@@ -10,17 +10,11 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from './ui/button'
+import { CATEGORIES } from '@/constants'
 
-const CATEGORIES = [
-    "All Categories",
-    "Nails",
-    "Hair",
-    "Eyes",
-    "Make-up"
-]
 function Hero() {
     return (
-        <div className="text-center pt-10 sm:pt-14 container mx-auto px-6 md:px-0">
+        <div className="flex text-center items-center justify-center flex-col container mx-auto px-6 md:px-0 min-h-[70vh]">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-foreground mb-4 sm:mb-6 leading-tight">Book Your Perfect
                 <br />
                 <span className="text-primary">Experience</span></h1>
