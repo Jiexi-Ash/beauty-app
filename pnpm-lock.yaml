@@ -8,6 +8,12 @@ dependencies:
   '@base-ui/react':
     specifier: ^1.2.0
     version: 1.2.0(@types/react@19.2.14)(react-dom@19.2.3)(react@19.2.3)
+  '@tanstack/react-form':
+    specifier: ^1.28.5
+    version: 1.28.5(react-dom@19.2.3)(react@19.2.3)
+  '@tanstack/react-form-nextjs':
+    specifier: ^1.28.4
+    version: 1.28.4(react-dom@19.2.3)(react@19.2.3)
   class-variance-authority:
     specifier: ^0.7.1
     version: 0.7.1
@@ -20,21 +26,36 @@ dependencies:
   next:
     specifier: 16.1.6
     version: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.3)(react@19.2.3)
+  next-themes:
+    specifier: ^0.4.6
+    version: 0.4.6(react-dom@19.2.3)(react@19.2.3)
   react:
     specifier: 19.2.3
     version: 19.2.3
   react-dom:
     specifier: 19.2.3
     version: 19.2.3(react@19.2.3)
+  react-image-crop:
+    specifier: ^11.0.10
+    version: 11.0.10(react@19.2.3)
   shadcn:
     specifier: ^4.0.2
     version: 4.0.2(@types/node@20.19.37)(typescript@5.9.3)
+  sonner:
+    specifier: ^2.0.7
+    version: 2.0.7(react-dom@19.2.3)(react@19.2.3)
   tailwind-merge:
     specifier: ^3.5.0
     version: 3.5.0
   tw-animate-css:
     specifier: ^1.4.0
     version: 1.4.0
+  zod:
+    specifier: ^4.3.6
+    version: 4.3.6
+  zustand:
+    specifier: ^5.0.11
+    version: 5.0.11(@types/react@19.2.14)(react@19.2.3)
 
 devDependencies:
   '@tailwindcss/postcss':
@@ -1257,6 +1278,96 @@ packages:
       tailwindcss: 4.2.1
     dev: true
 
+  /@tanstack/devtools-event-client@0.4.2:
+    resolution: {integrity: sha512-nerCPwV6RI4zQY+T5xxXEDOPgSF/gqf6dmCbDpTwkAvQJPHKgroHwKE5kvAcM3JC3ptdr5euwNV0//f8e+wmfQ==}
+    engines: {node: '>=18'}
+    dev: false
+
+  /@tanstack/form-core@1.28.4:
+    resolution: {integrity: sha512-2eox5ePrJ6kvA1DXD5QHk/GeGr3VFZ0uYR63UgQOe7bUg6h1JfXaIMqTjZK9sdGyE4oRNqFpoW54H0pZM7nObQ==}
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.2
+      '@tanstack/pacer-lite': 0.1.1
+      '@tanstack/store': 0.9.2
+    dev: false
+
+  /@tanstack/form-core@1.28.5:
+    resolution: {integrity: sha512-8lYnduHHfP6uaXF9+2OLnh3Fo27tH4TdtekWLG2b/Bp26ynbrWG6L4qhBgEb7VcvTpJw/RjvJF/JyFhZkG3pfQ==}
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.2
+      '@tanstack/pacer-lite': 0.1.1
+      '@tanstack/store': 0.9.2
+    dev: false
+
+  /@tanstack/pacer-lite@0.1.1:
+    resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
+    engines: {node: '>=18'}
+    dev: false
+
+  /@tanstack/react-form-nextjs@1.28.4(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-NW/nH1cMpB27eWih+irm/WIi2kx0+bWKuisd+vKRrhUraZ9YF2/0h/XOIk9CkREQYuit6SFSGXBKTtRujABZSg==}
+    peerDependencies:
+      '@tanstack/react-start': ^1.134.9
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@tanstack/react-start':
+        optional: true
+    dependencies:
+      '@tanstack/react-form': 1.28.4(react-dom@19.2.3)(react@19.2.3)
+      decode-formdata: 0.9.0
+      react: 19.2.3
+    transitivePeerDependencies:
+      - react-dom
+    dev: false
+
+  /@tanstack/react-form@1.28.4(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-ZGBwl9JM2u0kol7jAWpqAkr2JSHfXJaLPsFDZWPf+ewpVkwngTTW/rGgtoDe5uVpHoDIpOhzpPCAh6O1SjGEOg==}
+    peerDependencies:
+      '@tanstack/react-start': '*'
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@tanstack/react-start':
+        optional: true
+    dependencies:
+      '@tanstack/form-core': 1.28.4
+      '@tanstack/react-store': 0.9.2(react-dom@19.2.3)(react@19.2.3)
+      react: 19.2.3
+    transitivePeerDependencies:
+      - react-dom
+    dev: false
+
+  /@tanstack/react-form@1.28.5(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-CL8IeWkeXnEEDsHt5wBuIOZvSYrKiLRtsC9ca0LzfJJ22SYCma9cBmh1UX1EBX0o3gH2U21PmUf+y5f9OJNoEQ==}
+    peerDependencies:
+      '@tanstack/react-start': '*'
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@tanstack/react-start':
+        optional: true
+    dependencies:
+      '@tanstack/form-core': 1.28.5
+      '@tanstack/react-store': 0.9.2(react-dom@19.2.3)(react@19.2.3)
+      react: 19.2.3
+    transitivePeerDependencies:
+      - react-dom
+    dev: false
+
+  /@tanstack/react-store@0.9.2(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-Vt5usJE5sHG/cMechQfmwvwne6ktGCELe89Lmvoxe3LKRoFrhPa8OCKWs0NliG8HTJElEIj7PLtaBQIcux5pAQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      '@tanstack/store': 0.9.2
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      use-sync-external-store: 1.6.0(react@19.2.3)
+    dev: false
+
+  /@tanstack/store@0.9.2:
+    resolution: {integrity: sha512-K013lUJEFJK2ofFQ/hZKJUmCnpcV00ebLyOyFOWQvyQHUOZp/iYO84BM6aOGiV81JzwbX0APTVmW8YI7yiG5oA==}
+    dev: false
+
   /@ts-morph/common@0.27.0:
     resolution: {integrity: sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ==}
     dependencies:
@@ -2124,6 +2235,10 @@ packages:
         optional: true
     dependencies:
       ms: 2.1.3
+
+  /decode-formdata@0.9.0:
+    resolution: {integrity: sha512-q5uwOjR3Um5YD+ZWPOF/1sGHVW9A5rCrRwITQChRXlmPkxDFBqCm4jNTIVdGHNH9OnR+V9MoZVgRhsFb+ARbUw==}
+    dev: false
 
   /dedent@1.7.2:
     resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
@@ -3937,6 +4052,16 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
+  /next-themes@0.4.6(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+    dev: false
+
   /next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.3)(react@19.2.3):
     resolution: {integrity: sha512-hkyRkcu5x/41KoqnROkfTm2pZVbKxvbZRuNvKXLRXxs3VfyO0WhY50TQS40EuKO9SW3rBj/sF3WbVwDACeMZyw==}
     engines: {node: '>=20.9.0'}
@@ -4372,6 +4497,14 @@ packages:
       scheduler: 0.27.0
     dev: false
 
+  /react-image-crop@11.0.10(react@19.2.3):
+    resolution: {integrity: sha512-+5FfDXUgYLLqBh1Y/uQhIycpHCbXkI50a+nbfkB1C0xXXUTwkisHDo2QCB1SQJyHCqIuia4FeyReqXuMDKWQTQ==}
+    peerDependencies:
+      react: '>=16.13.1'
+    dependencies:
+      react: 19.2.3
+    dev: false
+
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
     dev: true
@@ -4753,6 +4886,16 @@ packages:
 
   /sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+    dev: false
+
+  /sonner@2.0.7(react-dom@19.2.3)(react@19.2.3):
+    resolution: {integrity: sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
     dev: false
 
   /source-map-js@1.2.1:
@@ -5415,4 +5558,25 @@ packages:
 
   /zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
-    dev: true
+
+  /zustand@5.0.11(@types/react@19.2.14)(react@19.2.3):
+    resolution: {integrity: sha512-fdZY+dk7zn/vbWNCYmzZULHRrss0jx5pPFiOuMZ/5HJN6Yv3u+1Wswy/4MpZEkEGhtNH+pwxZB8OKgUBPzYAGg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
+    dependencies:
+      '@types/react': 19.2.14
+      react: 19.2.3
+    dev: false
