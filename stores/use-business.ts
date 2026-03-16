@@ -3,9 +3,10 @@ import * as z from "zod";
 
 
 export const businessSchema = z.object({
-    name: z.string(),
+    name: z.string().min(3, "Business Name needs to be at least 3 characters long."),
     description: z.string().min(10, "Business description must have at least 10 characters").max(250),
     address:z.string().min(10, "Business address must at least have 10 characters"),
+    businessDays:z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])).min(1, "Please select at least one day you are open"),
     coverImage:z.custom<File | null>((val) => val instanceof File || val === null, {
         message: "Invalid file type",
       })
@@ -23,6 +24,8 @@ export const businessSchema = z.object({
 export const paymentSchema = z.object({
   merchantId: z.string().max(10),
 });
+
+export const BUSINESS_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 export type Business = z.infer<typeof businessSchema>;
 export type Payment = z.infer<typeof paymentSchema>;

@@ -15,14 +15,14 @@ import {
     InputGroupText,
     InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { businessSchema, useBusinessStore } from "@/stores/use-business";
+import { Business, BUSINESS_DAYS, businessSchema, useBusinessStore } from "@/stores/use-business";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import { Card } from "../ui/card";
 import Image from "next/image";
 import { toast } from "sonner";
 import ImageCropDialog, { CroppedFile } from "../image-cropper";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const IMAGE_UPLOAD_GUIDELINES = {
     galleryImages: {
@@ -46,7 +46,7 @@ export const IMAGE_UPLOAD_GUIDELINES = {
 };
 
 const BusinessDetailForm = () => {
-    const { business, payment, setBusinessDetails, setSteps } = useBusinessStore();
+    const { business, setBusinessDetails, setSteps } = useBusinessStore();
     const [coverImage, setCoverImage] = useState<string | null>(null);
     const [pendingCropFile, setPendingCropFile] = useState<{
         file: File;
@@ -60,6 +60,7 @@ const BusinessDetailForm = () => {
             name: business?.name ?? "",
             description: business?.description ?? "",
             address: business?.address ?? "",
+            businessDays: [] as Business["businessDays"],
             coverImage: business?.coverImage ?? (null as File | null),
         },
         validators: {
@@ -71,6 +72,7 @@ const BusinessDetailForm = () => {
                 description: value.description,
                 name: value.name,
                 coverImage: value?.coverImage as File,
+                businessDays: value.businessDays
             });
             setSteps("payment");
         },
@@ -116,8 +118,9 @@ const BusinessDetailForm = () => {
         setPendingCropFile(null);
     }
 
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             <form
                 id="business-details-form"
                 onSubmit={(e) => {
@@ -142,6 +145,7 @@ const BusinessDetailForm = () => {
                                         aria-invalid={isInvalid}
                                         placeholder="Katlego's Nail Bar"
                                         autoComplete="off"
+                                        className={cn("h-9 placeholder:text-sm rounded-sm")}
                                     />
                                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                 </Field>
@@ -164,7 +168,45 @@ const BusinessDetailForm = () => {
                                         aria-invalid={isInvalid}
                                         placeholder="123 Main str, 1321"
                                         autoComplete="off"
+                                        className={cn("h-9 placeholder:text-sm rounded-sm")}
                                     />
+                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                </Field>
+                            );
+                        }}
+                    </form.Field>
+                    <form.Field name="businessDays">
+                        {(field) => {
+                            const isInvalid =
+                                field.state.meta.isTouched && !field.state.meta.isValid;
+                            return (
+                                <Field data-invalid={isInvalid}>
+                                    <FieldLabel htmlFor={field.name}>Business Days</FieldLabel>
+                                    <div className="flex flex-wrap gap-2">
+                                        {BUSINESS_DAYS.map((day) => {
+                                            const isSelected = field.state.value.includes(day as typeof field.state.value[number]);
+                                            return (
+                                                <Button
+                                                    variant={isSelected ? "default" : "outline"}
+                                                    key={day}
+                                                    size="sm"
+                                                    type="button"
+                                                    className={cn(
+                                                        "rounded-sm text-sm capitalize",
+                                                        isSelected ? "bg-primary text-white" : ""
+                                                    )}
+                                                    onClick={() => {
+                                                        const days = field.state.value.includes(day as typeof field.state.value[number])
+                                                            ? field.state.value.filter((d: typeof day) => d !== (day as typeof field.state.value[number]))
+                                                            : [...field.state.value, day as typeof field.state.value[number]];
+                                                        field.handleChange(days as typeof field.state.value);
+                                                    }}
+                                                >
+                                                    {day}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
                                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                 </Field>
                             );
@@ -186,7 +228,7 @@ const BusinessDetailForm = () => {
                                             onChange={(e) => field.handleChange(e.target.value)}
                                             placeholder="Put you business description here. This can be a brief information of what you do"
                                             rows={6}
-                                            className="min-h-24 resize-none"
+                                            className={cn("h-9 placeholder:text-sm rounded-sm min-h-24 resize-none")}
                                             aria-invalid={isInvalid}
                                         />
                                         <InputGroupAddon align="block-end">
@@ -216,7 +258,7 @@ const BusinessDetailForm = () => {
                                         onBlur={field.handleBlur}
                                         onChange={(e) => handleSelectCoverImage(e, field)}
                                         aria-invalid={isInvalid}
-                                        className="cursor-pointer"
+                                        className={cn("h-9 placeholder:text-sm rounded-sm cursor-pointer")}
                                     />
                                     <FieldDescription>
                                         recommended: square image, max 5MB
