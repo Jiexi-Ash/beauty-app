@@ -1,6 +1,6 @@
 import { internalMutation, query, QueryCtx } from "./_generated/server";
 import { UserJSON } from "@clerk/backend";
-import { v, Validator } from "convex/values";
+import { ConvexError, v, Validator } from "convex/values";
 
 
 
@@ -36,4 +36,20 @@ export const upsertFromClerk = internalMutation({
 
 const getUserByClerkId = async (ctx:QueryCtx, clerkId:string) => {
     return await ctx.db.query("users").withIndex("by_clerk_id", q => q.eq("clerkId", clerkId)).unique()
+}
+
+export const getCurrentUserOrThrow = async (ctx:QueryCtx) => {
+    const user =  await getCurrentUser(ctx)
+
+    if (!user) throw new ConvexError("User not found")
+}
+
+export const getCurrentUser = async (ctx:QueryCtx) => {
+    const identity = await ctx.auth.getUserIdentity()
+
+    if (identity === null) {
+        return null
+    }
+
+    return await getUserByClerkId(ctx, identity.subject)
 }
