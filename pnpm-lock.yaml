@@ -8,6 +8,9 @@ dependencies:
   '@base-ui/react':
     specifier: ^1.2.0
     version: 1.2.0(@types/react@19.2.14)(react-dom@19.2.3)(react@19.2.3)
+  '@clerk/backend':
+    specifier: ^3.2.0
+    version: 3.2.0(react-dom@19.2.3)(react@19.2.3)
   '@clerk/nextjs':
     specifier: ^7.0.4
     version: 7.0.4(next@16.1.6)(react-dom@19.2.3)(react@19.2.3)
@@ -56,6 +59,9 @@ dependencies:
   sonner:
     specifier: ^2.0.7
     version: 2.0.7(react-dom@19.2.3)(react@19.2.3)
+  svix:
+    specifier: ^1.88.0
+    version: 1.88.0
   tailwind-merge:
     specifier: ^3.5.0
     version: 3.5.0
@@ -5530,6 +5536,13 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
+  /svix@1.88.0:
+    resolution: {integrity: sha512-vm/JrrUd3bVyBE+3L33TIyVSs8gS5fYx7lrISvKlDJXTYX1ACH4REX8P1tHxsSKoZi/rvifM1t0XRc5Vc45THw==}
+    dependencies:
+      standardwebhooks: 1.0.0
+      uuid: 10.0.0
+    dev: false
+
   /tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
     dev: false
@@ -5814,6 +5827,11 @@ packages:
 
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+    dev: false
+
+  /uuid@10.0.0:
+    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
     dev: false
 
   /validate-npm-package-name@7.0.2:
