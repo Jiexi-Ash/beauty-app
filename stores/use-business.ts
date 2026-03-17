@@ -7,6 +7,8 @@ export const businessSchema = z.object({
     description: z.string().min(10, "Business description must have at least 10 characters").max(250),
     address:z.string().min(10, "Business address must at least have 10 characters"),
     businessDays:z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])).min(1, "Please select at least one day you are open"),
+    startTime: z.string(),
+    endTime:z.string(),
     coverImage:z.custom<File | null>((val) => val instanceof File || val === null, {
         message: "Invalid file type",
       })

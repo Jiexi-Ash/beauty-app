@@ -62,6 +62,8 @@ const BusinessDetailForm = () => {
             address: business?.address ?? "",
             businessDays: [] as Business["businessDays"],
             coverImage: business?.coverImage ?? (null as File | null),
+            startTime: business?.startTime ?? "08:00",
+            endTime: business?.endTime ?? "18:00",
         },
         validators: {
             onSubmit: businessSchema,
@@ -72,7 +74,10 @@ const BusinessDetailForm = () => {
                 description: value.description,
                 name: value.name,
                 coverImage: value?.coverImage as File,
-                businessDays: value.businessDays
+                businessDays: value.businessDays,
+                startTime: value.startTime,
+                endTime: value.endTime,
+
             });
             setSteps("payment");
         },
@@ -120,7 +125,7 @@ const BusinessDetailForm = () => {
 
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
             <form
                 id="business-details-form"
                 onSubmit={(e) => {
@@ -242,6 +247,53 @@ const BusinessDetailForm = () => {
                             );
                         }}
                     </form.Field>
+
+                    <Field className="">
+                        <FieldLabel className="">Business Hours</FieldLabel>
+                        <div className="flex items-center gap-3">
+                            <form.Field name="startTime">
+                                {(field) => {
+                                    const isInvalid =
+                                        field.state.meta.isTouched && !field.state.meta.isValid;
+                                    return (
+                                        <Field data-invalid={isInvalid}>
+                                            <Input
+                                                id={field.name}
+                                                type="time"
+                                                step="1"
+                                                value={field.state.value}
+                                                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none h-9 flex-1 rounded-sm"
+                                                onChange={(e) => field.handleChange(e.target.value)}
+                                            />
+                                            {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                        </Field>
+                                    );
+                                }}
+
+                            </form.Field>
+                            <span>to</span>
+                            <form.Field name="endTime">
+                                {(field) => {
+                                    const isInvalid =
+                                        field.state.meta.isTouched && !field.state.meta.isValid;
+                                    return (
+                                        <Field data-invalid={isInvalid}>
+                                            <Input
+                                                id={field.name}
+                                                type="time"
+                                                step="1"
+                                                value={field.state.value}
+                                                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none h-9 flex-1 rounded-sm"
+                                                onChange={(e) => field.handleChange(e.target.value)}
+                                            />
+                                            {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                        </Field>
+                                    );
+                                }}
+
+                            </form.Field>
+                        </div>
+                    </Field>
                     <form.Field name="coverImage">
                         {(field) => {
                             const file = field.state.value as File | null;
@@ -269,7 +321,7 @@ const BusinessDetailForm = () => {
 
                                         <div className="max-w-[200px] h-[200px] rounded-lg">
                                             <div className="w-full h-full relative rounded-lg">
-                                                <Image src={coverImage} className="object-cover rounded-lg" alt="Store Cover image preview" fill quality={90} />
+                                                <Image src={coverImage} className="object-cover rounded-lg" alt="Store Cover image preview" fill />
                                             </div>
                                         </div>
 
@@ -286,19 +338,20 @@ const BusinessDetailForm = () => {
                 </FieldGroup>
             </form>
 
-            <div>
-                <Field orientation="horizontal">
-                    <div className="py-4 w-full border-t border-border flex justify-between">
-                        <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => form.reset()}>
-                            Reset
-                        </Button>
-                        <Button type="submit" className="h-10 px-4 py-2" form="business-details-form" >
-                            Next
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
-                    </div>
-                </Field>
+            <div className="py-4 w-full border-t border-border flex justify-between">
+                <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => {
+                    form.reset();
+                    setCoverImage(null);
+                }}>
+                    Reset
+                </Button>
+                <Button type="submit" className="h-10 px-4 py-2" form="business-details-form" >
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
             </div>
+
+
 
             {pendingCropFile && (
                 <ImageCropDialog

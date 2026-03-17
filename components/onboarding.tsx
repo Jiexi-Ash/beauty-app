@@ -135,7 +135,7 @@ function Onboarding() {
                             })}
                         </div>
 
-                        <div className="py-5 flex-1 overflow-y-auto px-6">
+                        <div className="flex-1 overflow-y-auto px-6">
                             {step === "businessDetails" && (
                                 <BusinessDetailForm />
                             )}

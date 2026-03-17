@@ -12,7 +12,7 @@ import { paymentSchema, useBusinessStore } from "@/stores/use-business";
 
 import { useForm } from "@tanstack/react-form";
 import { ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
+
 
 const PaymentForm = () => {
     const { payment, setSteps, setPaymentDetails } = useBusinessStore();
@@ -31,34 +31,32 @@ const PaymentForm = () => {
         },
     });
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             <form
                 id="payment-form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     form.handleSubmit();
                 }}
-                className="space-y-6"
+                className="space-y-5"
             >
-                <Card className="border-border bg-secondary/50">
-                    <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                <CreditCard className="w-5 h-5 text-primary" />
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="text-sm font-semibold text-foreground">PayFast Payment Gateway</h4>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    We use PayFast to securely process payments. Create a PayFast account at{" "}
-                                    <a href="https://www.payfast.co.za" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
-                                        payfast.co.za
-                                    </a>{" "}
-                                    and retrieve your Merchant ID.
-                                </p>
-                            </div>
+                <div className="space-y-2 bg-accent/50 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <CreditCard className="w-5 h-5 text-primary" />
                         </div>
-                    </CardContent>
-                </Card>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-semibold text-foreground">PayFast Payment Gateway</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                We use PayFast to securely process payments. Create a PayFast account at{" "}
+                                <a href="https://www.payfast.co.za" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
+                                    payfast.co.za
+                                </a>{" "}
+                                and retrieve your Merchant ID.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="space-y-3 bg-accent/50 rounded-lg p-4">
                     <h4 className="text-sm font-semibold text-foreground">How to find your Merchant ID:</h4>
@@ -89,7 +87,7 @@ const PaymentForm = () => {
                                         aria-invalid={isInvalid}
                                         placeholder="e.g. 10000100"
                                         autoComplete="off"
-                                        className="py-4"
+                                        className="h-9 rounded-sm"
                                     />
                                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                 </Field>
@@ -100,19 +98,17 @@ const PaymentForm = () => {
             </form>
 
             <div>
-                <Field orientation="horizontal">
-                    <div className="py-4 w-full border-t border-border flex justify-between">
-                        <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => setSteps("businessDetails")}>
-                            <ArrowLeft className="w-4 h-4 mr-1" />
-                            Back
-                        </Button>
+                <div className="py-4 w-full border-t border-border flex justify-between">
+                    <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => setSteps("businessDetails")}>
+                        <ArrowLeft className="w-4 h-4 mr-1" />
+                        Back
+                    </Button>
 
-                        <Button type="submit" className="h-10 px-4 py-2" form="payment-form" >
-                            Next
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
-                    </div>
-                </Field>
+                    <Button type="submit" className="h-10 px-4 py-2" form="payment-form" >
+                        Next
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                </div>
             </div>
         </div>
     );
