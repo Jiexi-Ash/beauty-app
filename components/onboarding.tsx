@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { SetStateAction, Dispatch, useState } from "react"
 import {
     Dialog,
     DialogClose,
@@ -26,11 +26,16 @@ const stepIcons = [
     { icon: CheckCircle2, label: "Launch", step: "Launch" },
 ]
 
-function Onboarding() {
-    const [isOpen, setOpen] = useState(true)
+interface OnboardingProps {
+    open: boolean,
+
+
+}
+function Onboarding({ open }: OnboardingProps) {
+
     const { step } = useBusinessStore()
     return (
-        <Dialog open={isOpen}>
+        <Dialog open={open}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0 gap-0 border-border bg-card">
                 <div className="flex min-h-[560px]">
                     <div className="hidden md:flex w-[340px] shrink-0 flex-col items-center justify-center border-r border-border rounded-l-lg">
@@ -89,7 +94,7 @@ function Onboarding() {
                                     href="/"
                                     className="text-sm flex text-primary  items-center gap-1"
                                 >
-                                    <ArrowLeft className="w-5 h-5 ml-0.5" /> Back to Home page
+                                    <ArrowLeft className="w-5 h-5 ml-0.5" /> Create Business Later
                                 </Link>
                             </Button>
                             <DialogTitle className="text-xl font-bold text-foreground">
