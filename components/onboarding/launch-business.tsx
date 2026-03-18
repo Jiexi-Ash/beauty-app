@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, Clock, CreditCard, DotIcon, MapPin } from 'luc
 import { Button } from '../ui/button'
 import { useEffect, useMemo } from 'react'
 
-function ConfirmBusiness() {
+function LaunchBusiness() {
     const { business, payment, setSteps } = useBusinessStore()
 
 
@@ -79,7 +79,7 @@ function ConfirmBusiness() {
 
             {business && payment ? (
                 <div className="py-4 border-t border-border flex justify-between">
-                    <Button variant="outline" className="h-10 px-4 py-2" onClick={() => setSteps("payment")}>
+                    <Button variant="outline" className="h-10 px-4 py-2" onClick={() => setSteps("Payment")}>
                         <ArrowLeft className="w-4 h-4 mr-1" />
                         Back
                     </Button>
@@ -94,4 +94,4 @@ function ConfirmBusiness() {
     )
 }
 
-export default ConfirmBusiness
+export default LaunchBusiness

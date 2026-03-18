@@ -79,7 +79,7 @@ const BusinessDetailForm = () => {
                 endTime: value.endTime,
 
             });
-            setSteps("payment");
+            setSteps("Payment");
         },
     });
 

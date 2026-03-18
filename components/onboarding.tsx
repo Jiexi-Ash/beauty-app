@@ -17,18 +17,18 @@ import { ArrowLeft, CheckCircle2, CreditCard, StoreIcon } from "lucide-react"
 import BusinessDetailForm from "./onboarding/business-details-form"
 import { Button } from "./ui/button"
 import PaymentForm from "./onboarding/payment-form"
-import ConfirmBusiness from "./onboarding/confirm-business"
+import LaunchBusiness from "./onboarding/launch-business"
 import Link from "next/link"
 
 const stepIcons = [
-    { icon: StoreIcon, label: "Business", step: "businessDetails" },
+    { icon: StoreIcon, label: "Business", step: "Details" },
     { icon: CreditCard, label: "Payment", step: "payment" },
-    { icon: CheckCircle2, label: "Confirm", step: "confirm" },
+    { icon: CheckCircle2, label: "Launch", step: "Launch" },
 ]
 
 function Onboarding() {
     const [isOpen, setOpen] = useState(true)
-    const { step, business, payment, setSteps } = useBusinessStore()
+    const { step } = useBusinessStore()
     return (
         <Dialog open={isOpen}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0 gap-0 border-border bg-card">
@@ -36,7 +36,7 @@ function Onboarding() {
                     <div className="hidden md:flex w-[340px] shrink-0 flex-col items-center justify-center border-r border-border rounded-l-lg">
                         {/* Illustrations */}
                         <div className="max-w-[260px] mb-6 w-full">
-                            {step === "businessDetails" && (<Image
+                            {step === "Details" && (<Image
                                 src="/online-shopping.svg"
                                 width={200}
                                 height={200}
@@ -44,7 +44,7 @@ function Onboarding() {
                                 alt="Online shopping illustration"
                                 priority
                             />)}
-                            {step === "payment" && (<Image
+                            {step === "Payment" && (<Image
                                 src="/online-transactions.svg"
                                 width={200}
                                 height={200}
@@ -52,7 +52,7 @@ function Onboarding() {
                                 alt="Online shopping illustration"
                                 priority
                             />)}
-                            {step === "confirm" && (<Image
+                            {step === "Launch" && (<Image
                                 src="/completed.svg"
                                 width={200}
                                 height={200}
@@ -64,15 +64,15 @@ function Onboarding() {
 
 
                         <div className="px-6">
-                            {step === "businessDetails" && <>
+                            {step === "Details" && <>
                                 <h3 className="text-lg font-bold text-primary text-center">Create your business</h3>
                                 <p className="text-sm text-muted-foreground text-center mt-1">Set up your store profile</p>
                             </>}
-                            {step === "payment" && <>
+                            {step === "Payment" && <>
                                 <h3 className="text-lg font-bold text-primary text-center">Get paid seamlessly</h3>
                                 <p className="text-sm text-muted-foreground text-center mt-1">Connect Payfast to start accepting payments instantly</p>
                             </>}
-                            {step === "confirm" && <>
+                            {step === "Launch" && <>
                                 <h3 className="text-lg font-bold text-center text-primary">{"You're all set"}</h3>
                                 <p className="text-sm text-muted-foreground text-center mt-1">Review your details and launch your business</p>
                             </>}
@@ -93,14 +93,14 @@ function Onboarding() {
                                 </Link>
                             </Button>
                             <DialogTitle className="text-xl font-bold text-foreground">
-                                {step === "businessDetails" && "Set up your Business"}
-                                {step === "payment" && "Payment setup"}
-                                {step === "confirm" && "Confirm your details"}
+                                {step === "Details" && "Set up your Business"}
+                                {step === "Payment" && "Payment setup"}
+                                {step === "Launch" && "Launch your business"}
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground">
-                                {step === "businessDetails" && "Tell us about your business to get started"}
-                                {step === "payment" && "Connect your payment provider to accept bookings"}
-                                {step === "confirm" && "Review everything before launching your business"}
+                                {step === "Details" && "Tell us about your business to get started"}
+                                {step === "Payment" && "Connect your payment provider to accept bookings"}
+                                {step === "Launch" && "Review everything before launching your business"}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -136,14 +136,14 @@ function Onboarding() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto px-6">
-                            {step === "businessDetails" && (
+                            {step === "Details" && (
                                 <BusinessDetailForm />
                             )}
-                            {step === "payment" && (
+                            {step === "Payment" && (
                                 <PaymentForm />
                             )}
-                            {step === "confirm" && (
-                                <ConfirmBusiness />
+                            {step === "Launch" && (
+                                <LaunchBusiness />
                             )}
                         </div>
                     </div>

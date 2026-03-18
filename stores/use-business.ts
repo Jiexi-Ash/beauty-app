@@ -33,7 +33,7 @@ export type Business = z.infer<typeof businessSchema>;
 export type Payment = z.infer<typeof paymentSchema>;
 
 interface BusinessState {
-  step: "businessDetails"  | "payment" | "confirm";
+  step: "Details"  | "Payment" | "Launch";
   business: Business | null;
   payment: Payment | null;
   setBusinessDetails: (business: Business) => void;
@@ -43,7 +43,7 @@ interface BusinessState {
 }
 
 export const useBusinessStore = create<BusinessState>((set, get) => ({
-step: "businessDetails",
+step: "Details",
 business: null,
 payment: null,
 setBusinessDetails: (business) => set({business}),
@@ -53,7 +53,7 @@ reset: () => {
   set({
     business: null,
     payment: null,
-    step: "businessDetails"
+    step: "Details"
   })
 },
 }))

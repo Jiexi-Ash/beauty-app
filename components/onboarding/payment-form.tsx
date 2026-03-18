@@ -27,7 +27,7 @@ const PaymentForm = () => {
             setPaymentDetails({
                 merchantId: value.merchantId
             });
-            setSteps("confirm");
+            setSteps("Launch");
         },
     });
     return (
@@ -99,7 +99,7 @@ const PaymentForm = () => {
 
             <div>
                 <div className="py-4 w-full border-t border-border flex justify-between">
-                    <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => setSteps("businessDetails")}>
+                    <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => setSteps("Details")}>
                         <ArrowLeft className="w-4 h-4 mr-1" />
                         Back
                     </Button>
