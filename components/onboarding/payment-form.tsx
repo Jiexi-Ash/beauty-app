@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { paymentSchema, useBusinessStore } from "@/stores/use-business";
 
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, ArrowRight, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlertIcon, CreditCard, LockIcon, ZapIcon } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
 
 
 const PaymentForm = () => {
@@ -31,65 +32,72 @@ const PaymentForm = () => {
         },
     });
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 w-full flex justify-center">
             <form
                 id="payment-form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     form.handleSubmit();
                 }}
-                className="space-y-5"
+                className="w-full max-w-xl"
             >
-                <div className="space-y-2 bg-accent/50 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <CreditCard className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-semibold text-foreground">PayFast Payment Gateway</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                We use PayFast to securely process payments. Create a PayFast account at{" "}
-                                <a href="https://www.payfast.co.za" target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
-                                    payfast.co.za
-                                </a>{" "}
-                                and retrieve your Merchant ID.
-                            </p>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="space-y-3 bg-accent/50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-foreground">How to find your Merchant ID:</h4>
-                    <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                        <li>Log in to your PayFast dashboard</li>
-                        <li>Navigate to <span className="font-medium text-foreground">Settings → Merchant Settings</span></li>
-                        <li>Copy your <span className="font-medium text-foreground">Merchant ID</span> number</li>
-                        <li>Paste it in the field below</li>
-                    </ol>
-                </div>
                 <FieldGroup>
                     <form.Field name="merchantId">
                         {(field) => {
                             const isInvalid =
                                 field.state.meta.isTouched && !field.state.meta.isValid;
                             return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>
-                                        Merchant ID{" "}
-                                        <span className="text-gray-400">(Copy from Payfast)</span>
-                                    </FieldLabel>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        aria-invalid={isInvalid}
-                                        placeholder="e.g. 10000100"
-                                        autoComplete="off"
-                                        className="h-9 rounded-sm"
-                                    />
-                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                <Field data-invalid={isInvalid} className="w-full">
+                                    <div className="flex gap-4 flex-col">
+                                        <Card className="">
+                                            <CardContent className="flex flex-col space-y-3">
+                                                <FieldLabel htmlFor={field.name}>
+                                                    Payfast Merchant ID
+                                                    <span className="text-gray-400">(Copy from Payfast)</span>
+                                                </FieldLabel>
+                                                <Input
+                                                    id={field.name}
+                                                    name={field.name}
+                                                    value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)}
+                                                    aria-invalid={isInvalid}
+                                                    placeholder="e.g. 10000100" autoComplete="off"
+                                                    className="h-9 rounded-smh-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm "
+                                                />
+
+                                                <div className="bg-secondary p-3">
+                                                    <div className="flex gap-2">
+                                                        <CircleAlertIcon className="size-7 text-primary" />
+                                                        <p className="text-sm">
+                                                            Find your Merchant ID in your Payfast Dashboard under <span className="font-bold">Settings {'>'} </span>  <span className="font-bold">Business Profile</span>. Ensure you have enabled the <span className="font-bold">{'"Allow API access"'}</span> toggle
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className=" rounded-lg">
+                                            <CardContent>
+
+                                                <div className="bg-secondary p-3 space-y-3">
+                                                    <h3 className="font-bold text-base">Why payfast?</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <ZapIcon className="size-5 text-primary" />
+                                                        <p className="text-xs md:text-sm">Payments via PayFast settle quickly and reflect directly in your PayFast account.</p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <LockIcon className="size-4 text-primary" />
+                                                        <p className="text-xs md:text-sm">PCI Level 1 compliant security for your peace of mind.</p>
+                                                    </div>
+
+                                                    <div className="flex gap-2">
+                                                        <CreditCard className="size-5 text-primary" />
+                                                        <p className="text-xs md:text-sm">Marketplace-ready: enter only your PayFast Merchant ID; no banking details required in this app.</p>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
                                 </Field>
                             );
                         }}
@@ -97,21 +105,11 @@ const PaymentForm = () => {
                 </FieldGroup>
             </form>
 
-            <div>
-                <div className="py-4 w-full border-t border-border flex justify-between">
-                    <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => setSteps("Details")}>
-                        <ArrowLeft className="w-4 h-4 mr-1" />
-                        Back
-                    </Button>
 
-                    <Button type="submit" className="h-10 px-4 py-2" form="payment-form" >
-                        Next
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
-                </div>
-            </div>
         </div>
     );
 };
 
 export default PaymentForm;
+
+

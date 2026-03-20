@@ -16,6 +16,7 @@ import Link from 'next/link'
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import BusinessDetailForm from '@/components/onboarding/business-details-form'
+import PaymentForm from '@/components/onboarding/payment-form'
 
 
 
@@ -65,7 +66,7 @@ function Onboarding() {
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col items-center justify-center px-6 lg:px-8 2xl:px-0 mt-6">
+            <div className="flex-1 flex flex-col items-center  px-6 lg:px-8 2xl:px-0 mt-6">
                 <div className="w-full max-w-xl">
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
@@ -105,6 +106,7 @@ function Onboarding() {
                 </div>
 
                 {step === "Details" && <BusinessDetailForm setVisibleCount={setVisibleCount} visibleCount={visibleCount} />}
+                {step === "Payment" && <PaymentForm />}
             </div>
 
             <footer className="sticky bottom-0 bg-white border-t border-border px-6 lg:px-8 2xl:px-0 h-32 flex items-center">

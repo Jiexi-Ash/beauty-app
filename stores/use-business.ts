@@ -107,7 +107,7 @@ interface BusinessState {
 }
 
 export const useBusinessStore = create<BusinessState>((set, get) => ({
-step: "Details",
+step: "Payment",
 business: null,
 payment: null,
 setBusinessDetails: (business) => set({business}),
