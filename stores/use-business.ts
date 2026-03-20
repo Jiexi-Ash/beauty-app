@@ -2,13 +2,77 @@ import { create } from "zustand";
 import * as z from "zod";
 
 
+type BusinessDay = {
+  shortName: string
+  fullName: string
+  openTime: string
+  closeTime: string
+}
+export const BUSINESS_DAYS:BusinessDay[] = [
+  {
+      shortName: "M",
+      fullName: "Monday",
+      openTime:"08:00",
+      closeTime: "18:00",
+      
+  },
+  {
+      shortName: "T",
+      fullName: "Tuesday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  },
+  {
+      shortName: "W",
+      fullName: "Wednesday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  },
+  {
+      shortName: "T",
+      fullName: "Thursday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  },
+  {
+      shortName: "F",
+      fullName: "Friday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  },
+  {
+      shortName: "S",
+      fullName: "Saturday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  },
+  {
+      shortName: "S",
+      fullName: "Sunday",
+      openTime:"08:00",
+      closeTime: "18:00",
+  }
+]
+
+
+const businessDaySchema = z.object({
+  shortName: z.string(),
+  fullName: z.string(),
+  openTime: z.string(),
+  closeTime: z.string(),
+}).refine(
+  (day) => BUSINESS_DAYS.some(d => d.shortName === day.shortName && d.fullName === day.fullName),
+  { message: "Invalid business day" }
+).refine(
+  (day) => !day.openTime || !day.closeTime || day.openTime < day.closeTime,
+  { message: "Opening time must be before closing time" }
+)
+
 export const businessSchema = z.object({
     name: z.string().min(3, "Business Name needs to be at least 3 characters long."),
     description: z.string().min(10, "Business description must have at least 10 characters").max(250),
     address:z.string().min(10, "Business address must at least have 10 characters"),
-    businessDays:z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])).min(1, "Please select at least one day you are open"),
-    startTime: z.string(),
-    endTime:z.string(),
+    businessDays: z.array(businessDaySchema),
     coverImage:z.custom<File | null>((val) => val instanceof File || val === null, {
         message: "Invalid file type",
       })
@@ -27,7 +91,7 @@ export const paymentSchema = z.object({
   merchantId: z.string().max(10),
 });
 
-export const BUSINESS_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
 
 export type Business = z.infer<typeof businessSchema>;
 export type Payment = z.infer<typeof paymentSchema>;

@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import {
     Field,
-    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -17,11 +16,11 @@ import {
 } from "@/components/ui/input-group";
 import { Business, BUSINESS_DAYS, businessSchema, useBusinessStore } from "@/stores/use-business";
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import ImageCropDialog, { CroppedFile } from "../image-cropper";
-import { ArrowRight } from "lucide-react";
+import { CameraIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const IMAGE_UPLOAD_GUIDELINES = {
@@ -45,12 +44,18 @@ export const IMAGE_UPLOAD_GUIDELINES = {
     acceptedFormats: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
 };
 
-const BusinessDetailForm = () => {
+interface BusinessDetailFormProps {
+    visibleCount: number,
+    setVisibleCount: React.Dispatch<React.SetStateAction<number>>
+}
+const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFormProps) => {
     const { business, setBusinessDetails, setSteps } = useBusinessStore();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [coverImage, setCoverImage] = useState<string | null>(null);
     const [pendingCropFile, setPendingCropFile] = useState<{
         file: File;
         isPrimary: boolean;
+        primaryAspect: number;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         field: any;
     } | null>(null)
@@ -60,10 +65,8 @@ const BusinessDetailForm = () => {
             name: business?.name ?? "",
             description: business?.description ?? "",
             address: business?.address ?? "",
-            businessDays: [] as Business["businessDays"],
+            businessDays: [{ ...BUSINESS_DAYS[0] }] as Business["businessDays"],
             coverImage: business?.coverImage ?? (null as File | null),
-            startTime: business?.startTime ?? "08:00",
-            endTime: business?.endTime ?? "18:00",
         },
         validators: {
             onSubmit: businessSchema,
@@ -75,8 +78,6 @@ const BusinessDetailForm = () => {
                 name: value.name,
                 coverImage: value?.coverImage as File,
                 businessDays: value.businessDays,
-                startTime: value.startTime,
-                endTime: value.endTime,
 
             });
             setSteps("Payment");
@@ -106,6 +107,7 @@ const BusinessDetailForm = () => {
         setPendingCropFile({
             file,
             isPrimary: true,
+            primaryAspect: 16 / 9,
             field
         })
 
@@ -121,247 +123,262 @@ const BusinessDetailForm = () => {
         setCoverImage(cropped.url)
 
         setPendingCropFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+
+    const handleCropCancel = () => {
+        setPendingCropFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = "" // and here
     }
 
 
+
     return (
-        <div className="space-y-1.5">
+        <>
             <form
                 id="business-details-form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     form.handleSubmit();
                 }}
+                className="w-full max-w-xl"
             >
-                <FieldGroup>
-                    <form.Field name="name">
-                        {(field) => {
-                            const isInvalid =
-                                field.state.meta.isTouched && !field.state.meta.isValid;
-                            return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>Business Name</FieldLabel>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        aria-invalid={isInvalid}
-                                        placeholder="Katlego's Nail Bar"
-                                        autoComplete="off"
-                                        className={cn("h-9 placeholder:text-sm rounded-sm")}
-                                    />
-                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                </Field>
-                            );
-                        }}
-                    </form.Field>
-                    <form.Field name="address">
-                        {(field) => {
-                            const isInvalid =
-                                field.state.meta.isTouched && !field.state.meta.isValid;
-                            return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>Address</FieldLabel>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        aria-invalid={isInvalid}
-                                        placeholder="123 Main str, 1321"
-                                        autoComplete="off"
-                                        className={cn("h-9 placeholder:text-sm rounded-sm")}
-                                    />
-                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                </Field>
-                            );
-                        }}
-                    </form.Field>
-                    <form.Field name="businessDays">
-                        {(field) => {
-                            const isInvalid =
-                                field.state.meta.isTouched && !field.state.meta.isValid;
-                            return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>Business Days</FieldLabel>
-                                    <div className="flex flex-wrap gap-2">
-                                        {BUSINESS_DAYS.map((day) => {
-                                            const isSelected = field.state.value.includes(day as typeof field.state.value[number]);
-                                            return (
-                                                <Button
-                                                    variant={isSelected ? "default" : "outline"}
-                                                    key={day}
-                                                    size="sm"
-                                                    type="button"
-                                                    className={cn(
-                                                        "rounded-sm text-sm capitalize",
-                                                        isSelected ? "bg-primary text-white" : ""
-                                                    )}
-                                                    onClick={() => {
-                                                        const days = field.state.value.includes(day as typeof field.state.value[number])
-                                                            ? field.state.value.filter((d: typeof day) => d !== (day as typeof field.state.value[number]))
-                                                            : [...field.state.value, day as typeof field.state.value[number]];
-                                                        field.handleChange(days as typeof field.state.value);
-                                                    }}
-                                                >
-                                                    {day}
-                                                </Button>
-                                            );
-                                        })}
-                                    </div>
-                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                </Field>
-                            );
-                        }}
-                    </form.Field>
-                    <form.Field name="description">
-                        {(field) => {
-                            const isInvalid =
-                                field.state.meta.isTouched && !field.state.meta.isValid;
-                            return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-                                    <InputGroup>
-                                        <InputGroupTextarea
+                <div className="w-full h-full">
+                    <FieldGroup className="space-y-3">
+                        <form.Field name="coverImage">
+                            {(field) => {
+                                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <Input
+                                            id={field.name}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            ref={fileInputRef}
+                                            onChange={(e) => handleSelectCoverImage(e, field)}
+                                        />
+
+                                        <div className="relative w-full h-40 md:h-72 bg-white rounded-lg shadow-lg overflow-hidden">
+                                            <Image
+                                                src={coverImage ?? "/salon-image-placeholder.jpg"}
+                                                fill
+                                                className="object-cover rounded-lg p-2"
+                                                alt="image placeholder"
+                                            />
+                                            <div
+                                                className="group hover:bg-white/40 duration-200 ease-in-out absolute flex flex-col gap-2 items-center justify-center inset-0 bg-white/60 z-10 m-2 rounded cursor-pointer"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                <div className="bg-secondary w-14 h-14 rounded-full flex justify-center items-center">
+                                                    <CameraIcon fill="#EB3368" className="size-8 text-white" />
+                                                </div>
+                                                <span className="text-black font-bold">
+                                                    {coverImage ? "Change Cover Photo" : "Upload Cover Photo"}
+                                                </span>
+                                                <span className="text-sm">PNG, JPG 5MB</span>
+                                            </div>
+                                        </div>
+
+
+
+                                    </Field>
+                                );
+                            }}
+                        </form.Field>
+
+                        <form.Field name="name">
+                            {(field) => {
+                                const isInvalid =
+                                    field.state.meta.isTouched && !field.state.meta.isValid;
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <FieldLabel htmlFor={field.name}>Business Name</FieldLabel>
+                                        <Input
                                             id={field.name}
                                             name={field.name}
                                             value={field.state.value}
                                             onBlur={field.handleBlur}
                                             onChange={(e) => field.handleChange(e.target.value)}
-                                            placeholder="Put you business description here. This can be a brief information of what you do"
-                                            rows={6}
-                                            className={cn("h-9 placeholder:text-sm rounded-sm min-h-24 resize-none")}
                                             aria-invalid={isInvalid}
+                                            placeholder="Katlego's Nail Bar"
+                                            autoComplete="off"
+                                            className={cn("h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm ")}
                                         />
-                                        <InputGroupAddon align="block-end">
-                                            <InputGroupText className="tabular-nums">
-                                                {field.state.value.length}/150 characters
-                                            </InputGroupText>
-                                        </InputGroupAddon>
-                                    </InputGroup>
-                                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                </Field>
-                            );
-                        }}
-                    </form.Field>
-
-                    <Field className="">
-                        <FieldLabel className="">Business Hours</FieldLabel>
-                        <div className="flex items-center gap-3">
-                            <form.Field name="startTime">
-                                {(field) => {
-                                    const isInvalid =
-                                        field.state.meta.isTouched && !field.state.meta.isValid;
-                                    return (
-                                        <Field data-invalid={isInvalid}>
-                                            <Input
+                                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                    </Field>
+                                );
+                            }}
+                        </form.Field>
+                        <form.Field name="description">
+                            {(field) => {
+                                const isInvalid =
+                                    field.state.meta.isTouched && !field.state.meta.isValid;
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+                                        <InputGroup>
+                                            <InputGroupTextarea
                                                 id={field.name}
-                                                type="time"
-                                                step="1"
+                                                name={field.name}
                                                 value={field.state.value}
-                                                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none h-9 flex-1 rounded-sm"
+                                                onBlur={field.handleBlur}
                                                 onChange={(e) => field.handleChange(e.target.value)}
+                                                placeholder="Put you business description here. This can be a brief information of what you do"
+                                                rows={6}
+                                                className={cn("h-9 placeholder:text-sm bg-[#F3F3F4] rounded-sm min-h-24 resize-none")}
+                                                aria-invalid={isInvalid}
                                             />
-                                            {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                        </Field>
-                                    );
-                                }}
+                                            <InputGroupAddon align="block-end">
+                                                <InputGroupText className="tabular-nums">
+                                                    {field.state.value.length}/150 characters
+                                                </InputGroupText>
+                                            </InputGroupAddon>
+                                        </InputGroup>
+                                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                    </Field>
+                                );
+                            }}
+                        </form.Field>
+                        <form.Field name="address">
+                            {(field) => {
+                                const isInvalid =
+                                    field.state.meta.isTouched && !field.state.meta.isValid;
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <FieldLabel htmlFor={field.name}>Address</FieldLabel>
+                                        <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            aria-invalid={isInvalid}
+                                            placeholder="123 Main str, 1321"
+                                            autoComplete="off"
+                                            className={cn("h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm")}
+                                        />
+                                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                    </Field>
+                                );
+                            }}
+                        </form.Field>
 
-                            </form.Field>
-                            <span>to</span>
-                            <form.Field name="endTime">
-                                {(field) => {
-                                    const isInvalid =
-                                        field.state.meta.isTouched && !field.state.meta.isValid;
-                                    return (
-                                        <Field data-invalid={isInvalid}>
-                                            <Input
-                                                id={field.name}
-                                                type="time"
-                                                step="1"
-                                                value={field.state.value}
-                                                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none h-9 flex-1 rounded-sm"
-                                                onChange={(e) => field.handleChange(e.target.value)}
-                                            />
-                                            {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                                        </Field>
-                                    );
-                                }}
+                        <form.Field name="businessDays">
+                            {(field) => {
+                                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                                const visibleDays = BUSINESS_DAYS.slice(0, visibleCount);
+                                const hasMoreDays = visibleCount < BUSINESS_DAYS.length;
 
-                            </form.Field>
-                        </div>
-                    </Field>
-                    <form.Field name="coverImage">
-                        {(field) => {
-                            const file = field.state.value as File | null;
-                            const isInvalid =
-                                field.state.meta.isTouched && !field.state.meta.isValid;
-                            return (
-                                <Field data-invalid={isInvalid}>
-                                    <FieldLabel htmlFor={field.name}>Business Cover Image</FieldLabel>
-                                    <Input
-                                        id={field.name}
-                                        name={field.name}
-                                        type="file"
-                                        accept="image/*"
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) => handleSelectCoverImage(e, field)}
-                                        aria-invalid={isInvalid}
-                                        className={cn("h-9 placeholder:text-sm rounded-sm cursor-pointer")}
-                                    />
-                                    <FieldDescription>
-                                        recommended: square image, max 5MB
-                                    </FieldDescription>
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <FieldLabel htmlFor={field.name}>Business Days</FieldLabel>
+                                        <div className="flex flex-col gap-2">
+                                            {visibleDays.map((day) => {
+                                                const isSelected = field.state.value.some(
+                                                    (d) => d.fullName === day.fullName
+                                                );
 
-                                    {/* Preview */}
-                                    {file && coverImage && (
+                                                return (
+                                                    <div
+                                                        key={day.fullName}
+                                                        className="w-full bg-white p-4 flex items-center gap-3 justify-between"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const isAlreadySelected = field.state.value.some(
+                                                                    (d) => d.fullName === day.fullName
+                                                                );
+                                                                const updated = isAlreadySelected
+                                                                    ? field.state.value.filter((d) => d.fullName !== day.fullName)
+                                                                    : [...field.state.value, { ...day }];
+                                                                field.handleChange(updated as Business["businessDays"]);
+                                                            }}
+                                                            className="flex items-center gap-3"
+                                                        >
+                                                            <div className={cn(
+                                                                "w-12 h-12 rounded-full text-sm flex items-center justify-center font-semibold",
+                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                                            )}>
+                                                                {day.shortName}
+                                                            </div>
+                                                            <span className="font-semibold hidden md:block">{day.fullName}</span>
+                                                        </button>
 
-                                        <div className="max-w-[200px] h-[200px] rounded-lg">
-                                            <div className="w-full h-full relative rounded-lg">
-                                                <Image src={coverImage} className="object-cover rounded-lg" alt="Store Cover image preview" fill />
-                                            </div>
+                                                        {isSelected ? (
+                                                            <div className="flex gap-2 items-center">
+                                                                <form.Field name={`businessDays[${field.state.value.findIndex(d => d.fullName === day.fullName)}].openTime`}>
+                                                                    {(subField) => (
+                                                                        <Input
+                                                                            type="time"
+                                                                            step="60"
+                                                                            value={subField.state.value}
+                                                                            className="appearance-none bg-background h-9 rounded-sm"
+                                                                            onChange={(e) => subField.handleChange(e.target.value)}
+                                                                        />
+                                                                    )}
+                                                                </form.Field>
+                                                                <span>to</span>
+                                                                <form.Field name={`businessDays[${field.state.value.findIndex(d => d.fullName === day.fullName)}].closeTime`}>
+                                                                    {(subField) => (
+                                                                        <Input
+                                                                            type="time"
+                                                                            step="60"
+                                                                            value={subField.state.value}
+                                                                            className="appearance-none bg-background h-9 rounded-sm"
+                                                                            onChange={(e) => subField.handleChange(e.target.value)}
+                                                                        />
+                                                                    )}
+                                                                </form.Field>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-sm text-muted-foreground font-medium px-3 py-1 bg-muted rounded-sm">
+                                                                Closed
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {/* Add Day button */}
+                                            {hasMoreDays && (
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const nextDay = BUSINESS_DAYS[visibleCount];
+                                                        setVisibleCount((prev) => prev + 1);
+                                                        field.handleChange([
+                                                            ...field.state.value,
+                                                            { ...nextDay },
+                                                        ] as Business["businessDays"]);
+                                                    }}
+                                                    className="w-full h-10 mt-3 mb-6 border-border bg-none text-primary"
+                                                    variant="outline"
+                                                >
+                                                    <span className="text-lg leading-none">+</span> Add Day
+                                                </Button>
+                                            )}
                                         </div>
-
-                                    )}
-
-                                    {/* // @ts-expect-error - File validation causes deep type instantiation */}
-                                    {isInvalid && (
-                                        <FieldError errors={field.state.meta.errors as never} />
-                                    )}
-                                </Field>
-                            );
-                        }}
-                    </form.Field>
-                </FieldGroup>
+                                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                                    </Field>
+                                );
+                            }}
+                        </form.Field>
+                    </FieldGroup>
+                </div>
             </form>
-
-            <div className="py-4 w-full border-t border-border flex justify-between">
-                <Button type="button" className="h-10 px-4 py-2" variant="outline" onClick={() => {
-                    form.reset();
-                    setCoverImage(null);
-                }}>
-                    Reset
-                </Button>
-                <Button type="submit" className="h-10 px-4 py-2" form="business-details-form" >
-                    Next
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-            </div>
-
-
 
             {pendingCropFile && (
                 <ImageCropDialog
                     file={pendingCropFile.file}
                     isPrimary={pendingCropFile.isPrimary}
                     onCropConfirm={handleCropConfirm}
-                    onCancel={() => setPendingCropFile(null)}
+                    primaryAspect={pendingCropFile.primaryAspect}
+                    onCancel={handleCropCancel}
                 />
             )}
-        </div>
+        </>
     );
 };
 
