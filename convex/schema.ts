@@ -49,6 +49,13 @@ export default defineSchema({
         businessId: v.id("business")
       }).index("by_business", ["businessId"]),
 
+      businessSettings: defineTable({
+        allowBookingBeyondCloseTime: v.boolean(),
+        bufferTimeMinutes: v.float64(),
+        businessId: v.id("business"),
+        enableBusinessBufferTime: v.boolean(),
+      }).index("by_business", ["businessId"]),
+
       subscriptionTiers: defineTable({
         tier: v.union(v.literal("free")),
         price:v.number()
