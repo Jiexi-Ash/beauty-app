@@ -1,57 +1,59 @@
 "use client"
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupText,
-    InputGroupTextarea,
-} from "@/components/ui/input-group"
-import { Input } from '@/components/ui/input'
+
 import { cn } from '@/lib/utils'
-import { Business, BUSINESS_DAYS, businessSchema, useBusinessStore } from '@/stores/use-business'
-import { useForm } from '@tanstack/react-form'
-import { ArrowLeft, CameraIcon } from 'lucide-react'
-import Image from 'next/image'
+import { useBusinessStore } from '@/stores/use-business'
+
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import BusinessDetailForm from '@/components/onboarding/business-details-form'
 import PaymentForm from '@/components/onboarding/payment-form'
+import LaunchBusiness from '@/components/onboarding/launch-business'
+import { toast } from 'sonner'
 
 
 
 function Onboarding() {
     const [visibleCount, setVisibleCount] = useState(1);
-    const { business, setBusinessDetails, setSteps, step } = useBusinessStore()
+    const { setSteps, step, reset, business, payment } = useBusinessStore()
     const subHeader =
         step === "Details" ? "Set up your business" : step === "Payment" ? "Payment Integration" : "Launch & Review"
 
     const onboardingHeader = step === "Details" ? "Business Details" : step === "Payment" ? "Get Paid" : "Review and Launch"
     const stepCounter = step === "Details" ? "1" : step === "Payment" ? "2" : "3"
 
-    const form = useForm({
-        defaultValues: {
-            name: business?.name ?? "",
-            description: business?.description ?? "",
-            address: business?.address ?? "",
-            businessDays: [{ ...BUSINESS_DAYS[0] }] as Business["businessDays"],
-            coverImage: business?.coverImage ?? (null as File | null),
-        },
-        validators: {
-            onSubmit: businessSchema,
-        },
-        onSubmit: ({ value }) => {
-            setBusinessDetails({
-                address: value.address,
-                description: value.description,
-                name: value.name,
-                coverImage: value?.coverImage as File,
-                businessDays: value.businessDays,
+    const handlePreviousStep = () => {
+        if (step === "Payment") {
+            setSteps("Details")
+            return
+        }
+        if (step === "Launch") {
+            setSteps("Payment")
+            return
+        }
 
-            });
-            setSteps("Payment");
-        },
-    });
+    }
+
+    const handleLaunch = () => {
+        if (!business) {
+            toast.error("Missing business details", {
+                description: "Please complete your business details before launching.",
+            })
+            setSteps("Details")
+            return
+        }
+
+        if (!payment?.merchantId) {
+            toast.error("Missing payment details", {
+                description: "Please add your PayFast Merchant ID before launching.",
+            })
+            setSteps("Payment")
+            return
+        }
+
+    }
+
 
 
 
@@ -107,24 +109,39 @@ function Onboarding() {
 
                 {step === "Details" && <BusinessDetailForm setVisibleCount={setVisibleCount} visibleCount={visibleCount} />}
                 {step === "Payment" && <PaymentForm />}
+                {step === "Launch" && <LaunchBusiness />}
             </div>
 
             <footer className="sticky bottom-0 bg-white border-t border-border px-6 lg:px-8 2xl:px-0 h-32 flex items-center">
                 <div className="container mx-auto flex justify-between w-full max-w-xl">
-                    <Button
+                    {step === "Details" && (<Button
                         variant="ghost"
                         className="h-14 px-8"
-                        onClick={() => form.reset()}
-
+                        onClick={() => reset()}
                     >
                         Reset
-                    </Button>
+                    </Button>)}
+                    {step !== "Details" && (
+                        <Button
+                            variant="ghost"
+                            className="h-14 px-8"
+                            onClick={handlePreviousStep}
+
+                        >
+                            Back
+                        </Button>)}
                     <Button
-                        type="submit"
-                        form="business-details-form"
+                        type={step === "Details" || step === "Payment" ? "submit" : "button"}
+
+                        form={
+                            step === "Details" ? "business-details-form"
+                                : step === "Payment" ? "payment-form"
+                                    : undefined
+                        }
                         className="h-14 px-8"
+                        onClick={step === "Launch" ? handleLaunch : undefined}
                     >
-                        Next Step
+                        {step === "Launch" ? "Launch Store" : "Next Step"}
                     </Button>
                 </div>
             </footer>
