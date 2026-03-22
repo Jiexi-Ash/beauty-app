@@ -22,6 +22,9 @@ import { toast } from "sonner";
 import ImageCropDialog, { CroppedFile } from "../image-cropper";
 import { CameraIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useDebouncedCallback } from 'use-debounce'
 
 export const IMAGE_UPLOAD_GUIDELINES = {
     galleryImages: {
@@ -49,6 +52,9 @@ interface BusinessDetailFormProps {
     setVisibleCount: React.Dispatch<React.SetStateAction<number>>
 }
 const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFormProps) => {
+    const [suggestions, setSuggestions] = useState<{ description: string; placeId: string }[]>([])
+    const searchAddress = useAction(api.business.admin.searchAddressPublic);
+
     const { business, setBusinessDetails, setSteps } = useBusinessStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [coverImage, setCoverImage] = useState<string | null>(null);
@@ -64,7 +70,7 @@ const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFor
         defaultValues: {
             name: business?.name ?? "",
             description: business?.description ?? "",
-            address: business?.address ?? "",
+            address: business?.address ?? { address: "", placeId: "" },
             businessDays: [{ ...BUSINESS_DAYS[0] }] as Business["businessDays"],
             coverImage: business?.coverImage ?? (null as File | null),
         },
@@ -83,6 +89,19 @@ const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFor
             setSteps("Payment");
         },
     });
+
+    const handleAddressChange = useDebouncedCallback(async (value: string) => {
+        if (value.length < 3) {
+            setSuggestions([])
+            return
+        }
+        try {
+            const results = await searchAddress({ input: value })
+            setSuggestions(results)
+        } catch {
+            setSuggestions([])
+        }
+    }, 400)
 
     const handleSelectCoverImage = (e: React.ChangeEvent<HTMLInputElement>, field: unknown) => {
         const files = Array.from(e.target.files ?? []);
@@ -247,17 +266,45 @@ const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFor
                                 return (
                                     <Field data-invalid={isInvalid}>
                                         <FieldLabel htmlFor={field.name}>Address</FieldLabel>
-                                        <Input
-                                            id={field.name}
-                                            name={field.name}
-                                            value={field.state.value}
-                                            onBlur={field.handleBlur}
-                                            onChange={(e) => field.handleChange(e.target.value)}
-                                            aria-invalid={isInvalid}
-                                            placeholder="123 Main str, 1321"
-                                            autoComplete="off"
-                                            className={cn("h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm")}
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id={field.name}
+                                                value={field.state.value.address}
+                                                onBlur={() => {
+                                                    field.handleBlur()
+                                                    setTimeout(() => setSuggestions([]), 100)
+                                                }}
+                                                onChange={(e) => {
+                                                    field.handleChange({ ...field.state.value, address: e.target.value })
+                                                    handleAddressChange(e.target.value)
+                                                }}
+                                                aria-invalid={isInvalid}
+                                                placeholder="123 Main str, 1321"
+                                                autoComplete="off"
+                                                className={cn("h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm")}
+                                            />
+                                            {suggestions.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-border overflow-hidden">
+                                                    {suggestions.map((suggestion) => (
+                                                        <button
+                                                            key={suggestion.placeId}
+                                                            type="button"
+                                                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors border-b border-border last:border-0"
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault()
+                                                                field.handleChange({
+                                                                    address: suggestion.description,
+                                                                    placeId: suggestion.placeId,
+                                                                })
+                                                                setSuggestions([])
+                                                            }}
+                                                        >
+                                                            {suggestion.description}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                     </Field>
                                 );

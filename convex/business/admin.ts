@@ -12,6 +12,19 @@ import {PlacesClient} from "@googlemaps/places"
 const geospatial = new GeospatialIndex(components.geospatial)
 
 
+export const searchAddressPublic = action({
+    args: { input: v.string() },
+    handler: async (ctx, { input }) => {
+      const address = await ctx.runAction(internal.business.actions.searchAddress, { input });
+
+      const filteredAddress: { placeId: string; description: string }[] = address.filter(
+        (item): item is { placeId: string; description: string } => item !== null
+      );
+
+      return filteredAddress;
+    },
+  });
+
 export const createBusiness = action({
     args:{
         name:v.string(),

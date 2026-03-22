@@ -68,10 +68,16 @@ const businessDaySchema = z.object({
   { message: "Opening time must be before closing time" }
 )
 
+const addressSchema = z.object({
+  address:z.string(),
+  placeId:z.string()
+})
+
+export type Address = z.infer<typeof addressSchema>;
 export const businessSchema = z.object({
     name: z.string().min(3, "Business Name needs to be at least 3 characters long."),
     description: z.string().min(10, "Business description must have at least 10 characters").max(250),
-    address:z.string().min(10, "Business address must at least have 10 characters"),
+    address:addressSchema,
     businessDays: z.array(businessDaySchema),
     coverImage:z.custom<File | null>((val) => val instanceof File || val === null, {
         message: "Invalid file type",
@@ -106,7 +112,7 @@ interface BusinessState {
   reset: () => void;
 }
 
-export const useBusinessStore = create<BusinessState>((set, get) => ({
+export const useBusinessStore = create<BusinessState>((set) => ({
 step: "Details",
 business: null,
 payment: null,

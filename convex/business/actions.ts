@@ -26,7 +26,7 @@ export const searchAddress = internalAction({
 
         const results = await Promise.all((suggestions ?? []).map(async (suggestion) => {
             const placeId = suggestion.placePrediction?.placeId
-            const text = suggestion.placePrediction?.text
+            const text = suggestion.placePrediction?.text?.text
 
             if (!placeId) return null
 

@@ -90,7 +90,7 @@ function LaunchBusiness() {
                         </div>
                         <div className="flex gap-2 items-center">
                             <MapPinIcon className="size-4 text-gray-300" />
-                            <p className="text-xs truncate">{business?.address}</p>
+                            <p className="text-xs truncate">{business?.address.address}</p>
                         </div>
                     </CardContent>
                 </Card>
