@@ -1,6 +1,6 @@
-import {  action, mutation, query, QueryCtx } from "../_generated/server";
+import {  action, internalMutation, mutation, query, QueryCtx } from "../_generated/server";
 import { GeospatialIndex } from "@convex-dev/geospatial";
-import { components } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { Id } from "../_generated/dataModel";
 import { ConvexError, v } from "convex/values";
@@ -12,19 +12,58 @@ import {PlacesClient} from "@googlemaps/places"
 const geospatial = new GeospatialIndex(components.geospatial)
 
 
-export const createBusiness = mutation({
+export const createBusiness = action({
     args:{
         name:v.string(),
         description:v.string(),
         address:v.string(),
         coverImageStorageId:v.id("_storage"),
-        latitude:v.float64(),
-        longitude:v.float64(),
         merchantId:v.int64(),
-        businessDays:v.array(businessDayValidator)
+        businessDays:v.array(businessDayValidator),
+        placesId:v.string()
     },
-    handler: async (ctx, { name,address,coverImageStorageId,description,latitude,longitude, businessDays, merchantId }) => {
-        const user = await getCurrentUserOrThrow(ctx)
+    handler: async (ctx, { name,address,coverImageStorageId,description, placesId, businessDays, merchantId }) => {
+        const identity = await ctx.auth.getUserIdentity()
+
+        if (identity === null) {
+            throw new ConvexError("User is unauthenticated")
+        }
+
+        const coordinates = await ctx.runAction(internal.business.actions.getBusinessCoordinates, {
+            placesId:placesId
+        })
+
+        if (!coordinates) throw new ConvexError("Could not get coordinates");
+
+       const businessId:Id<"business"> =  await ctx.runMutation(internal.business.admin.saveBusiness, {
+            address,
+            businessDays,
+            coverImageStorageId,
+            description,
+            latitude:coordinates.latitude,
+            longitude:coordinates.longitude,
+            merchantId,
+            name,
+        });
+
+        return businessId
+        
+        
+    }
+})
+
+export const saveBusiness = internalMutation({
+    args:{
+        name:v.string(),
+        description:v.string(),
+        address:v.string(),
+        coverImageStorageId:v.id("_storage"),
+        merchantId:v.int64(),
+        businessDays:v.array(businessDayValidator),
+        latitude:v.number(),
+        longitude:v.number(),
+    },
+    handler: async (ctx, {name,address,coverImageStorageId,description, latitude, longitude, businessDays, merchantId }) => {
 
         const businessSlug = name
             .toLowerCase()
@@ -44,7 +83,7 @@ export const createBusiness = mutation({
                 }
             }
 
-        
+        const user = await getCurrentUserOrThrow(ctx)
         const userBusiness = await getBusinessByUserId(ctx,user._id)
 
         if (userBusiness) throw new ConvexError("User already has a business.")
