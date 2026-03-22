@@ -1,9 +1,107 @@
-import {  query, QueryCtx } from "../_generated/server";
-import { getCurrentUser } from "../users";
+import {  mutation, query, QueryCtx } from "../_generated/server";
+import { GeospatialIndex } from "@convex-dev/geospatial";
+import { components } from "../_generated/api";
+import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { Id } from "../_generated/dataModel";
+import { ConvexError, v } from "convex/values";
+import { businessDayValidator } from "../schema";
+import { BUSINESS_DAYS } from "../../constants";
 
 
+const geospatial = new GeospatialIndex(components.geospatial)
 
+export const createBusiness = mutation({
+    args:{
+        name:v.string(),
+        description:v.string(),
+        address:v.string(),
+        coverImageStorageId:v.id("_storage"),
+        latitude:v.float64(),
+        longitude:v.float64(),
+        merchantId:v.int64(),
+        businessDays:v.array(businessDayValidator)
+    },
+    handler: async (ctx, { name,address,coverImageStorageId,description,latitude,longitude, businessDays, merchantId }) => {
+        const user = await getCurrentUserOrThrow(ctx)
+
+        const businessSlug = name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+
+            for (const day of businessDays) {
+                const isValidDay = BUSINESS_DAYS.some(
+                    d => d.shortName === day.shortName && d.fullName === day.fullName
+                )
+                if (!isValidDay) throw new ConvexError(`Invalid business day: ${day.shortName}`)
+                
+
+                if (day.openTime >= day.closeTime) {
+                    throw new ConvexError(`Opening time must be before closing time for ${day.fullName}`)
+                }
+            }
+
+        
+        const userBusiness = await getBusinessByUserId(ctx,user._id)
+
+        if (userBusiness) throw new ConvexError("User already has a business.")
+
+        const businessBySlug = await ctx.db.query("business").withIndex("by_slug", q => q.eq("slug",businessSlug)).first()
+
+        if (businessBySlug) throw new ConvexError("A business with that name already exists.")
+        
+        const subscription = await ctx.db.query("subscriptionTiers").withIndex("by_tier", q=> q.eq("tier", "free")).unique()
+
+        if (!subscription) throw new ConvexError("Error pulling the subscription tiers, please try again later.")
+
+        const businessId = await ctx.db.insert("business", {
+            ownerId:user._id,
+            name,
+            description,
+            location:address,
+            coverImageStorageId,
+            latitude,
+            longitude,
+            slug:businessSlug,
+            merchantId,
+            subscriptionTierId: subscription._id,
+            timezone: "Africa/Johannesburg",
+            visibility: "hidden",
+        })
+
+        await geospatial.insert(
+            ctx,
+            businessId,
+            {
+                latitude:latitude,
+                longitude:longitude
+            },
+            {slug:businessSlug}
+        )
+
+        await ctx.db.insert("businessSettings", {
+            businessId,
+            allowBookingBeyondCloseTime:false,
+            bufferTimeMinutes: 0,
+            enableBusinessBufferTime:false
+        })
+
+        await Promise.all(
+            businessDays.map(day => ctx.db.insert("businessHours", {
+                businessId,
+                closeTime: day.closeTime,
+                fullName: day.fullName,
+                openTime: day.openTime,
+                shortName: day.shortName,
+            }))
+        )
+
+        return businessId
+        
+        
+    }
+})
 export const getUserBusiness = query({
     handler: async (ctx) => {
         const user = await getCurrentUser(ctx)

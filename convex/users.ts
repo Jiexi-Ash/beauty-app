@@ -42,6 +42,8 @@ export const getCurrentUserOrThrow = async (ctx:QueryCtx) => {
     const user =  await getCurrentUser(ctx)
 
     if (!user) throw new ConvexError("User not found")
+
+    return user
 }
 
 export const getCurrentUser = async (ctx:QueryCtx) => {

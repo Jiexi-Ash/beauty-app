@@ -22,24 +22,17 @@ export default defineSchema({
           description: v.optional(v.string()),
           coverImageStorageId: v.id("_storage"),
           ownerId: v.id("users"),
-          openingTime: v.number(),
-          closingTime: v.number(),
           subscriptionTierId: v.id("subscriptionTiers"),
-          likes: v.number(),
           timezone: v.literal("Africa/Johannesburg"),
+          merchantId: v.int64(),
           visibility: v.union(
             v.literal("hidden"),
             v.literal("visible"),
             v.literal("offline")
           ),
-          LastVerified: v.number(),// This represents Date
-          businessDays: v.array(
-              v.union(
-                  v.literal("monday"), v.literal("tuesday"), v.literal("wednesday"),
-                  v.literal("thursday"), v.literal("friday"), v.literal("saturday"), v.literal("sunday")
-              )
-          ),
+          LastVerified: v.optional(v.number()),
       }).index("by_owner", ["ownerId"])
+      .index("by_slug", ["slug"])
       .searchIndex("search_index", {
         searchField: "name",
       }),
@@ -56,9 +49,23 @@ export default defineSchema({
         enableBusinessBufferTime: v.boolean(),
       }).index("by_business", ["businessId"]),
 
+      businessHours: defineTable({
+        businessId:v.id("business"),
+        fullName: v.string(),
+        shortName: v.string(),
+        openTime: v.string(),
+        closeTime: v.string(),
+      }).index("by_businessId", ["businessId"]),
+
       subscriptionTiers: defineTable({
         tier: v.union(v.literal("free")),
         price:v.number()
       }).index("by_tier", ["tier"])
 })
 
+export const businessDayValidator = v.object({
+  fullName: v.string(),
+  shortName: v.string(),
+  openTime: v.string(),
+  closeTime: v.string(),
+})

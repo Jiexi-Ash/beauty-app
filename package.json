@@ -12,6 +12,7 @@
     "@base-ui/react": "^1.2.0",
     "@clerk/backend": "^3.2.0",
     "@clerk/nextjs": "^7.0.4",
+    "@convex-dev/geospatial": "^0.2.1",
     "@convex-dev/react-query": "^0.1.0",
     "@tanstack/react-form": "^1.28.5",
     "@tanstack/react-form-nextjs": "^1.28.4",
