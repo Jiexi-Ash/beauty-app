@@ -60,8 +60,8 @@ export const saveBusiness = internalMutation({
         coverImageStorageId:v.id("_storage"),
         merchantId:v.int64(),
         businessDays:v.array(businessDayValidator),
-        latitude:v.number(),
-        longitude:v.number(),
+        latitude:v.float64(),
+        longitude:v.float64(),
     },
     handler: async (ctx, {name,address,coverImageStorageId,description, latitude, longitude, businessDays, merchantId }) => {
 
