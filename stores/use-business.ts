@@ -94,8 +94,15 @@ export const businessSchema = z.object({
 })
 
 export const paymentSchema = z.object({
-  merchantId: z.string().max(10),
+  merchantId: z.number()
+    .int("Merchant ID must be a whole number")
+    .positive("Merchant ID must be a positive number")
+    .max(99999999, "Merchant ID must be at most 8 digits"),
+}).refine((data) => data.merchantId !== undefined && data.merchantId !== null, {
+  message: "Merchant ID is required",
+  path: ["merchantId"],
 });
+
 
 
 

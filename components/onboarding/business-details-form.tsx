@@ -250,7 +250,7 @@ const BusinessDetailForm = ({ setVisibleCount, visibleCount }: BusinessDetailFor
                                             />
                                             <InputGroupAddon align="block-end">
                                                 <InputGroupText className="tabular-nums">
-                                                    {field.state.value.length}/150 characters
+                                                    {field.state.value.length}/250 characters
                                                 </InputGroupText>
                                             </InputGroupAddon>
                                         </InputGroup>

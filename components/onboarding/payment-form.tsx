@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+
 import {
     Field,
     FieldError,
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { paymentSchema, useBusinessStore } from "@/stores/use-business";
 
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, ArrowRight, CircleAlertIcon, CreditCard, LockIcon, ZapIcon } from "lucide-react";
+import { CircleAlertIcon, CreditCard, LockIcon, ZapIcon } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 
 
@@ -19,16 +19,18 @@ const PaymentForm = () => {
     const { payment, setSteps, setPaymentDetails } = useBusinessStore();
     const form = useForm({
         defaultValues: {
-            merchantId: payment?.merchantId ?? ""
+            merchantId: payment?.merchantId ?? undefined as number | undefined,
         },
         validators: {
             onSubmit: paymentSchema,
         },
         onSubmit: ({ value }) => {
-            setPaymentDetails({
-                merchantId: value.merchantId
-            });
-            setSteps("Launch");
+            if (value.merchantId) {
+                setPaymentDetails({
+                    merchantId: value.merchantId
+                })
+                setSteps("Launch");
+            }
         },
     });
     return (
@@ -59,11 +61,33 @@ const PaymentForm = () => {
                                                 <Input
                                                     id={field.name}
                                                     name={field.name}
-                                                    value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)}
+                                                    value={field.state.value ?? ""}
+                                                    onBlur={field.handleBlur}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+
+                                                        field.handleChange(
+                                                            v === ""
+                                                                ? undefined
+                                                                : Number(v)
+                                                        );
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (!/[\d\b]/.test(e.key) && !["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                                                            e.preventDefault()
+                                                        }
+                                                    }}
+                                                    onPaste={(e) => {
+                                                        const pasted = e.clipboardData.getData("text")
+                                                        if (!/^\d+$/.test(pasted)) e.preventDefault()
+                                                    }}
                                                     aria-invalid={isInvalid}
-                                                    placeholder="e.g. 10000100" autoComplete="off"
-                                                    className="h-9 rounded-smh-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm "
+                                                    placeholder="e.g. 10000100"
+                                                    autoComplete="off"
+                                                    className="h-9 rounded-sm bg-[#F3F3F4] placeholder:text-sm"
+                                                    type="number"
                                                 />
+                                                {isInvalid && <FieldError errors={field.state.meta.errors} />}
 
                                                 <div className="bg-secondary p-3">
                                                     <div className="flex gap-2">

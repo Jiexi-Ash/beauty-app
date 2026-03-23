@@ -24,7 +24,7 @@ export default defineSchema({
           ownerId: v.id("users"),
           subscriptionTierId: v.id("subscriptionTiers"),
           timezone: v.literal("Africa/Johannesburg"),
-          merchantId: v.int64(),
+          merchantId: v.number(),
           visibility: v.union(
             v.literal("hidden"),
             v.literal("visible"),

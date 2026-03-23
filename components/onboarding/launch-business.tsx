@@ -1,58 +1,40 @@
 "use client"
-import { Business, BUSINESS_DAYS, useBusinessStore } from '@/stores/use-business'
+import { Business, useBusinessStore } from '@/stores/use-business'
 import { Card, CardContent } from '../ui/card'
 import Image from 'next/image'
-import { ArrowLeft, Calendar1Icon, CalendarCheck, CalendarIcon, CheckCircle2, ChevronRightIcon, Clock, ClockIcon, CreditCard, DotIcon, MapPin, MapPinIcon, PencilIcon, PinIcon, StoreIcon } from 'lucide-react'
-import { Button } from '../ui/button'
-import { useEffect, useMemo } from 'react'
+import { CalendarCheck, CalendarIcon, ChevronRightIcon, ClockIcon, MapPinIcon, PencilIcon, StoreIcon } from 'lucide-react'
 import { Separator } from '../ui/separator'
 
+const groupBusinessDays = (days: Business["businessDays"]) => {
+    if (!days?.length) return [];
+
+    const groups: { start: string; end: string; openTime: string; closeTime: string }[] = [];
+    let current = days[0];
+    let groupStart = current;
+
+    for (let i = 1; i < days.length; i++) {
+        const day = days[i];
+        const sameTime = day.openTime === current.openTime && day.closeTime === current.closeTime;
+
+        if (sameTime) {
+            current = day;
+        } else {
+            groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
+            groupStart = day;
+            current = day;
+        }
+    }
+    groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
+
+    return groups;
+};
+
 function LaunchBusiness() {
-    const { business, payment, setSteps } = useBusinessStore()
-
-
-    const coverImageFile = business?.coverImage ?? null;
-    const coverImage = useMemo(() => {
-        if (!coverImageFile) return null;
-        return URL.createObjectURL(coverImageFile);
-    }, [coverImageFile]);
-
-    useEffect(() => {
-        return () => { if (coverImage) URL.revokeObjectURL(coverImage); };
-    }, [coverImage]);
-
-    const sortedDays = useMemo(() =>
-        BUSINESS_DAYS.filter(day =>
-            business?.businessDays.includes(day as Business["businessDays"][number])
-        ), [business?.businessDays]);
+    const { business, setSteps } = useBusinessStore()
 
     const coverImageUrl = business?.coverImage
         ? URL.createObjectURL(business.coverImage)
         : null;
-
-    const groupBusinessDays = (days: Business["businessDays"]) => {
-        if (!days?.length) return [];
-
-        const groups: { start: string; end: string; openTime: string; closeTime: string }[] = [];
-        let current = days[0];
-        let groupStart = current;
-
-        for (let i = 1; i < days.length; i++) {
-            const day = days[i];
-            const sameTime = day.openTime === current.openTime && day.closeTime === current.closeTime;
-
-            if (sameTime) {
-                current = day;
-            } else {
-                groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
-                groupStart = day;
-                current = day;
-            }
-        }
-        groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
-
-        return groups;
-    };
 
     return (
         <div className="w-full max-w-xl">

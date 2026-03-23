@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { useBusinessStore } from '@/stores/use-business'
 
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -11,12 +11,23 @@ import BusinessDetailForm from '@/components/onboarding/business-details-form'
 import PaymentForm from '@/components/onboarding/payment-form'
 import LaunchBusiness from '@/components/onboarding/launch-business'
 import { toast } from 'sonner'
+import { useAction } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { ConvexError } from 'convex/values'
+import { useConvexMutation } from '@convex-dev/react-query'
+import { useRouter } from 'next/navigation'
 
 
 
 function Onboarding() {
+    const router = useRouter()
+    const [isSubmitting, setSubmitting] = useState(false)
     const [visibleCount, setVisibleCount] = useState(1);
     const { setSteps, step, reset, business, payment } = useBusinessStore()
+
+    const createBusiness = useAction(api.business.admin.createBusiness);
+
+    const generateUploadUrl = useConvexMutation(api.business.admin.generateUploadUrl);
     const subHeader =
         step === "Details" ? "Set up your business" : step === "Payment" ? "Payment Integration" : "Launch & Review"
 
@@ -35,7 +46,7 @@ function Onboarding() {
 
     }
 
-    const handleLaunch = () => {
+    const handleLaunch = async () => {
         if (!business) {
             toast.error("Missing business details", {
                 description: "Please complete your business details before launching.",
@@ -50,6 +61,45 @@ function Onboarding() {
             })
             setSteps("Payment")
             return
+        }
+
+        try {
+            setSubmitting(true)
+            const uploadCoverImageUrl = await generateUploadUrl();
+            const coverImageResult = await fetch(uploadCoverImageUrl, {
+                method: "POST",
+                headers: { "Content-Type": business.coverImage!.type },
+                body: business.coverImage,
+            });
+
+            if (!coverImageResult.ok) {
+                throw new Error("Failed to upload logo");
+            }
+
+            const { storageId } = await coverImageResult.json();
+
+            await createBusiness({
+                name: business.name,
+                merchantId: payment.merchantId,
+                address: business.address.address,
+                placesId: business.address.placeId,
+                businessDays: business.businessDays,
+                coverImageStorageId: storageId,
+                description: business.description,
+            })
+
+            reset()
+            router.push("/dashboard")
+
+        } catch (error) {
+            const errorMessage =
+                error instanceof ConvexError
+                    ? (error.data as { message: string }).message
+                    : "An unexpected error occurred";
+
+            toast.error(errorMessage);
+        } finally {
+            setSubmitting(false)
         }
 
     }
@@ -132,6 +182,7 @@ function Onboarding() {
                         </Button>)}
                     <Button
                         type={step === "Details" || step === "Payment" ? "submit" : "button"}
+                        disabled={isSubmitting}
 
                         form={
                             step === "Details" ? "business-details-form"
@@ -141,7 +192,8 @@ function Onboarding() {
                         className="h-14 px-8"
                         onClick={step === "Launch" ? handleLaunch : undefined}
                     >
-                        {step === "Launch" ? "Launch Store" : "Next Step"}
+                        {isSubmitting ? <Loader2 className="text-white size-5 animate-spin" /> : step === "Launch" ? "Launch Store" : "Next Step"}
+
                     </Button>
                 </div>
             </footer>

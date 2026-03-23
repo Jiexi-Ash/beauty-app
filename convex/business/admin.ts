@@ -11,6 +11,15 @@ import {PlacesClient} from "@googlemaps/places"
 
 const geospatial = new GeospatialIndex(components.geospatial)
 
+export const generateUploadUrl = mutation({
+    args: {},
+    handler: async (ctx) => {
+      await getCurrentUserOrThrow(ctx);
+
+      return await ctx.storage.generateUploadUrl();
+    },
+  })
+
 
 export const searchAddressPublic = action({
     args: { input: v.string() },
@@ -31,7 +40,7 @@ export const createBusiness = action({
         description:v.string(),
         address:v.string(),
         coverImageStorageId:v.id("_storage"),
-        merchantId:v.int64(),
+        merchantId:v.number(),
         businessDays:v.array(businessDayValidator),
         placesId:v.string()
     },
@@ -71,7 +80,7 @@ export const saveBusiness = internalMutation({
         description:v.string(),
         address:v.string(),
         coverImageStorageId:v.id("_storage"),
-        merchantId:v.int64(),
+        merchantId:v.number(),
         businessDays:v.array(businessDayValidator),
         latitude:v.float64(),
         longitude:v.float64(),
