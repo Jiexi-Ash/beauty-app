@@ -12,9 +12,7 @@ async function OnboardingPage() {
     if (business) redirect("/dashboard")
 
     return (
-        <div className="w-full min-h-screen">
-            <Onboarding />
-        </div>
+        <Onboarding />
     )
 }
 

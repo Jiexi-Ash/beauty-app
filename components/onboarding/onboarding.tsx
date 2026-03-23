@@ -106,7 +106,7 @@ function Onboarding() {
 
 
     return (
-        <div className="w-full min-h-full bg-[#F5F5F5] flex flex-col justify-center">
+        <div className="w-full min-h-screen bg-[#F5F5F5] flex flex-col justify-center">
             <header className="h-16 flex items-center bg-white w-full sticky top-0 z-50">
                 <div className="container mx-auto flex px-6 lg:px-8  2xl:px-0">
                     <Link href="/" className="flex items-center gap-3">
