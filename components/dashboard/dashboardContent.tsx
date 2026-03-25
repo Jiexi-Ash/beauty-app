@@ -1,16 +1,73 @@
-"use client"
+"use client";
 
 import { Doc } from "@/convex/_generated/dataModel";
-
-
+import {
+  Banknote,
+  Bell,
+  CalendarCheck,
+  Search,
+  Settings,
+  Star,
+  UserPlus,
+} from "lucide-react";
+import Image from "next/image";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import AnalyticCards from "./analytics-cards";
 
 interface DashboardContentProps {
-    business: Doc<"business">
+  business: Doc<"business">;
+  coverImageUrl: string | null;
 }
-function DashboardContent({ business }: DashboardContentProps) {
-    return (
-        <div className="min-h-screen w-full">{business.name}</div>
-    )
+function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
+  return (
+    <div className="min-h-screen w-full">
+      <div className="flex w-full justify-between items-center top-0 sticky border-b border-border shadow-sm px-6 z-50 bg-white">
+        <div className="flex gap-3 items-center h-20">
+          <div className="relative w-12 h-12 rounded-full">
+            <Image
+              src={coverImageUrl ?? "/salon-image-placeholder"}
+              alt={`${business.name} cover image`}
+              fill
+              className="rounded-full object-cover"
+            />
+          </div>
+
+          <h1 className="text-base text-primary font-medium">
+            {business.name}
+          </h1>
+        </div>
+
+        <div className="flex gap-4 items-center">
+          <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
+        </div>
+      </div>
+      <div className="flex justify-between items-center px-6 py-4">
+        <div>
+          <h1 className="font-bold text-lg">Welcome Back</h1>
+          <p className="text-xs text-foreground">
+            {"Here's what's been happening lately"}
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-between items-center px-6 py-4">
+        <div
+          className="border w-full max-w-[250px] sm:max-w-[320px] flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-md
+  transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+        >
+          <Search className="size-4 text-gray-400 shrink-0" />
+          <Input
+            placeholder="Search appointments, clients..."
+            className="w-full text-sm border-0 shadow-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+          />
+        </div>
+        <Button>Generate Report</Button>
+      </div>
+      <AnalyticCards />
+    </div>
+  );
 }
 
-export default DashboardContent
+export default DashboardContent;

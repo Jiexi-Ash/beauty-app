@@ -16,7 +16,10 @@ async function DashboardPage() {
   if (!business) redirect("/onboarding");
   return (
     <div className="w-full min-h-screen justify-center items-center bg-[#F5F5F5]">
-      <DashboardContent business={business} />
+      <DashboardContent
+        business={business}
+        coverImageUrl={business.coverImageUrl}
+      />
 
       <DashboardFooter />
     </div>
