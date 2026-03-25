@@ -16,6 +16,7 @@ import { Card, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import AnalyticCards from "./analytics-cards";
+import Revenue from "./revenue";
 
 interface DashboardContentProps {
   business: Doc<"business">;
@@ -66,6 +67,8 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
         <Button>Generate Report</Button>
       </div>
       <AnalyticCards />
+
+      <Revenue />
     </div>
   );
 }
