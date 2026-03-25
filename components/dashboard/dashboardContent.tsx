@@ -1,23 +1,15 @@
 "use client"
 
-import { api } from "@/convex/_generated/api";
-import { Preloaded, usePreloadedQuery } from "convex/react"
-import Onboarding from "../onboarding";
-import { useState } from "react";
+import { Doc } from "@/convex/_generated/dataModel";
+
+
 
 interface DashboardContentProps {
-    preloadDashboard: Preloaded<typeof api.business.admin.getUserBusiness>;
+    business: Doc<"business">
 }
-function DashboardContent({ preloadDashboard }: DashboardContentProps) {
-    const business = usePreloadedQuery(preloadDashboard)
-
-    if (!business) {
-        return <div className="w-full h-full flex justify-center items-center">
-            <Onboarding open={!business}/>
-        </div>
-    }
+function DashboardContent({ business }: DashboardContentProps) {
     return (
-        <div>DashboardContent</div>
+        <div className="min-h-screen w-full">{business.name}</div>
     )
 }
 
