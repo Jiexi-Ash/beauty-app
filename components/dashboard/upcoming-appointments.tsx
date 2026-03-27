@@ -29,7 +29,7 @@ const appointments = [
 
 function UpcomingAppointments() {
   return (
-    <Card className="mx-6 rounded my-6">
+    <Card className="mx-6 rounded mt-3 mb-6">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>

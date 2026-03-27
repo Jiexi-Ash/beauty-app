@@ -44,7 +44,7 @@ function Revenue() {
   const [selectedPeriod, setPeriod] = useState<Period>("Month");
   return (
     <div className="px-6">
-      <Card className="rounded mt-6">
+      <Card className="rounded mt-3">
         <CardHeader>
           <div className="w-full flex items-center justify-between">
             <div className="flex flex-col gap-1">
