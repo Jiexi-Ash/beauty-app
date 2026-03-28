@@ -51,7 +51,7 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
         <div>
           <h1 className="font-bold text-lg">Welcome Back</h1>
           <p className="text-xs text-foreground">
-            {"Here's what's been happening lately"}
+            {"Here's what's been happening"}
           </p>
         </div>
       </div>
@@ -68,9 +68,9 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
         </div>
         <Button>Generate Report</Button>
       </div>
-      <div className="w-full px-6">
+      <div className="w-full px-6 space-y-3">
         <AnalyticCards />
-        <div className="flex w-full flex-col gap-3  md:gap-6 md:flex-row mt-3 lg:h-[500px]">
+        <div className="flex w-full flex-col gap-3 md:flex-row lg:h-[450px]">
           <Revenue />
           <ServiceHighlight />
         </div>

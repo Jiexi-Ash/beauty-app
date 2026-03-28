@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 
 function ServiceHighlight() {
   return (
-    <Card className="rounded lg:w-[300px] bg-primary">
+    <Card className="rounded-lg lg:w-[300px] bg-primary">
       <CardHeader>
         <CardTitle className="text-primary-foreground font-bold">
           Service Highlight
