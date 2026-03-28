@@ -68,12 +68,14 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
         </div>
         <Button>Generate Report</Button>
       </div>
-      <AnalyticCards />
-      <div className="flex  flex-col gap-3">
-        <Revenue />
-        <ServiceHighlight />
+      <div className="w-full px-6">
+        <AnalyticCards />
+        <div className="flex w-full flex-col gap-3  md:gap-6 md:flex-row mt-3 lg:h-[500px]">
+          <Revenue />
+          <ServiceHighlight />
+        </div>
+        <UpcomingAppointments />
       </div>
-      <UpcomingAppointments />
     </div>
   );
 }

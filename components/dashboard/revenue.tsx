@@ -31,6 +31,12 @@ const chartData = [
   { month: "April", revenue: 13500 },
   { month: "May", revenue: 9800 },
   { month: "June", revenue: 15000 },
+  { month: "July", revenue: 15000 },
+  { month: "August", revenue: 9000 },
+  { month: "September", revenue: 7000 },
+  { month: "October", revenue: 10000 },
+  { month: "Novermber", revenue: 20000 },
+  { month: "December", revenue: 5000 },
 ];
 
 type Period = "Week" | "Month" | "Year";
@@ -43,8 +49,8 @@ const chartConfig = {
 function Revenue() {
   const [selectedPeriod, setPeriod] = useState<Period>("Month");
   return (
-    <div className="px-6">
-      <Card className="rounded mt-3">
+    <div className="flex-1 h-full">
+      <Card className="rounded h-full">
         <CardHeader>
           <div className="w-full flex items-center justify-between">
             <div className="flex flex-col gap-1">
@@ -74,8 +80,8 @@ function Revenue() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+        <CardContent className="flex-1 min-h-0 px-4">
+          <ChartContainer config={chartConfig} className="h-full w-full">
             <BarChart accessibilityLayer data={chartData}>
               <XAxis
                 dataKey="month"
