@@ -19,7 +19,7 @@ const navlinks = [
 function DashboardFooter() {
   const pathname = usePathname();
   return (
-    <footer className="sticky bottom-0 lg:hidden bg-white z-50  border-t border-b border-border grid grid-cols-4 gap-4 px-6">
+    <footer className="sticky bottom-0 lg:hidden bg-white z-50  border-t  border-border grid grid-cols-4 gap-4 px-6">
       {navlinks.map((link) => (
         <Navlink
           key={link.label}
