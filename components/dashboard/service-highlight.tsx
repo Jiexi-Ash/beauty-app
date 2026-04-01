@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "../ui/button";
 
 function ServiceHighlight() {
   return (
@@ -16,18 +17,29 @@ function ServiceHighlight() {
         </CardTitle>
         <CardDescription className="text-muted text-xs">{`box braids is your top performing service this week with 14 bookings`}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
-          <span className="text-muted font-medium">Box Braids</span>
-          <Badge className="bg-primary">14 Bookings</Badge>
+      <CardContent className="flex flex-col h-full">
+        <div className="flex-1 space-y-2">
+          <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
+            <span className="text-muted font-medium">Box Braids</span>
+            <Badge className="bg-primary">14 Bookings</Badge>
+          </div>
+          <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
+            <span className="text-muted font-medium">Sticth Braids</span>
+            <Badge className="bg-primary">8 Bookings</Badge>
+          </div>
+          <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
+            <span className="text-muted font-medium">Fade Cut</span>
+            <Badge className="bg-primary">6 Bookings</Badge>
+          </div>
         </div>
-        <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
-          <span className="text-muted font-medium">Sticth Braids</span>
-          <Badge className="bg-primary">8 Bookings</Badge>
-        </div>
-        <div className="bg-white/25 flex items-center justify-between p-2 rounded-lg">
-          <span className="text-muted font-medium">Fade Cut</span>
-          <Badge className="bg-primary">6 Bookings</Badge>
+
+        <div className="mt-4">
+          <Button
+            className="bg-primary-foreground text-primary w-full cursor-pointer"
+            size="lg"
+          >
+            Manage services
+          </Button>
         </div>
       </CardContent>
     </Card>
