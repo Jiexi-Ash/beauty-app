@@ -45,7 +45,7 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           </p>
         </div>
       </div>
-      <div className="flex justify-between items-center px-6 py-4">
+      <div className="hidden lg:flex justify-between items-center px-6 py-4">
         <div className="border w-full max-w-[250px] sm:max-w-[320px] flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-md transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
           <Search className="size-4 text-gray-400 shrink-0" />
           <Input
@@ -61,7 +61,7 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           Add New Booking
         </Button>
       </div>
-      <div className="w-full px-6 space-y-3">
+      <div className="w-full px-6 space-y-4 lg:space-y-3">
         <AnalyticCards />
         <div className="flex w-full flex-col gap-3 md:flex-row lg:h-[450px]">
           <Revenue />
