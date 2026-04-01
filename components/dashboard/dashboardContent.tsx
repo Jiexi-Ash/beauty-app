@@ -17,7 +17,7 @@ interface DashboardContentProps {
 function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
   return (
     <div className="min-h-screen w-full">
-      <div className="flex w-full justify-between items-center top-0 sticky border-b border-border shadow-sm px-6 z-50 bg-white">
+      <header className="flex w-full justify-between items-center top-0 sticky border-border shadow-sm px-6 z-50 bg-white">
         <div className="flex gap-3 items-center h-20">
           <div className="relative w-12 h-12 rounded-full">
             <Image
@@ -28,15 +28,13 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
             />
           </div>
 
-          <h1 className="text-base text-primary font-medium">
-            {business.name}
-          </h1>
+          <h1 className="text-base text-primary font-bold">{business.name}</h1>
         </div>
 
         <div className="flex gap-4 items-center">
           <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
         </div>
-      </div>
+      </header>
       <div className="flex justify-between items-center px-6 py-4">
         <div>
           <h1 className="font-bold text-lg">Welcome Back</h1>
