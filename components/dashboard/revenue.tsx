@@ -6,7 +6,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis } from "recharts";
+import { Bar, BarChart, LabelList, XAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -93,11 +93,12 @@ function Revenue() {
               <ChartTooltip
                 content={
                   <ChartTooltipContent
+                    cursor={false}
                     formatter={(value) => `R${Number(value).toFixed(2)}`}
                   />
                 }
               />
-              <Bar dataKey="revenue" fill="var(--primary)" radius={4} />
+              <Bar dataKey="revenue" fill="var(--primary)" radius={10} />
             </BarChart>
           </ChartContainer>
         </CardContent>

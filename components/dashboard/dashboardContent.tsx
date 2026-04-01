@@ -1,18 +1,8 @@
 "use client";
 
 import { Doc } from "@/convex/_generated/dataModel";
-import {
-  Banknote,
-  Bell,
-  CalendarCheck,
-  Search,
-  Settings,
-  Star,
-  UserPlus,
-} from "lucide-react";
+import { Bell, PlusIcon, Search } from "lucide-react";
 import Image from "next/image";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import AnalyticCards from "./analytics-cards";
@@ -56,17 +46,20 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
         </div>
       </div>
       <div className="flex justify-between items-center px-6 py-4">
-        <div
-          className="border w-full max-w-[250px] sm:max-w-[320px] flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-md
-  transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
-        >
+        <div className="border w-full max-w-[250px] sm:max-w-[320px] flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-md transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
           <Search className="size-4 text-gray-400 shrink-0" />
           <Input
             placeholder="Search appointments, clients..."
             className="w-full text-sm border-0 shadow-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
           />
         </div>
-        <Button>Generate Report</Button>
+        <Button
+          className="text-sm cursor-pointer hover:bg-primary/70"
+          size="lg"
+        >
+          <PlusIcon className="size-4 text-white" />
+          Add New Booking
+        </Button>
       </div>
       <div className="w-full px-6 space-y-3">
         <AnalyticCards />
