@@ -38,7 +38,10 @@ function DashboardSidebar() {
       <SidebarHeader>
         <SidebarMenu className="pl-3 py-3">
           <SidebarMenuItem>
-            <Link href="/dashboard" className="font-medium">
+            <Link
+              href="/dashboard"
+              className="font-extrabold text-2xl select-none"
+            >
               The <span className="text-primary">Beauty</span> App
             </Link>
           </SidebarMenuItem>
@@ -46,7 +49,7 @@ function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarMenu>
+        <SidebarMenu className="px-4 gap-1">
           {navlinks.map((link) => (
             <MenuItem
               key={link.label}
@@ -87,18 +90,16 @@ const MenuItem = ({
 }) => {
   return (
     <SidebarMenuItem key={label}>
-      <SidebarMenuButton>
-        <Link
-          href={href}
-          className={cn(
-            "flex items-center gap-3",
-            isActive ? "text-primary" : "text-foreground",
-          )}
-        >
-          <Icon className="size-4" />
-          <span className="capitalize">{label}</span>
-        </Link>
-      </SidebarMenuButton>
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 hover:text-primary duration-200 ease-in-out text-sm",
+          isActive ? "text-primary font-semibold" : "text-foreground  ",
+        )}
+      >
+        <Icon className="size-5" />
+        <span className="capitalize">{label}</span>
+      </Link>
     </SidebarMenuItem>
   );
 };
