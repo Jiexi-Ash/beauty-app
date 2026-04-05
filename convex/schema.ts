@@ -3,64 +3,81 @@ import { v } from "convex/values";
 
 
 export default defineSchema({
-    users: defineTable({
-        clerkId: v.string(),
-        email: v.string(),
-        fullname: v.string(),
-        image: v.string(),
-        phone: v.optional(v.string()),
-      })
-        .index("by_clerk_id", ["clerkId"])
-        .index("by_email", ["email"]),
+  users: defineTable({
+    clerkId: v.string(),
+    email: v.string(),
+    fullname: v.string(),
+    image: v.string(),
+    phone: v.optional(v.string()),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"]),
 
-        business: defineTable({
-          name: v.string(),
-          slug: v.string(),
-          location: v.string(),
-          latitude: v.float64(),
-          longitude: v.float64(),
-          description: v.optional(v.string()),
-          coverImageStorageId: v.id("_storage"),
-          ownerId: v.id("users"),
-          subscriptionTierId: v.id("subscriptionTiers"),
-          timezone: v.literal("Africa/Johannesburg"),
-          merchantId: v.number(),
-          visibility: v.union(
-            v.literal("hidden"),
-            v.literal("visible"),
-            v.literal("offline")
-          ),
-          LastVerified: v.optional(v.number()),
-      }).index("by_owner", ["ownerId"])
-      .index("by_slug", ["slug"])
-      .searchIndex("search_index", {
-        searchField: "name",
-      }),
+  business: defineTable({
+    name: v.string(),
+    slug: v.string(),
+    location: v.string(),
+    latitude: v.float64(),
+    longitude: v.float64(),
+    description: v.optional(v.string()),
+    coverImageStorageId: v.id("_storage"),
+    ownerId: v.id("users"),
+    subscriptionTierId: v.id("subscriptionTiers"),
+    timezone: v.literal("Africa/Johannesburg"),
+    merchantId: v.number(),
+    visibility: v.union(
+      v.literal("hidden"),
+      v.literal("visible"),
+      v.literal("offline")
+    ),
+    LastVerified: v.optional(v.number()),
+  }).index("by_owner", ["ownerId"])
+    .index("by_slug", ["slug"])
+    .searchIndex("search_index", {
+      searchField: "name",
+    }),
 
-      businessVerified: defineTable({
-        verifiedDate:v.number(),
-        businessId: v.id("business")
-      }).index("by_business", ["businessId"]),
+  businessVerified: defineTable({
+    verifiedDate: v.number(),
+    businessId: v.id("business")
+  }).index("by_business", ["businessId"]),
 
-      businessSettings: defineTable({
-        allowBookingBeyondCloseTime: v.boolean(),
-        bufferTimeMinutes: v.float64(),
-        businessId: v.id("business"),
-        enableBusinessBufferTime: v.boolean(),
-      }).index("by_business", ["businessId"]),
+  businessSettings: defineTable({
+    allowBookingBeyondCloseTime: v.boolean(),
+    bufferTimeMinutes: v.float64(),
+    businessId: v.id("business"),
+    enableBusinessBufferTime: v.boolean(),
+  }).index("by_business", ["businessId"]),
 
-      businessHours: defineTable({
-        businessId:v.id("business"),
-        fullName: v.string(),
-        shortName: v.string(),
-        openTime: v.string(),
-        closeTime: v.string(),
-      }).index("by_businessId", ["businessId"]),
+  businessHours: defineTable({
+    businessId: v.id("business"),
+    fullName: v.string(),
+    shortName: v.string(),
+    openTime: v.string(),
+    closeTime: v.string(),
+  }).index("by_businessId", ["businessId"]),
 
-      subscriptionTiers: defineTable({
-        tier: v.union(v.literal("free")),
-        price:v.number()
-      }).index("by_tier", ["tier"])
+  subscriptionTiers: defineTable({
+    tier: v.union(v.literal("free")),
+    price: v.number()
+  }).index("by_tier", ["tier"]),
+
+  service: defineTable({
+    name: v.string(),
+    description: v.string(),
+    price: v.number(),
+    categoryId: v.id("categories"),
+    businessId: v.id("business"),
+    duration: v.number(),
+    primaryImageStorageId: v.id("_storage"),
+    updatedAt: v.optional(v.number())
+  }).index("by_name", ["name"])
+    .index("by_business", ["businessId"])
+    .index("by_business_and_category", ["businessId", "categoryId"]),
+
+  categories: defineTable({
+    name: v.string(),
+  }).index("by_name", ["name"])
 })
 
 export const businessDayValidator = v.object({
