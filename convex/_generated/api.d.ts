@@ -11,6 +11,7 @@
 import type * as business_actions from "../business/actions.js";
 import type * as business_admin from "../business/admin.js";
 import type * as http from "../http.js";
+import type * as seed from "../seed.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,6 +24,7 @@ declare const fullApi: ApiFromModules<{
   "business/actions": typeof business_actions;
   "business/admin": typeof business_admin;
   http: typeof http;
+  seed: typeof seed;
   users: typeof users;
 }>;
 
