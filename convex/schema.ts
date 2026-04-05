@@ -70,8 +70,11 @@ export default defineSchema({
     businessId: v.id("business"),
     duration: v.number(),
     primaryImageStorageId: v.id("_storage"),
+    totalBookings: v.number(),
+    visibility: v.union(v.literal("hidden"), v.literal("visible")),
     updatedAt: v.optional(v.number())
-  }).index("by_name", ["name"])
+  }).index("by_name_and_business", ["name", "businessId"])
+    .index("by_name_business_visiblity", ["name", "businessId", "visibility"])
     .index("by_business", ["businessId"])
     .index("by_business_and_category", ["businessId", "categoryId"]),
 
