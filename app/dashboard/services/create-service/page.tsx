@@ -3,6 +3,7 @@
 import ImageCropDialog, { CroppedFile } from "@/components/image-cropper";
 import { IMAGE_UPLOAD_GUIDELINES } from "@/components/onboarding/business-details-form";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Field,
   FieldError,
@@ -23,14 +24,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
+import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Bell, CameraIcon } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ConvexError } from "convex/values";
+import { ArrowLeft, Bell, CameraIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
+import { Id } from "@/convex/_generated/dataModel";
 
 const serviceSchema = z.object({
   name: z
@@ -70,17 +76,112 @@ const DURATION_OPTIONS = [
   { label: "4 hr", value: 240 },
 ];
 
-const CATEGORY_OPTIONS = [
-  { label: "Hair", value: "hair" },
-  { label: "Nails", value: "nails" },
-  { label: "Eyes", value: "eyes" },
-  { label: "Skin & Facials", value: "skin_facials" },
-  { label: "Makeup", value: "makeup" },
-  { label: "Lashes & Brows", value: "lashes_brows" },
-  { label: "Other", value: "other" },
-];
-
 function DashboardCreateServicePage() {
+  const {
+    data: categories,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    ...convexQuery(api.public.getCategories),
+  });
+
+  if (isLoading) return <CreateServiceSkeleton />;
+
+  if (error)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-muted-foreground">Failed to load categories</p>
+        <Button onClick={() => refetch()} variant="outline">
+          Retry
+        </Button>
+      </div>
+    );
+
+  return <CreateServiceForm categories={categories!} />;
+}
+
+export default DashboardCreateServicePage;
+
+export function CreateServiceSkeleton() {
+  return (
+    <div className="min-h-screen w-full">
+      {/* Header */}
+      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
+        <div className="flex gap-3 items-center h-20">
+          <Skeleton className="w-12 h-12 rounded-full" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+        <Skeleton className="h-6 w-6 rounded-full" />
+      </header>
+
+      <div className="space-y-6 px-6 pt-4 pb-6">
+        {/* Title */}
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+
+        {/* Back button */}
+        <Skeleton className="h-10 w-24 rounded-full" />
+
+        <div className="w-full max-w-xl space-y-3">
+          {/* Image upload */}
+          <Skeleton className="w-2/3 aspect-4/3 rounded-lg" />
+
+          {/* Service name */}
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-9 w-full rounded-sm" />
+          </div>
+
+          {/* Category + Price row */}
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-9 w-full rounded-sm" />
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-9 w-full rounded-sm" />
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-9 w-full rounded-sm" />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-32 w-full rounded-sm" />
+            <Skeleton className="h-3 w-28 ml-auto" />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="sticky bottom-0 bg-white z-50 border-t border-border p-6">
+        <div className="flex gap-3 md:justify-end">
+          <Skeleton className="flex-1 md:flex-none h-12 w-32 rounded-full" />
+          <Skeleton className="flex-1 md:flex-none h-12 w-36 rounded-full" />
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+interface CreateServiceFormProps {
+  categories: {
+    _id: Id<"categories">;
+    _creationTime: number;
+    name: string;
+  }[];
+}
+export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
+  const [isSubmiting, setSubmiting] = useState(false);
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [serviceImage, setServiceImage] = useState<string | null>(null);
@@ -92,10 +193,33 @@ function DashboardCreateServicePage() {
     field: any;
   } | null>(null);
 
+  const generateUploadUrl = useConvexMutation(
+    api.business.admin.generateUploadUrl,
+  );
+
+  const { mutate: createService } = useMutation({
+    mutationFn: useConvexMutation(api.service.admin.createService),
+    onSuccess: () => {
+      toast.success("Service created Successfully");
+      form.reset();
+    },
+    onError: (error) => {
+      if (error instanceof ConvexError) {
+        toast.error(
+          error.data || "An unknown error occurred while creating service.",
+        );
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred while creating service.");
+      }
+    },
+  });
+
   const form = useForm({
     defaultValues: {
       name: "",
-      category: CATEGORY_OPTIONS[0].value,
+      category: categories[0].name,
       price: 100,
       description: "",
       duration: 60,
@@ -104,8 +228,39 @@ function DashboardCreateServicePage() {
     validators: {
       onSubmit: serviceSchema,
     },
-    onSubmit: ({ value }) => {
-      console.log(value);
+    onSubmit: async ({ value }) => {
+      if (!value.serviceImage) return;
+      try {
+        setSubmiting(true);
+        const uploadUrl = await generateUploadUrl();
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": value.serviceImage.type },
+          body: value.serviceImage,
+        });
+
+        if (!uploadResult.ok) {
+          throw new Error("Failed to upload service image.");
+        }
+
+        const { storageId } = await uploadResult.json();
+        createService({
+          name: value.name,
+          description: value.description,
+          duration: value.duration,
+          price: value.price,
+          primaryImageStorageId: storageId,
+          categoryName: value.category,
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error("An unknown error occurred while creating service.");
+        }
+      } finally {
+        setSubmiting(false);
+      }
     },
   });
 
@@ -194,6 +349,7 @@ function DashboardCreateServicePage() {
           className="text-primary h-10"
           onClick={() => router.back()}
           size="lg"
+          disabled={isSubmiting}
         >
           <ArrowLeft className="text-primary size-4" />
           Go Back
@@ -270,6 +426,7 @@ function DashboardCreateServicePage() {
                       id={field.name}
                       name={field.name}
                       onBlur={field.handleBlur}
+                      value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
                       placeholder="Box braids"
@@ -306,9 +463,13 @@ function DashboardCreateServicePage() {
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {CATEGORY_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
+                          {categories?.map((opt) => (
+                            <SelectItem
+                              className="capitalize"
+                              key={opt.name}
+                              value={opt.name}
+                            >
+                              {opt.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -334,6 +495,9 @@ function DashboardCreateServicePage() {
                           id={field.name}
                           name={field.name}
                           onBlur={field.handleBlur}
+                          value={
+                            field.state.value === 0 ? "" : field.state.value
+                          }
                           onChange={(e) =>
                             field.handleChange(
                               e.target.value === ""
@@ -407,6 +571,7 @@ function DashboardCreateServicePage() {
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
+                        value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="This can be a brief information about the service"
                         rows={6}
@@ -439,6 +604,7 @@ function DashboardCreateServicePage() {
             onClick={() => router.back()}
             className="flex-1 md:flex-none h-12 px-6 rounded-full"
             size="lg"
+            disabled={isSubmiting}
           >
             Cancel
           </Button>
@@ -447,8 +613,13 @@ function DashboardCreateServicePage() {
             form="service-form"
             className="flex-1 md:flex-none h-12 px-6 rounded-full"
             size="lg"
+            disabled={isSubmiting}
           >
-            Save Service
+            {isSubmiting ? (
+              <Loader2 className="text-white animate-spin size-4" />
+            ) : (
+              "Save Service"
+            )}
           </Button>
         </div>
       </footer>
@@ -464,6 +635,4 @@ function DashboardCreateServicePage() {
       )}
     </div>
   );
-}
-
-export default DashboardCreateServicePage;
+};
