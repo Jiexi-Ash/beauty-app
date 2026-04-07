@@ -44,3 +44,28 @@ export const createService = mutation({
         return serviceId
     }
 })
+
+export const getBusinessServices = query({
+    handler: async (ctx) => {
+        const user = await getCurrentUserOrThrow(ctx)
+
+        const business = await getBusinessByUserId(ctx, user._id)
+
+        if (!business) return []
+
+        const services = await ctx.db.query("service").withIndex("by_business", q => q.eq("businessId", business._id)).collect()
+
+        if (!services) return []
+
+        const servicesWithImage = await Promise.all(
+            services.map(async (service) => {
+                const image = await ctx.storage.getUrl(service.primaryImageStorageId)
+                if (!image) return { ...service, image }
+
+                return { ...service, image }
+            })
+        )
+
+        return servicesWithImage
+    }
+})
