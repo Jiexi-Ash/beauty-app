@@ -15,7 +15,7 @@ async function DashboardServices() {
   );
   return (
     <div>
-      <Services preloadedServices={services} />;
+      <Services preloadedServices={services} />
       <DashboardFooter />
     </div>
   );
