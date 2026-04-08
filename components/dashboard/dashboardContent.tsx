@@ -35,12 +35,22 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
         </div>
       </header>
-      <div className="flex justify-between items-center px-6 py-4">
-        <div>
-          <h1 className="font-bold text-lg md:text-2xl">Welcome Back</h1>
-          <p className="text-sm text-gray-400">
-            {"Here's what's been happening lately."}
-          </p>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center px-6 py-4">
+        <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
+          <div className="flex flex-col">
+            <h1 className="font-bold text-xl md:text-2xl">Welcome Back</h1>
+            <p className="text-sm text-gray-400">
+              {"Here's what's been happening lately."}
+            </p>
+          </div>
+
+          <Button
+            className="text-sm md:hidden cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
+            size="lg"
+          >
+            <PlusIcon className="size-4 text-white" />
+            New Booking
+          </Button>
         </div>
       </div>
       <div className="hidden lg:flex justify-between items-center px-6 py-4">
