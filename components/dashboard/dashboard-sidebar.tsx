@@ -50,15 +50,22 @@ function DashboardSidebar() {
 
       <SidebarContent>
         <SidebarMenu className="px-4 gap-1">
-          {navlinks.map((link) => (
-            <MenuItem
-              key={link.label}
-              Icon={link.icon}
-              href={link.href}
-              label={link.label}
-              isActive={pathname.includes(link.href)}
-            />
-          ))}
+          {navlinks.map((link) => {
+            const isActive =
+              link.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname.startsWith(link.href);
+
+            return (
+              <MenuItem
+                key={link.label}
+                Icon={link.icon}
+                href={link.href}
+                label={link.label}
+                isActive={isActive}
+              />
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
 

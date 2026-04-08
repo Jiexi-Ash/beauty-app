@@ -20,15 +20,22 @@ function DashboardFooter() {
   const pathname = usePathname();
   return (
     <footer className="sticky bottom-0 md:hidden bg-white z-50  border-t  border-border grid grid-cols-4 gap-4 px-6">
-      {navlinks.map((link) => (
-        <Navlink
-          key={link.label}
-          Icon={link.icon}
-          label={link.label}
-          href={link.href}
-          isActive={pathname.includes(link.href)}
-        />
-      ))}
+      {navlinks.map((link) => {
+        const isActive =
+          link.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(link.href);
+
+        return (
+          <Navlink
+            key={link.label}
+            Icon={link.icon}
+            label={link.label}
+            href={link.href}
+            isActive={isActive}
+          />
+        );
+      })}
     </footer>
   );
 }
