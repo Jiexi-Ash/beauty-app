@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 
 function AnalyticCards() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <Card className="w-full flex flex-col bg-white px-4 rounded-lg">
         <CardTitle>
           <div className="flex justify-between items-center">
