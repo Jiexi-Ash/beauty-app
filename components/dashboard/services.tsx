@@ -9,6 +9,8 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Switch } from "../ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
+import { DataTable } from "./tables/services/data-table";
+import { columns, Service } from "./tables/services/columns";
 
 interface ServicesProps {
   preloadedServices: Preloaded<typeof api.service.admin.getBusinessServices>;
@@ -29,7 +31,7 @@ function Services({ preloadedServices }: ServicesProps) {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-[##f7f7f7]">
       <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
         <div className="flex gap-3 items-center h-20">
           <div className="relative w-12 h-12 rounded-full">
@@ -80,7 +82,7 @@ function Services({ preloadedServices }: ServicesProps) {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:hidden">
           {services.map((service) => (
             <ServiceCard
               key={service._id}
@@ -94,6 +96,8 @@ function Services({ preloadedServices }: ServicesProps) {
             />
           ))}
         </div>
+
+        <ServicesDesktop services={services} />
       </div>
     </div>
   );
@@ -169,6 +173,19 @@ const ServiceCard = ({
           id="toggle-visibility"
           onCheckedChange={() => toggleVisibility(serviceVisibility)}
         />
+      </CardContent>
+    </Card>
+  );
+};
+
+interface ServicesDeskopProps {
+  services: Service[];
+}
+const ServicesDesktop = ({ services }: ServicesDeskopProps) => {
+  return (
+    <Card className="border-0 bg-white shadow-lg ring-1 ring-black/5">
+      <CardContent className="p-5">
+        <DataTable columns={columns} data={services} />;
       </CardContent>
     </Card>
   );
