@@ -55,17 +55,15 @@ export const getBusinessServices = query({
 
         const services = await ctx.db.query("service").withIndex("by_business", q => q.eq("businessId", business._id)).collect()
 
-        if (!services) return []
-
-        const servicesWithImage = await Promise.all(
+        const servicesWithResources = await Promise.all(
             services.map(async (service) => {
                 const image = await ctx.storage.getUrl(service.primaryImageStorageId)
-                if (!image) return { ...service, image }
+                const category = await ctx.db.get(service.categoryId)
 
-                return { ...service, image }
+                return { ...service, image: image ?? null, category: category?.name ?? "Other" }
             })
         )
 
-        return servicesWithImage
+        return servicesWithResources
     }
 })
