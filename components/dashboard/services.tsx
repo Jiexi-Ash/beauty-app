@@ -1,10 +1,17 @@
 "use client";
 import { api } from "@/convex/_generated/api";
 import { Preloaded, usePreloadedQuery } from "convex/react";
-import { Bell, Clock, ListFilter, Scissors } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck,
+  Clock,
+  PlusIcon,
+  Scissors,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
-import { Badge } from "../ui/badge";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Switch } from "../ui/switch";
@@ -22,16 +29,81 @@ function Services({ preloadedServices }: ServicesProps) {
     (service) => service.visibility === "visible",
   );
 
+  const totalRevenue = services.reduce((acc, s) => acc + s.price, 0) / 100;
+  const avgPrice = services.length > 0 ? totalRevenue / services.length : 0;
+  const totalBookings = services.reduce((acc, s) => acc + s.totalBookings, 0);
+  const topCategory =
+    services.length > 0
+      ? Object.entries(
+          services.reduce(
+            (acc, s) => {
+              acc[s.category] = (acc[s.category] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
+        ).sort((a, b) => b[1] - a[1])[0][0]
+      : "N/A";
+
   const hiddenServices = services.filter(
     (service) => service.visibility === "hidden",
   );
 
   if (services.length === 0) {
-    return <div></div>;
+    return (
+      <div className="min-h-screen w-full flex flex-col">
+        <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
+          <div className="flex gap-3 items-center h-20">
+            <div className="relative w-12 h-12 rounded-full">
+              <Image
+                src={"/salon-image-placeholder.jpg"}
+                alt={`${"Katlego nail's bar"} cover image`}
+                fill
+                className="rounded-full object-cover"
+              />
+            </div>
+
+            <h1 className="text-base capitalize text-primary font-bold">
+              {"Katlego's Nail Bar"}
+            </h1>
+          </div>
+
+          <div className="flex gap-4 items-center overflow-hidden">
+            <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center ">
+          <Image
+            src="/no_data.svg"
+            width={200}
+            height={200}
+            className="opacity-80"
+            alt="no services"
+          />
+          <div className="flex flex-col items-center text-center gap-4 mt-6">
+            <div className="space-y-1">
+              <p className="text-lg font-bold">No services yet</p>
+              <p className="text-sm text-muted-foreground">
+                Create your first service to get started.
+              </p>
+            </div>
+
+            <Button
+              className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
+              size="lg"
+            >
+              <PlusIcon className="size-4 text-white" />
+              New Service
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[##f7f7f7]">
+    <div className="min-h-screen w-full">
       <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
         <div className="flex gap-3 items-center h-20">
           <div className="relative w-12 h-12 rounded-full">
@@ -43,7 +115,7 @@ function Services({ preloadedServices }: ServicesProps) {
             />
           </div>
 
-          <h1 className="text-base text-primary font-bold">
+          <h1 className="text-base capitalize text-primary font-bold">
             {"Katlego's nail Bar"}
           </h1>
         </div>
@@ -53,48 +125,113 @@ function Services({ preloadedServices }: ServicesProps) {
         </div>
       </header>
 
-      <div className="px-6 flex flex-col space-y-6">
-        <div className="bg-gray-50 w-full  p-4 rounded-xl flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center">
-              <Scissors className="text-primary size-6" />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="uppercase text-xs text-muted-foreground font-bold">
-                Services
-              </span>
-              <span className="font-bold text-lg">
-                {activeServices.length} Active
-              </span>
-            </div>
+      <div className="px-6 flex flex-col space-y-4 mt-6">
+        <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
+          <div className="flex flex-col">
+            <h2 className="font-bold text-xl md:text-2xl">Services</h2>
+            <p className="text-sm text-gray-400">
+              Create and manage your service list, pricing, duration, and
+              visibility.
+            </p>
           </div>
 
-          <Badge className="bg-primary/40">
-            {hiddenServices.length} hidden
-          </Badge>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <h2 className="font-bold text-lg">All Services</h2>
-
-          <Button variant="ghost" className="text-primary">
-            Filter <ListFilter className="text-primary" />
+          <Button
+            className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
+            size="lg"
+          >
+            <PlusIcon className="size-4 text-white" />
+            New Service
           </Button>
         </div>
 
-        <div className="flex flex-col gap-3 lg:hidden">
-          {services.map((service) => (
-            <ServiceCard
-              key={service._id}
-              _id={service._id}
-              category={service.category}
-              duration={service.duration}
-              image={service.image ?? ""}
-              name={service.name}
-              price={service.price}
-              visibility={service.visibility}
-            />
-          ))}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className=" border border-border shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                <Scissors className="text-primary size-4" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase">
+                  Active
+                </p>
+                <p className="font-bold text-lg leading-tight">
+                  {activeServices.length}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {hiddenServices.length} hidden
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className=" border border-border shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                <TrendingUp className="text-green-600 size-4" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase">
+                  Average Price
+                </p>
+                <p className="font-bold text-lg leading-tight">
+                  R{avgPrice.toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground">per service</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className=" border border-border shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                <CalendarCheck className="text-blue-600 size-4" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase">
+                  Bookings
+                </p>
+                <p className="font-bold text-lg leading-tight">
+                  {totalBookings}
+                </p>
+                <p className="text-xs text-muted-foreground">all time</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className=" border border-border shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+                <Tag className="text-purple-600 size-4" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase">
+                  Top Category
+                </p>
+                <p className="font-bold text-lg leading-tight capitalize">
+                  {topCategory}
+                </p>
+                <p className="text-xs text-muted-foreground">most services</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-3 block lg:hidden">
+          <h3 className="text-base md:text-lg font-semibold">All Services</h3>
+          <div className="flex flex-col gap-3 ">
+            {services.map((service) => (
+              <ServiceCard
+                key={service._id}
+                _id={service._id}
+                category={service.category}
+                duration={service.duration}
+                image={service.image ?? ""}
+                name={service.name}
+                price={service.price}
+                visibility={service.visibility}
+              />
+            ))}
+          </div>
         </div>
 
         <ServicesDesktop services={services} />
@@ -139,7 +276,7 @@ const ServiceCard = ({
   const formatedPrice = price / 100;
   return (
     <Card key={_id} className="w-full border-none border-0">
-      <CardContent className="border-none border-0 flex items-center justify-between">
+      <CardContent className="border-none border-0 flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
           <div className="relative w-20 h-20 rounded-full">
             <Image
@@ -150,7 +287,7 @@ const ServiceCard = ({
             />
           </div>
 
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col">
             <span className="text-primary text-xs uppercase font-semibold">
               {category}
             </span>
@@ -178,14 +315,14 @@ const ServiceCard = ({
   );
 };
 
-interface ServicesDeskopProps {
+interface ServicesDesktopProps {
   services: Service[];
 }
-const ServicesDesktop = ({ services }: ServicesDeskopProps) => {
+const ServicesDesktop = ({ services }: ServicesDesktopProps) => {
   return (
-    <Card className="border-0 bg-white shadow-lg ring-1 ring-black/5">
-      <CardContent className="p-5">
-        <DataTable columns={columns} data={services} />;
+    <Card className="hidden lg:block border border-border bg-white shadow-lg ring-1 ring-black/5">
+      <CardContent className="p-0">
+        <DataTable columns={columns} data={services} />
       </CardContent>
     </Card>
   );
