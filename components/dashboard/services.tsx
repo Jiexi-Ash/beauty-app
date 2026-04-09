@@ -5,9 +5,11 @@ import {
   Bell,
   CalendarCheck,
   Clock,
+  EllipsisVertical,
   PlusIcon,
   Scissors,
   Tag,
+  Trash2,
   TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
@@ -19,6 +21,17 @@ import { Id } from "@/convex/_generated/dataModel";
 import { DataTable } from "./tables/services/data-table";
 import { columns, Service } from "./tables/services/columns";
 import Link from "next/link";
+import VisibilityToggle from "./tables/services/visibility-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { useMutation } from "@tanstack/react-query";
+import { useConvexMutation } from "@convex-dev/react-query";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
 
 interface ServicesProps {
   preloadedServices: Preloaded<typeof api.service.admin.getBusinessServices>;
@@ -271,58 +284,88 @@ const ServiceCard = ({
   price,
   visibility,
 }: ServiceCardProps) => {
-  const [serviceVisibility, setVisibility] = useState<"hidden" | "visible">(
-    visibility,
-  );
-
-  const toggleVisibility = (visibility: "hidden" | "visible") => {
-    if (visibility === "hidden") {
-      setVisibility("visible");
-      return;
-    }
-
-    setVisibility("hidden");
-  };
+  const { mutate: deleteService, isPending } = useMutation({
+    mutationFn: useConvexMutation(api.service.admin.deleteService),
+    onSuccess: () => {
+      toast.success("Service deleted Successfully");
+    },
+    onError: (error) => {
+      if (error instanceof ConvexError) {
+        toast.error(
+          error.data || "An unknown error occurred while deleting service.",
+        );
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred while deleting service.");
+      }
+    },
+  });
 
   const formatedPrice = price / 100;
+
+  const handleDelete = () => {
+    deleteService({ serviceId: _id });
+  };
+
   return (
-    <Card key={_id} className="w-full border-none border-0">
-      <CardContent className="border-none border-0 flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <div className="relative w-20 h-20 rounded-full">
-            <Image
-              src={image ?? ""}
-              fill
-              className="object-cover rounded-full"
-              alt={`${name} image`}
-            />
-          </div>
+    <Link href={`/dashboard/services/${_id}`}>
+      <Card key={_id} className="w-full border-none border-0">
+        <CardContent className="border-none border-0 flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="relative w-20 h-20 rounded-full">
+              <Image
+                src={image ?? ""}
+                fill
+                className="object-cover rounded-full"
+                alt={`${name} image`}
+              />
+            </div>
 
-          <div className="flex flex-col">
-            <span className="text-primary text-xs uppercase font-semibold">
-              {category}
-            </span>
-            <span className="capitalize font-bold text-sm">{name}</span>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-primary font-bold">
-                R{formatedPrice.toFixed(2)}
+            <div className="flex flex-col">
+              <span className="text-primary text-xs uppercase font-semibold">
+                {category}
               </span>
+              <span className="capitalize font-bold text-sm">{name}</span>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-primary font-bold">
+                  R{formatedPrice.toFixed(2)}
+                </span>
 
-              <div className="flex items-center gap-1">
-                <Clock className="size-4 text-muted-foreground overflow-hidden" />
-                <span className="text-xs">{duration}m</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="size-4 text-muted-foreground overflow-hidden" />
+                  <span className="text-xs">{duration}m</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <Switch
-          checked={serviceVisibility === "visible" ? true : false}
-          id="toggle-visibility"
-          onCheckedChange={() => toggleVisibility(serviceVisibility)}
-        />
-      </CardContent>
-    </Card>
+          <div
+            className="flex items-center gap-3"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <VisibilityToggle id={_id} visibility={visibility} />
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <EllipsisVertical className="size-4 text-gray-400" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive border p-2"
+                  onClick={() => handleDelete()}
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
 
