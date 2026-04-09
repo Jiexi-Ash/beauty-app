@@ -49,7 +49,7 @@ export default function VisibilityToggle({
         checked={visibility === "visible"}
         id={`toggle-visibility-${id}`}
         disabled={isPending}
-        onCheckedChange={(e) =>
+        onCheckedChange={() =>
           handleVisibility(visibility === "visible" ? "hidden" : "visible")
         }
       />

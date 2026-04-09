@@ -13,10 +13,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { Switch } from "../ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
 import { DataTable } from "./tables/services/data-table";
 import { columns, Service } from "./tables/services/columns";
@@ -284,7 +282,7 @@ const ServiceCard = ({
   price,
   visibility,
 }: ServiceCardProps) => {
-  const { mutate: deleteService, isPending } = useMutation({
+  const { mutate: deleteService } = useMutation({
     mutationFn: useConvexMutation(api.service.admin.deleteService),
     onSuccess: () => {
       toast.success("Service deleted Successfully");

@@ -25,12 +25,6 @@ export type Service = {
   totalBookings: number;
 };
 
-const toggleVisibility = (visibility: "hidden" | "visible") => {
-  if (visibility === "hidden") {
-    return;
-  }
-};
-
 export const columns: ColumnDef<Service>[] = [
   {
     accessorKey: "name",
