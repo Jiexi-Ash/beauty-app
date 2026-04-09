@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { getCurrentUserOrThrow } from "../users";
+import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 
 export const createService = mutation({
@@ -115,5 +115,31 @@ export const getBusinessServices = query({
         )
 
         return servicesWithResources
+    }
+})
+
+export const getServiceById = query({
+    args: {
+        id: v.id("service")
+    },
+    handler: async (ctx, { id }) => {
+        const user = await getCurrentUser(ctx)
+
+        if (!user) return null
+
+        const business = await getBusinessByUserId(ctx, user._id)
+
+        if (!business) return null
+
+        const service = await ctx.db.get(id)
+
+
+        if (!service) return null
+
+        if (service.businessId !== business._id) return null
+
+        const serviceWithPrimaryImage = await ctx.storage.getUrl(service.primaryImageStorageId)
+
+        return { ...service, image: serviceWithPrimaryImage }
     }
 })
