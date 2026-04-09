@@ -38,13 +38,21 @@ export default function VisibilityToggle({
   };
 
   return (
-    <Switch
-      checked={visibility === "visible"}
-      id={`toggle-visibility-${id}`}
-      disabled={isPending}
-      onCheckedChange={() =>
-        handleVisibility(visibility === "visible" ? "hidden" : "visible")
-      }
-    />
+    <div
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      className="flex items-center"
+    >
+      <Switch
+        checked={visibility === "visible"}
+        id={`toggle-visibility-${id}`}
+        disabled={isPending}
+        onCheckedChange={(e) =>
+          handleVisibility(visibility === "visible" ? "hidden" : "visible")
+        }
+      />
+    </div>
   );
 }
