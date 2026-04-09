@@ -45,6 +45,32 @@ export const createService = mutation({
     }
 })
 
+export const deleteService = mutation({
+    args: {
+        serviceId: v.id("service")
+    },
+    handler: async (ctx, { serviceId }) => {
+        const user = await getCurrentUserOrThrow(ctx)
+
+        const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
+
+        if (!business) throw new ConvexError("Business not found. Please create a business before deleting services.");
+
+        const service = await ctx.db.get(serviceId)
+
+        if (!service) throw new ConvexError("Service not found with the provided ID.")
+
+        if (service.businessId !== business._id) {
+            throw new ConvexError("You do not have permission to delete this service.")
+        }
+
+        await Promise.all([
+            ctx.storage.delete(service.primaryImageStorageId),
+            ctx.db.delete(serviceId),
+        ])
+    }
+})
+
 export const getBusinessServices = query({
     handler: async (ctx) => {
         const user = await getCurrentUserOrThrow(ctx)
