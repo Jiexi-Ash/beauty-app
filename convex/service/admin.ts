@@ -54,6 +54,33 @@ export const deleteService = mutation({
 
         const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
 
+        if (!business) throw new ConvexError("Business not found.")
+
+        const service = await ctx.db.get(serviceId)
+
+        if (!service) throw new ConvexError("Service not found with the provided ID.")
+
+        if (service.businessId !== business._id) {
+            throw new ConvexError("You do not have permission to update this service.")
+        }
+
+        await Promise.all([
+            ctx.storage.delete(service.primaryImageStorageId),
+            ctx.db.delete(serviceId),
+        ])
+    }
+})
+
+export const toggleVisibility = mutation({
+    args: {
+        serviceId: v.id("service"),
+        visibility: v.union(v.literal("hidden"), v.literal("visible")),
+    },
+    handler: async (ctx, { serviceId, visibility }) => {
+        const user = await getCurrentUserOrThrow(ctx)
+
+        const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
+
         if (!business) throw new ConvexError("Business not found. Please create a business before deleting services.");
 
         const service = await ctx.db.get(serviceId)
@@ -64,10 +91,7 @@ export const deleteService = mutation({
             throw new ConvexError("You do not have permission to delete this service.")
         }
 
-        await Promise.all([
-            ctx.storage.delete(service.primaryImageStorageId),
-            ctx.db.delete(serviceId),
-        ])
+        await ctx.db.patch(serviceId, { visibility })
     }
 })
 
