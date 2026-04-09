@@ -97,7 +97,9 @@ export const toggleVisibility = mutation({
 
 export const getBusinessServices = query({
     handler: async (ctx) => {
-        const user = await getCurrentUserOrThrow(ctx)
+        const user = await getCurrentUser(ctx)
+
+        if (!user) return []
 
         const business = await getBusinessByUserId(ctx, user._id)
 
