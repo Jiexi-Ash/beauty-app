@@ -18,6 +18,7 @@ import { Switch } from "../ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
 import { DataTable } from "./tables/services/data-table";
 import { columns, Service } from "./tables/services/columns";
+import Link from "next/link";
 
 interface ServicesProps {
   preloadedServices: Preloaded<typeof api.service.admin.getBusinessServices>;
@@ -90,11 +91,16 @@ function Services({ preloadedServices }: ServicesProps) {
             </div>
 
             <Button
-              className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
+              className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 "
               size="lg"
             >
-              <PlusIcon className="size-4 text-white" />
-              New Service
+              <Link
+                href="/dashboard/services/create-service"
+                className="flex items-center gap-2"
+              >
+                <PlusIcon className="size-4 text-white" />
+                New Service
+              </Link>
             </Button>
           </div>
         </div>
@@ -136,11 +142,16 @@ function Services({ preloadedServices }: ServicesProps) {
           </div>
 
           <Button
-            className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
+            className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6"
             size="lg"
           >
-            <PlusIcon className="size-4 text-white" />
-            New Service
+            <Link
+              href="/dashboard/services/create-service"
+              className="flex items-center gap-2"
+            >
+              <PlusIcon className="size-4 text-white" />
+              New Service
+            </Link>
           </Button>
         </div>
 
