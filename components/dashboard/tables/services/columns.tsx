@@ -1,12 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import Actions from "./actions";
 import { cn } from "@/lib/utils";
+import VisibilityToggle from "./visibility-toggle";
 
 export type Service = {
   image: string | null;
@@ -110,13 +110,12 @@ export const columns: ColumnDef<Service>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const visibility = row.getValue("visibility") as "hidden" | "visible";
+      const service = row.original;
 
       return (
-        <Switch
-          checked={visibility === "visible" ? true : false}
-          id={`toggle-visibility-${row.original._id}`}
-          onCheckedChange={() => toggleVisibility(visibility)}
+        <VisibilityToggle
+          id={service._id}
+          visibility={service.visibility as "hidden" | "visible"}
         />
       );
     },
