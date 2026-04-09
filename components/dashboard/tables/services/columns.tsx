@@ -1,12 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
 import { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Trash, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Actions from "./actions";
+import { cn } from "@/lib/utils";
 
 export type Service = {
   image: string | null;
@@ -48,7 +48,10 @@ export const columns: ColumnDef<Service>[] = [
             <Image
               src={service.image ?? ""}
               fill
-              className="object-cover rounded-full"
+              className={cn(
+                "object-cover rounded-full",
+                service.visibility === "hidden" && "grayscale-100",
+              )}
               alt={`${service.name} image`}
             />
           </div>
@@ -121,25 +124,7 @@ export const columns: ColumnDef<Service>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      return (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            className="rounded-lg cursor-pointer"
-          >
-            <Pencil className="size-4 text-primary" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            className="rounded-lg cursor-pointer"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
-      );
+      return <Actions id={row.original._id} />;
     },
   },
 ];
