@@ -86,7 +86,7 @@ export const updateService = mutation({
             ...(primaryImageStorageId && { primaryImageStorageId }),
         })
 
-        if (galleryImageIds && galleryImageIds.length > 0) {
+        if (galleryImageIds) {
             const existingGallery = await ctx.db
                 .query("serviceImages")
                 .withIndex("by_service", q => q.eq("serviceId", serviceId))
