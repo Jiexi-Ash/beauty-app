@@ -78,6 +78,11 @@ export default defineSchema({
     .index("by_business", ["businessId"])
     .index("by_business_and_category", ["businessId", "categoryId"]),
 
+  serviceImages: defineTable({
+    serviceId: v.id("service"),
+    imageStorageId: v.id("_storage"),
+  }).index("by_service", ["serviceId"]),
+
   categories: defineTable({
     name: v.string(),
   }).index("by_name", ["name"])
