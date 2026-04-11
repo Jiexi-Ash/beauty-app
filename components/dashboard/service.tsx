@@ -181,7 +181,12 @@ interface DashboardServiceFormProps {
     _creationTime: number;
     name: string;
   }[];
-  service: Doc<"service"> & { image: string | null };
+  service: Doc<"service"> & { image: string | null } & {
+    galleryImages: {
+      storageId: Id<"_storage">;
+      url: string | null;
+    }[];
+  };
 }
 
 function DashboardServiceForm({
@@ -195,7 +200,13 @@ function DashboardServiceForm({
   //preview
   const [serviceImage, setServiceImage] = useState<string | null>(null);
   const [galleryImageUrls, setGalleryImageUrls] = useState<(string | null)[]>(
-    Array(IMAGE_UPLOAD_GUIDELINES.maxImages).fill(null),
+    () => {
+      const urls = Array(IMAGE_UPLOAD_GUIDELINES.maxImages).fill(null);
+      service.galleryImages.forEach((img, i) => {
+        urls[i] = img.url;
+      });
+      return urls;
+    },
   );
 
   const [pendingCropFile, setPendingCropFile] = useState<{
@@ -232,11 +243,18 @@ function DashboardServiceForm({
   });
 
   const price = service ? service.price / 100 : 1;
+  const existingGalleryIds = useRef<(Id<"_storage"> | null)[]>(
+    Array(IMAGE_UPLOAD_GUIDELINES.maxImages)
+      .fill(null)
+      .map((_, i) => service.galleryImages[i]?.storageId ?? null),
+  );
 
   const form = useForm({
     defaultValues: {
       name: service?.name ?? "",
-      category: categories[0].name ?? "",
+      category:
+        categories.find((c) => c._id === service.categoryId)?.name ??
+        categories[0].name,
       price,
       description: service?.description ?? "",
       duration: service?.duration ?? 60,
@@ -247,10 +265,6 @@ function DashboardServiceForm({
     },
     validators: {
       onSubmit: serviceSchema,
-    },
-    onSubmitInvalid: ({ value }) => {
-      console.log("Submit blocked - values:", value);
-      // console.log("Submit blocked - errors:", errors);
     },
     onSubmit: async ({ value }) => {
       try {
@@ -273,22 +287,23 @@ function DashboardServiceForm({
 
         const galleryStorageIds = (
           await Promise.all(
-            value.galleryImages.map(async (file) => {
-              if (!(file instanceof File)) return null;
-              const url = await generateUploadUrl();
-              const result = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": file.type },
-                body: file,
-              });
-              if (!result.ok)
-                throw new Error("Failed to upload gallery image.");
-              const { storageId } = await result.json();
-              return storageId as Id<"_storage">;
+            value.galleryImages.map(async (file, i) => {
+              if (file instanceof File) {
+                const url = await generateUploadUrl();
+                const result = await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": file.type },
+                  body: file,
+                });
+                if (!result.ok)
+                  throw new Error("Failed to upload gallery image.");
+                const { storageId } = await result.json();
+                return storageId as Id<"_storage">;
+              }
+              return existingGalleryIds.current[i] ?? null;
             }),
           )
         ).filter((id): id is Id<"_storage"> => id !== null);
-
         updateService({
           serviceId: service._id,
           categoryName: value.category,
@@ -390,6 +405,7 @@ function DashboardServiceForm({
   const handleRemoveGalleryImage = (index: number, field: unknown) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (field as any).handleChange(null);
+    existingGalleryIds.current[index] = null;
     setGalleryImageUrls((prev) => {
       const updated = [...prev];
       updated[index] = null;
