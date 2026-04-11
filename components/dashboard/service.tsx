@@ -226,7 +226,7 @@ function DashboardServiceForm({
     mutationFn: useConvexMutation(api.service.admin.updateService),
     onSuccess: () => {
       toast.success("Service updated Successfully");
-      router.back();
+      router.push("/dashboard/services");
     },
     onError: (error) => {
       if (error instanceof ConvexError) {
@@ -729,7 +729,7 @@ function DashboardServiceForm({
           <Button
             variant="secondary"
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/dashboard/services")}
             className="flex-1 md:flex-none h-12 px-6 rounded-full"
             size="lg"
             disabled={isSubmiting}
