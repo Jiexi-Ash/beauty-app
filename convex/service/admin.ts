@@ -207,7 +207,19 @@ export const getServiceById = query({
         if (service.businessId !== business._id) return null
 
         const serviceWithPrimaryImage = await ctx.storage.getUrl(service.primaryImageStorageId)
+        const serviceImages = await ctx.db.query("serviceImages").withIndex("by_service", q => q.eq("serviceId", service._id)).collect()
 
-        return { ...service, image: serviceWithPrimaryImage }
+        const galleryImagesWithIds = await Promise.all(
+            serviceImages.map(async (image) => ({
+                storageId: image.imageStorageId,
+                url: await ctx.storage.getUrl(image.imageStorageId)
+            }))
+        )
+
+        return {
+            ...service,
+            image: serviceWithPrimaryImage,
+            galleryImages: galleryImagesWithIds.filter((img) => img.url !== null)
+        }
     }
 })
