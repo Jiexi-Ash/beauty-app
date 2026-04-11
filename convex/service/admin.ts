@@ -45,6 +45,72 @@ export const createService = mutation({
     }
 })
 
+export const updateService = mutation({
+    args: {
+        serviceId: v.id("service"),
+        name: v.string(),
+        description: v.string(),
+        price: v.number(),
+        categoryName: v.string(),
+        duration: v.number(),
+        primaryImageStorageId: v.optional(v.id("_storage")),
+        galleryImageIds: v.optional(v.array(v.id("_storage"))),
+    },
+    handler: async (ctx, { serviceId, categoryName, description, duration, name, price, primaryImageStorageId, galleryImageIds }) => {
+        const user = await getCurrentUserOrThrow(ctx)
+
+        const business = await getBusinessByUserId(ctx, user._id)
+
+        if (!business) throw new ConvexError("You need to have a business to perform this action.")
+
+        const [service, category] = await Promise.all([
+            ctx.db.get(serviceId),
+            ctx.db.query("categories").withIndex("by_name", q => q.eq("name", categoryName)).first()
+        ])
+
+        if (!service) throw new ConvexError("Service not found.")
+        if (service.businessId !== business._id) throw new ConvexError("You do not have permission to update this service.")
+        if (!category) throw new ConvexError("Invalid category selected.")
+
+        if (primaryImageStorageId && service.primaryImageStorageId !== primaryImageStorageId) {
+            await ctx.storage.delete(service.primaryImageStorageId)
+        }
+
+        await ctx.db.patch(serviceId, {
+            name: name.toLowerCase().trim(),
+            price: Number(price) * 100,
+            description,
+            categoryId: category._id,
+            duration,
+            updatedAt: Date.now(),
+            ...(primaryImageStorageId && { primaryImageStorageId }),
+        })
+
+        if (galleryImageIds && galleryImageIds.length > 0) {
+            const existingGallery = await ctx.db
+                .query("serviceImages")
+                .withIndex("by_service", q => q.eq("serviceId", serviceId))
+                .collect()
+
+            const existingIds = new Set(existingGallery.map((img) => img.imageStorageId))
+            const incomingIds = new Set(galleryImageIds)
+
+            const toDelete = existingGallery.filter((img) => !incomingIds.has(img.imageStorageId))
+            const toInsert = galleryImageIds.filter((id) => !existingIds.has(id))
+
+            await Promise.all([
+                ...toDelete.map((img) => ctx.db.delete(img._id)),
+                ...toDelete.map((img) => ctx.storage.delete(img.imageStorageId)),
+                ...toInsert.map((imageStorageId) =>
+                    ctx.db.insert("serviceImages", { serviceId, imageStorageId })
+                ),
+            ])
+        }
+
+        return serviceId
+    }
+})
+
 export const deleteService = mutation({
     args: {
         serviceId: v.id("service")
