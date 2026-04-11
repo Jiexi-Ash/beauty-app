@@ -226,7 +226,6 @@ function DashboardServiceForm({
     mutationFn: useConvexMutation(api.service.admin.updateService),
     onSuccess: () => {
       toast.success("Service updated Successfully");
-      form.reset();
       router.back();
     },
     onError: (error) => {
