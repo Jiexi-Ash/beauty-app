@@ -37,6 +37,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Id } from "@/convex/_generated/dataModel";
+import { SERVICE_DURATION_OPTIONS } from "@/app/constants";
 
 const serviceSchema = z.object({
   name: z
@@ -65,16 +66,6 @@ const serviceSchema = z.object({
       "Logo must be an image file",
     ),
 });
-
-const DURATION_OPTIONS = [
-  { label: "15 min", value: 15 },
-  { label: "30 min", value: 30 },
-  { label: "45 min", value: 45 },
-  { label: "1 hr", value: 60 },
-  { label: "2 hr", value: 120 },
-  { label: "3 hr", value: 180 },
-  { label: "4 hr", value: 240 },
-];
 
 function DashboardCreateServicePage() {
   const {
@@ -544,7 +535,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
                       <SelectContent>
-                        {DURATION_OPTIONS.map((opt) => (
+                        {SERVICE_DURATION_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={String(opt.value)}>
                             {opt.label}
                           </SelectItem>
