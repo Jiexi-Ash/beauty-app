@@ -4,7 +4,12 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ConvexProviderWithClerk from "@/components/providers/convex-clerk"
 import { ClerkProvider } from "@clerk/nextjs";
+import { DM_Sans } from "next/font/google";
 
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+});
 
 
 const geistSans = Geist({
@@ -29,9 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${dmSans.variable} antialiased font-(family-name:--font-dm-sans)`}>
         <ClerkProvider>
           <ConvexProviderWithClerk>
             {children}
