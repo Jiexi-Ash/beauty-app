@@ -7,10 +7,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "vibrant-gnu-509.eu-west-1.convex.cloud",
         port: "",
-        pathname: "/**"
-      }
-    ]
-  }
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
