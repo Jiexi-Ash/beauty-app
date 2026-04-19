@@ -2,10 +2,8 @@
 import { getAuthToken } from '@/auth'
 import Explore from '@/components/explore'
 import Navbar from '@/components/navbar'
-import { Button } from '@/components/ui/button'
 import { api } from '@/convex/_generated/api'
 import { preloadQuery } from 'convex/nextjs'
-import Link from 'next/link'
 import React from 'react'
 
 async function ExplorePage() {
