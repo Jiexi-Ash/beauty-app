@@ -32,6 +32,7 @@ export default defineSchema({
     ),
     LastVerified: v.optional(v.number()),
   }).index("by_owner", ["ownerId"])
+  .index("by_visibility", ["visibility"])
     .index("by_slug", ["slug"])
     .searchIndex("search_index", {
       searchField: "name",
