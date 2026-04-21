@@ -90,27 +90,27 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
     const [selectedCategory, setSelectedCategory] = useState("All")
     const [focusedField, setFocusedField] = useState<"search" | "location" | null>(null)
 
-    if (!businesses || businesses.length === 0) {
-        return <div className="max-w-[1440px] container mx-auto px-6">no business</div>
-    }
+    // if (!businesses || businesses.length === 0) {
+    //     return <div className="max-w-[1440px] container mx-auto px-6">no business</div>
+    // }
 
     return (
         <div className="max-w-[1440px] container mx-auto px-6">
             <div className="space-y-6 mt-10">
 
-                {/* Heading */}
+              
                 <div className="space-y-1">
                     <h1 className="text-2xl font-bold">Find a Salon</h1>
                     <p className="text-sm text-muted-foreground">Discover top-rated salons and spas near you</p>
                 </div>
 
-                {/* Search Bar */}
+           
                 <div className={cn(
                     "flex items-center w-full max-w-2xl rounded-full border transition-all duration-200 overflow-hidden",
                     focusedField ? "bg-white ring-2 ring-primary border-primary" : "border-gray-200 bg-stone-100"
                 )}>
 
-                    {/* Search input */}
+                  
                     <div className="flex items-center gap-2 flex-1 px-4 py-1.5">
                         <SearchIcon className="size-4 text-gray-400 shrink-0" />
                         <Input
@@ -121,10 +121,10 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                         />
                     </div>
 
-                    {/* Divider */}
+                  
                     <div className="w-px h-6 bg-gray-200 shrink-0" />
 
-                    {/* Location input */}
+                 
                     <div className="flex items-center gap-2 flex-1 px-4 py-1.5">
                         <MapPin className="size-4 text-gray-400 shrink-0" />
                         <Input
@@ -135,7 +135,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                         />
                     </div>
 
-                    {/* Find button */}
+                 
                     <div className="pr-1.5">
                         <Button size="sm" className="rounded-full cursor-pointer shrink-0">
                             Find
@@ -145,7 +145,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                 </div>
 
 
-                {/* Category Pills */}
+                
                 <div className="flex items-center gap-2 flex-wrap">
                     {CATEGORIES.map((category) => (
                         <Button
@@ -164,7 +164,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                     ))}
                 </div>
 
-                {/* Business Grid */}
+         
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {dummyBusinesses.map((business) => (
                         <div key={business.id} className="group flex flex-col gap-3 cursor-pointer">
