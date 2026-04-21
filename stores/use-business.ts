@@ -79,6 +79,7 @@ export const businessSchema = z.object({
     description: z.string().min(10, "Business description must have at least 10 characters").max(250),
     address:addressSchema,
     businessDays: z.array(businessDaySchema),
+    tags: z.array(z.string()).min(1, "Please select at least 1 tag").max(3, "You can only select up to 3 tags"),
     coverImage:z.custom<File | null>((val) => val instanceof File || val === null, {
         message: "Invalid file type",
       })
