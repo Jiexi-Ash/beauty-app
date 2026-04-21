@@ -35,6 +35,7 @@ export default defineSchema({
     tags: v.array(v.string())
   }).index("by_owner", ["ownerId"])
   .index("by_visibility", ["visibility"])
+  .index("by_slug_visibility", ["slug", "visibility"])
     .index("by_slug", ["slug"])
     .searchIndex("search_index", {
       searchField: "name",
@@ -77,6 +78,7 @@ export default defineSchema({
     visibility: v.union(v.literal("hidden"), v.literal("visible")),
     updatedAt: v.optional(v.number())
   }).index("by_name_and_business", ["name", "businessId"])
+  .index("by_business_visibility", ["businessId", "visibility"])
     .index("by_name_business_visiblity", ["name", "businessId", "visibility"])
     .index("by_business", ["businessId"])
     .index("by_business_and_category", ["businessId", "categoryId"]),
