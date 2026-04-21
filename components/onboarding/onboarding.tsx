@@ -85,6 +85,7 @@ function Onboarding() {
                 businessDays: business.businessDays,
                 coverImageStorageId: storageId,
                 description: business.description,
+                tags: business.tags,
             })
 
             reset()
