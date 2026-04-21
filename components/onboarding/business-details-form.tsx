@@ -47,24 +47,33 @@ export const IMAGE_UPLOAD_GUIDELINES = {
       landscape: { width: 1440, height: 1080 },
     },
   },
-  maxFileSize: 5 * 1024 * 1024, // 5 MB
+  maxFileSize: 5 * 1024 * 1024,
   maxImages: 5,
   acceptedFormats: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
 };
+
+const BUSINESS_TAGS = [
+  "Hair Styling",
+  "Nails",
+  "Barbershop",
+  "Massage",
+  "Lashes",
+  "Makeup",
+  "Luxury Spa",
+  "Skincare",
+];
 
 interface BusinessDetailFormProps {
   visibleCount: number;
   setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
 }
+
 const BusinessDetailForm = ({
   setVisibleCount,
   visibleCount,
 }: BusinessDetailFormProps) => {
-  const [suggestions, setSuggestions] = useState<
-    { description: string; placeId: string }[]
-  >([]);
+  const [suggestions, setSuggestions] = useState<{ description: string, placeId: string }[]>([]);
   const searchAddress = useAction(api.business.admin.searchAddressPublic);
-
   const { business, setBusinessDetails, setSteps } = useBusinessStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
@@ -83,6 +92,7 @@ const BusinessDetailForm = ({
       address: business?.address ?? { address: "", placeId: "" },
       businessDays: [{ ...BUSINESS_DAYS[0] }] as Business["businessDays"],
       coverImage: business?.coverImage ?? (null as File | null),
+      tags: business?.tags ?? ([] as string[]),
     },
     validators: {
       onSubmit: businessSchema,
@@ -94,6 +104,7 @@ const BusinessDetailForm = ({
         name: value.name,
         coverImage: value?.coverImage as File,
         businessDays: value.businessDays,
+        tags: value.tags,
       });
       setSteps("Payment");
     },
@@ -134,7 +145,6 @@ const BusinessDetailForm = ({
       return;
     }
 
-    // open crop dialog
     setPendingCropFile({
       file,
       isPrimary: true,
@@ -145,20 +155,16 @@ const BusinessDetailForm = ({
 
   const handleCropConfirm = (cropped: CroppedFile) => {
     if (!pendingCropFile) return;
-
     const { field } = pendingCropFile;
-
     field.handleChange(cropped.file);
-
     setCoverImage(cropped.url);
-
     setPendingCropFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCropCancel = () => {
     setPendingCropFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = ""; // and here
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -173,6 +179,8 @@ const BusinessDetailForm = ({
       >
         <div className="w-full h-full">
           <FieldGroup className="space-y-3">
+
+
             <form.Field name="coverImage">
               {(field) => {
                 const isInvalid =
@@ -187,7 +195,6 @@ const BusinessDetailForm = ({
                       ref={fileInputRef}
                       onChange={(e) => handleSelectCoverImage(e, field)}
                     />
-
                     <div className="relative w-full h-40 md:h-72 bg-white rounded-lg shadow-lg overflow-hidden">
                       <Image
                         src={coverImage ?? "/salon-image-placeholder.jpg"}
@@ -200,15 +207,10 @@ const BusinessDetailForm = ({
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <div className="bg-secondary w-14 h-14 rounded-full flex justify-center items-center">
-                          <CameraIcon
-                            fill="#EB3368"
-                            className="size-8 text-white"
-                          />
+                          <CameraIcon fill="#EB3368" className="size-8 text-white" />
                         </div>
                         <span className="text-black font-bold">
-                          {coverImage
-                            ? "Change Cover Photo"
-                            : "Upload Cover Photo"}
+                          {coverImage ? "Change Cover Photo" : "Upload Cover Photo"}
                         </span>
                         <span className="text-sm">PNG, JPG 5MB</span>
                       </div>
@@ -234,17 +236,15 @@ const BusinessDetailForm = ({
                       aria-invalid={isInvalid}
                       placeholder="Katlego's Nail Bar"
                       autoComplete="off"
-                      className={cn(
-                        "h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm ",
-                      )}
+                      className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
                     />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
             </form.Field>
+
+           
             <form.Field name="description">
               {(field) => {
                 const isInvalid =
@@ -259,11 +259,9 @@ const BusinessDetailForm = ({
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Put you business description here. This can be a brief information of what you do"
+                        placeholder="Put your business description here. This can be a brief information of what you do"
                         rows={6}
-                        className={cn(
-                          "h-9 placeholder:text-sm bg-[#F3F3F4] rounded-sm min-h-24 resize-none",
-                        )}
+                        className="h-9 placeholder:text-sm bg-[#F3F3F4] rounded-sm min-h-24 resize-none"
                         aria-invalid={isInvalid}
                       />
                       <InputGroupAddon align="block-end">
@@ -272,13 +270,13 @@ const BusinessDetailForm = ({
                         </InputGroupText>
                       </InputGroupAddon>
                     </InputGroup>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
             </form.Field>
+
+        
             <form.Field name="address">
               {(field) => {
                 const isInvalid =
@@ -304,9 +302,7 @@ const BusinessDetailForm = ({
                         aria-invalid={isInvalid}
                         placeholder="123 Main str, 1321"
                         autoComplete="off"
-                        className={cn(
-                          "h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm",
-                        )}
+                        className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
                       />
                       {suggestions.length > 0 && (
                         <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-border overflow-hidden">
@@ -330,14 +326,72 @@ const BusinessDetailForm = ({
                         </div>
                       )}
                     </div>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
             </form.Field>
 
+           
+            <form.Field name="tags">
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                const selectedTags = field.state.value;
+
+                const toggleTag = (tag: string) => {
+                  const isSelected = selectedTags.includes(tag);
+                  if (isSelected) {
+                    field.handleChange(selectedTags.filter((t) => t !== tag));
+                  } else {
+                    if (selectedTags.length >= 3) {
+                      toast.error("Maximum 3 tags allowed", {
+                        description: "Remove a tag before adding a new one",
+                      });
+                      return;
+                    }
+                    field.handleChange([...selectedTags, tag]);
+                  }
+                };
+
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel>
+                      Business Tags
+                      <span className="text-muted-foreground font-normal ml-1 text-xs">
+                        (select up to 3)
+                      </span>
+                    </FieldLabel>
+                    <div className="flex flex-wrap gap-2">
+                      {BUSINESS_TAGS.map((tag) => {
+                        const isSelected = selectedTags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => toggleTag(tag)}
+                            className={cn(
+                              "px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 cursor-pointer",
+                              isSelected
+                                ? "bg-primary text-white border-primary"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary"
+                            )}
+                          >
+                            {tag}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedTags.length}/3 selected
+                    </p>
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                  </Field>
+                );
+              }}
+            </form.Field>
+
+          
             <form.Field name="businessDays">
               {(field) => {
                 const isInvalid =
@@ -353,7 +407,6 @@ const BusinessDetailForm = ({
                         const isSelected = field.state.value.some(
                           (d) => d.fullName === day.fullName,
                         );
-
                         return (
                           <div
                             key={day.fullName}
@@ -362,18 +415,15 @@ const BusinessDetailForm = ({
                             <button
                               type="button"
                               onClick={() => {
-                                const isAlreadySelected =
-                                  field.state.value.some(
-                                    (d) => d.fullName === day.fullName,
-                                  );
+                                const isAlreadySelected = field.state.value.some(
+                                  (d) => d.fullName === day.fullName,
+                                );
                                 const updated = isAlreadySelected
                                   ? field.state.value.filter(
-                                      (d) => d.fullName !== day.fullName,
-                                    )
+                                    (d) => d.fullName !== day.fullName,
+                                  )
                                   : [...field.state.value, { ...day }];
-                                field.handleChange(
-                                  updated as Business["businessDays"],
-                                );
+                                field.handleChange(updated as Business["businessDays"]);
                               }}
                               className="flex items-center gap-3"
                             >
@@ -403,9 +453,7 @@ const BusinessDetailForm = ({
                                       step="60"
                                       value={subField.state.value}
                                       className="appearance-none bg-background h-9 rounded-sm"
-                                      onChange={(e) =>
-                                        subField.handleChange(e.target.value)
-                                      }
+                                      onChange={(e) => subField.handleChange(e.target.value)}
                                     />
                                   )}
                                 </form.Field>
@@ -419,9 +467,7 @@ const BusinessDetailForm = ({
                                       step="60"
                                       value={subField.state.value}
                                       className="appearance-none bg-background h-9 rounded-sm"
-                                      onChange={(e) =>
-                                        subField.handleChange(e.target.value)
-                                      }
+                                      onChange={(e) => subField.handleChange(e.target.value)}
                                     />
                                   )}
                                 </form.Field>
@@ -435,7 +481,6 @@ const BusinessDetailForm = ({
                         );
                       })}
 
-                      {/* Add Day button */}
                       {hasMoreDays && (
                         <Button
                           type="button"
@@ -450,18 +495,16 @@ const BusinessDetailForm = ({
                           className="w-full h-10 mt-3 mb-6 border-border bg-none text-primary"
                           variant="outline"
                         >
-                          <span className="text-lg leading-none">+</span> Add
-                          Day
+                          <span className="text-lg leading-none">+</span> Add Day
                         </Button>
                       )}
                     </div>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
+                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
                   </Field>
                 );
               }}
             </form.Field>
+
           </FieldGroup>
         </div>
       </form>
