@@ -17,6 +17,7 @@ export default defineSchema({
     name: v.string(),
     slug: v.string(),
     location: v.string(),
+    city:v.string(),
     latitude: v.float64(),
     longitude: v.float64(),
     description: v.optional(v.string()),
@@ -31,6 +32,7 @@ export default defineSchema({
       v.literal("offline")
     ),
     LastVerified: v.optional(v.number()),
+    tags: v.array(v.string())
   }).index("by_owner", ["ownerId"])
   .index("by_visibility", ["visibility"])
     .index("by_slug", ["slug"])
