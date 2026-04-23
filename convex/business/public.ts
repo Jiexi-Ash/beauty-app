@@ -23,3 +23,52 @@ export const getBusinesses = query({
     );
   },
 });
+
+export const getBusinessBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, { slug }) => {
+    const business = await ctx.db
+      .query("business")
+      .withIndex("by_slug_visibility", (q) =>
+        q.eq("slug", slug).eq("visibility", "visible"),
+      )
+      .unique();
+
+    if (!business) return null;
+
+    const businessCoverImage = await ctx.storage.getUrl(
+      business.coverImageStorageId,
+    );
+
+    const businessServices = await ctx.db
+      .query("service")
+      .withIndex("by_business_visibility", (q) =>
+        q.eq("businessId", business._id).eq("visibility", "visible"),
+      )
+      .collect();
+
+    const services = await Promise.all(
+      businessServices.map(async (service) => {
+        const primaryImage = await ctx.storage.getUrl(
+          service.primaryImageStorageId,
+        );
+        const imageGallery = await ctx.db
+          .query("serviceImages")
+          .withIndex("by_service", (q) => q.eq("serviceId", service._id))
+          .collect();
+
+        const galleryWithUrls = await Promise.all(
+          imageGallery.map(async (img) => ({
+            _id: img._id,
+            url: await ctx.storage.getUrl(img.imageStorageId),
+          })),
+        );
+        return { ...service, primaryImage, imageGallery: galleryWithUrls };
+      }),
+    );
+
+    return { ...business, businessCoverImage, services };
+  },
+});
