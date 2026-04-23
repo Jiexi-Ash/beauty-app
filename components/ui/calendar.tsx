@@ -21,6 +21,7 @@ function Calendar({
   locale,
   formatters,
   components,
+  navLayout = "after",
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
@@ -36,6 +37,7 @@ function Calendar({
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
       )}
+      navLayout={navLayout}
       captionLayout={captionLayout}
       locale={locale}
       formatters={{
