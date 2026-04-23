@@ -17,6 +17,8 @@ export const getBusinesses = query({
         id: business._id,
         name: business.name,
         location: business.location,
+        city: business.city,
+        tags: business.tags,
         coverImage:
           (await ctx.storage.getUrl(business.coverImageStorageId)) ?? null,
       })),
