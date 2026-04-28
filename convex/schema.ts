@@ -1,7 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-
 export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
@@ -17,7 +16,7 @@ export default defineSchema({
     name: v.string(),
     slug: v.string(),
     location: v.string(),
-    city:v.string(),
+    city: v.string(),
     latitude: v.float64(),
     longitude: v.float64(),
     description: v.optional(v.string()),
@@ -29,13 +28,14 @@ export default defineSchema({
     visibility: v.union(
       v.literal("hidden"),
       v.literal("visible"),
-      v.literal("offline")
+      v.literal("offline"),
     ),
     LastVerified: v.optional(v.number()),
-    tags: v.array(v.string())
-  }).index("by_owner", ["ownerId"])
-  .index("by_visibility", ["visibility"])
-  .index("by_slug_visibility", ["slug", "visibility"])
+    tags: v.array(v.string()),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_visibility", ["visibility"])
+    .index("by_slug_visibility", ["slug", "visibility"])
     .index("by_slug", ["slug"])
     .searchIndex("search_index", {
       searchField: "name",
@@ -43,7 +43,7 @@ export default defineSchema({
 
   businessVerified: defineTable({
     verifiedDate: v.number(),
-    businessId: v.id("business")
+    businessId: v.id("business"),
   }).index("by_business", ["businessId"]),
 
   businessSettings: defineTable({
@@ -63,7 +63,7 @@ export default defineSchema({
 
   subscriptionTiers: defineTable({
     tier: v.union(v.literal("free")),
-    price: v.number()
+    price: v.number(),
   }).index("by_tier", ["tier"]),
 
   service: defineTable({
@@ -76,9 +76,10 @@ export default defineSchema({
     primaryImageStorageId: v.id("_storage"),
     totalBookings: v.number(),
     visibility: v.union(v.literal("hidden"), v.literal("visible")),
-    updatedAt: v.optional(v.number())
-  }).index("by_name_and_business", ["name", "businessId"])
-  .index("by_business_visibility", ["businessId", "visibility"])
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_name_and_business", ["name", "businessId"])
+    .index("by_business_visibility", ["businessId", "visibility"])
     .index("by_name_business_visiblity", ["name", "businessId", "visibility"])
     .index("by_business", ["businessId"])
     .index("by_business_and_category", ["businessId", "categoryId"]),
@@ -90,12 +91,49 @@ export default defineSchema({
 
   categories: defineTable({
     name: v.string(),
-  }).index("by_name", ["name"])
-})
+  }).index("by_name", ["name"]),
+
+  booking: defineTable({
+    businessId: v.id("business"),
+    serviceId: v.id("service"),
+    userId: v.id("users"),
+    bookingStartDate: v.number(),
+    bookingEndDate: v.number(),
+    notes: v.optional(v.string()),
+    bookingPaymentId: v.optional(v.id("bookingPayment")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("failed"),
+      v.literal("confirmed"),
+    ),
+  })
+    .index("by_business", ["businessId"])
+    .index("by_business_service", ["businessId", "serviceId"])
+    .index("by_status", ["status"])
+    .index("by_business_and_date", ["businessId", "bookingStartDate"])
+    .index("by_user", ["userId"])
+    .index("by_user_and_date", ["userId", "bookingStartDate"]),
+
+  bookingPayment: defineTable({
+    bookingId: v.id("booking"),
+    paymentType: v.union(v.literal("deposit"), v.literal("full-payment")),
+    amount: v.number(),
+    paymentDate: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("refunded"),
+    ),
+    paymentReference: v.optional(v.string()),
+  })
+    .index("by_booking", ["bookingId"])
+    .index("by_booking_and_date", ["bookingId", "paymentDate"]),
+});
 
 export const businessDayValidator = v.object({
   fullName: v.string(),
   shortName: v.string(),
   openTime: v.string(),
   closeTime: v.string(),
-})
+});
