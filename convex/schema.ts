@@ -51,6 +51,7 @@ export default defineSchema({
     bufferTimeMinutes: v.float64(),
     businessId: v.id("business"),
     enableBusinessBufferTime: v.boolean(),
+    maxConcurrentBookings: v.number(),
   }).index("by_business", ["businessId"]),
 
   businessHours: defineTable({
