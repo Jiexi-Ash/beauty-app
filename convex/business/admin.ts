@@ -136,9 +136,11 @@ export const saveBusiness = internalMutation({
   ) => {
     const businessSlug = name
       .toLowerCase()
+      .replace(/'/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
       .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
 
     for (const day of businessDays) {
       const isValidDay = BUSINESS_DAYS.some(
@@ -214,6 +216,7 @@ export const saveBusiness = internalMutation({
       allowBookingBeyondCloseTime: false,
       bufferTimeMinutes: 0,
       enableBusinessBufferTime: false,
+      maxConcurrentBookings: 1,
     });
 
     await Promise.all(
