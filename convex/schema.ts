@@ -69,6 +69,7 @@ export default defineSchema({
 
   service: defineTable({
     name: v.string(),
+    slug: v.string(),
     description: v.string(),
     price: v.number(),
     categoryId: v.id("categories"),
@@ -80,6 +81,7 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index("by_name_and_business", ["name", "businessId"])
+    .index("by_business_and_slug", ["businessId","slug"])
     .index("by_business_visibility", ["businessId", "visibility"])
     .index("by_name_business_visiblity", ["name", "businessId", "visibility"])
     .index("by_business", ["businessId"])
@@ -111,7 +113,11 @@ export default defineSchema({
     .index("by_business", ["businessId"])
     .index("by_business_service", ["businessId", "serviceId"])
     .index("by_service_status", ["serviceId", "status"])
-    .index("by_service_status_date", ["serviceId", "status", "bookingStartDate"])
+    .index("by_service_status_date", [
+      "serviceId",
+      "status",
+      "bookingStartDate",
+    ])
     .index("by_status", ["status"])
     .index("by_business_and_date", ["businessId", "bookingStartDate"])
     .index("by_user", ["userId"])
