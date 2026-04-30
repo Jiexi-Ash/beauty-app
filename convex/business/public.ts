@@ -119,6 +119,51 @@ export const getBusinessServiceById = query({
   },
 });
 
+export const getBusinessServiceBySlug = query({
+  args: {
+    businessSlug: v.string(),
+    serviceSlug: v.string(),
+  },
+  handler: async (ctx, { serviceSlug, businessSlug }) => {
+    const business = await ctx.db
+      .query("business")
+      .withIndex("by_slug", (q) => q.eq("slug", businessSlug))
+      .first();
+
+    if (!business) return null;
+    const service = await ctx.db
+      .query("service")
+      .withIndex("by_business_and_slug", (q) =>
+        q.eq("businessId", business._id).eq("slug", serviceSlug),
+      )
+      .first();
+
+    if (!service) return null;
+
+    const [primaryImage, serviceGalleryImages] = await Promise.all([
+      ctx.storage.getUrl(service.primaryImageStorageId),
+      ctx.db
+        .query("serviceImages")
+        .withIndex("by_service", (q) => q.eq("serviceId", service._id))
+        .collect(),
+    ]);
+
+    const imageGallery = await Promise.all(
+      serviceGalleryImages.map(async (image) => ({
+        _id: image._id,
+        url: await ctx.storage.getUrl(image.imageStorageId),
+      })),
+    );
+
+    return {
+      ...service,
+      business: { name: business.name },
+      primaryImage,
+      imageGallery,
+    };
+  },
+});
+
 export const getBlockedSlots = query({
   args: {
     businessSlug: v.string(),
