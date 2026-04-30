@@ -31,7 +31,10 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
 
 
                 <div className="space-y-1">
-                    <h1 className="text-2xl font-bold">Find a Salon</h1>
+                    <h1 className="text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                        Find a{" "}
+                        <span className="text-primary italic">Salon.</span>
+                    </h1>
                     <p className="text-sm text-muted-foreground">Discover top-rated salons and spas near you</p>
                 </div>
 
@@ -99,20 +102,20 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {businesses.map((business) => (
                         <div key={business.id} className="group flex flex-col gap-3 cursor-pointer">
-                            <div className="relative aspect-4/3 overflow-hidden rounded-tl-4xl rounded-br-4xl">
+                            <div className="relative aspect-4/3 overflow-hidden ">
                                 <Badge className="absolute top-2 right-2 z-20 bg-white hover:bg-white shadow-sm gap-1">
-                                    <StarIcon fill="#F59E0B" className="size-3.5 text-amber-400" />
+                                    <StarIcon fill="#dd275e" className="size-3.5 text-primary" />
                                     <span className="text-[11px] font-medium text-black">4.3</span>
                                 </Badge>
                                 <Image
                                     src={business.coverImage ?? ""}
                                     fill
                                     alt={`${business.name} cover photo`}
-                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                    className="object-cover rounded-tl-4xl rounded-br-4xl group-hover:scale-110 transition-transform duration-300 "
                                 />
                             </div>
                             <div className="flex flex-col gap-1 px-1">
-                                <h2 className="text-sm font-semibold leading-tight">{business.name}</h2>
+                                <h2 className="text-sm font-semibold leading-tight group-hover:text-primary">{business.name}</h2>
                                 <div className="flex items-center gap-1 text-gray-400">
                                     <MapPin className="size-3.5 shrink-0" />
                                     <p className="text-xs">{business.city}</p>
