@@ -18,7 +18,7 @@ export default function Home() {
               <span className="text-primary italic">Beauty,</span> Booked.
             </h1>
             <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed mb-8">
-              Bridge the gap between editorial luxury and kasi pride. Premium booking management for business owners, effortless self-care for everyone else.
+              Bridge the gap between editorial luxury and local pride. Premium booking management for business owners, effortless self-care for everyone else.
             </p>
 
             {/* Search Bar */}
@@ -112,7 +112,7 @@ export default function Home() {
                   <UserRoundSearch className="size-6" />
                 </div>
                 <h3 className="text-2xl font-headline font-bold mb-4">Customer Records</h3>
-                <p className="text-on-surface-variant">Store preferences, allergy alerts, and visit history to provide that personalized &apos;kasi&apos; service every single time.</p>
+                <p className="text-on-surface-variant">Store preferences, allergy alerts, and visit history to provide that personalized service every single time.</p>
               </div>
 
               {/* Feature Card 4 - Dashboard Preview */}
@@ -201,7 +201,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <Quote className="size-16 text-primary/20 mx-auto mb-8" />
             <p className="text-3xl md:text-4xl font-headline font-bold italic leading-tight mb-12">
-              &ldquo;Switching to The Beauty App was the best decision for my salon. It brought professional management to my &apos;kasi&apos; business without the massive costs. My bookings have doubled since clients can book even at midnight.&rdquo;
+              &ldquo;Switching to The Beauty App was the best decision for my salon. It brought professional management to my business without the massive costs.&rdquo;
             </p>
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg mb-4 overflow-hidden relative">
