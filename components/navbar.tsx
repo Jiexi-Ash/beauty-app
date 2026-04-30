@@ -20,8 +20,8 @@ function Navbar() {
     const pathname = usePathname()
 
     return (
-        <header className="w-full bg-white flex items-center justify-between py-4 px-6 sticky top-0 z-50 border-b border-gray-100">
-            <nav className="w-full flex justify-between items-center max-w-[1440px] container mx-auto">
+        <header className="w-full bg-white sticky top-0 z-50 border-b border-gray-100">
+            <nav className="w-full flex justify-between items-center max-w-[1440px] mx-auto px-6 py-4">
 
                 <div className="flex items-center gap-6">
                     <Link href="/">
