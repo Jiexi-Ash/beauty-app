@@ -3,7 +3,6 @@ import { api } from '@/convex/_generated/api';
 import { Preloaded, usePreloadedQuery } from 'convex/react';
 import { Heart, MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
 import { useState } from 'react';
@@ -295,8 +294,8 @@ function ServiceDetailDialog({
                         <span className="text-xs text-muted-foreground">{duration}</span>
                         <span className="text-sm font-bold text-primary">R{price}</span>
                     </div>
-                    <Button className="w-full mt-2" onClick={() => {
-                        router.push(`/explore/${slug}/${service._id}/book`)
+                    <Button className="w-full mt-2 h-11 hover:bg-primary/80" size="lg" onClick={() => {
+                        router.push(`/explore/${slug}/services/${service._id}/book`)
                     }}>
                         Book Now
                     </Button>
