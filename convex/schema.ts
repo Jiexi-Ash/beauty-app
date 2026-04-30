@@ -98,8 +98,8 @@ export default defineSchema({
     businessId: v.id("business"),
     serviceId: v.id("service"),
     userId: v.id("users"),
-    bookingStartDate: v.number(),
-    bookingEndDate: v.number(),
+    bookingStartDate: v.number(), // time and date
+    bookingEndDate: v.number(), // time and date
     notes: v.optional(v.string()),
     bookingPaymentId: v.optional(v.id("bookingPayment")),
     status: v.union(
@@ -110,6 +110,8 @@ export default defineSchema({
   })
     .index("by_business", ["businessId"])
     .index("by_business_service", ["businessId", "serviceId"])
+    .index("by_service_status", ["serviceId", "status"])
+    .index("by_service_status_date", ["serviceId", "status", "bookingStartDate"])
     .index("by_status", ["status"])
     .index("by_business_and_date", ["businessId", "bookingStartDate"])
     .index("by_user", ["userId"])
