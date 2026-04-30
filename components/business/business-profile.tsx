@@ -295,7 +295,7 @@ function ServiceDetailDialog({
                         <span className="text-sm font-bold text-primary">R{price}</span>
                     </div>
                     <Button className="w-full mt-2 h-11 hover:bg-primary/80" size="lg" onClick={() => {
-                        router.push(`/explore/${slug}/services/${service._id}/book`)
+                        router.push(`/explore/${slug}/services/${service.slug}/book`)
                     }}>
                         Book Now
                     </Button>
