@@ -12,6 +12,7 @@ import { Id } from "../_generated/dataModel";
 import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
 import { BUSINESS_DAYS } from "../../constants";
+import { slugify } from "../../lib/utils";
 
 const geospatial = new GeospatialIndex(components.geospatial);
 
@@ -134,13 +135,7 @@ export const saveBusiness = internalMutation({
       city,
     },
   ) => {
-    const businessSlug = name
-      .toLowerCase()
-      .replace(/'/g, "")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
+    const businessSlug = slugify(name)
 
     for (const day of businessDays) {
       const isValidDay = BUSINESS_DAYS.some(
