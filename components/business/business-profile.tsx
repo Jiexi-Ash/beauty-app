@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Doc, Id } from '@/convex/_generated/dataModel';
+import { useRouter } from 'next/navigation';
 
 type Service = Doc<"service"> & {
     primaryImage: string | null;
@@ -243,6 +244,7 @@ function ServiceDetailDialog({
     slug: string
 }) {
     const [activeImage, setActiveImage] = useState<string | null>(null)
+    const router = useRouter()
 
     if (!service) return null
 
@@ -293,8 +295,10 @@ function ServiceDetailDialog({
                         <span className="text-xs text-muted-foreground">{duration}</span>
                         <span className="text-sm font-bold text-primary">R{price}</span>
                     </div>
-                    <Button className="w-full mt-2">
-                        <Link href={`/explore/${slug}/book`}>Book Now</Link>
+                    <Button className="w-full mt-2" onClick={() => {
+                        router.push(`/explore/${slug}/${service._id}/book`)
+                    }}>
+                        Book Now
                     </Button>
                 </div>
             </DialogContent>
