@@ -13,7 +13,6 @@ type NavLink = {
 
 const navLinks: NavLink[] = [
     { href: "/explore", label: "Find a Salon" },
-    { href: "/business", label: "For Business" },
 ];
 
 function Navbar() {
