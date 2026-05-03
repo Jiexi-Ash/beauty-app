@@ -32,8 +32,6 @@ export const bookSlot = action({
       },
     );
 
-    const isProd = process.env.NODE_ENV === "production";
-    const appUrl = isProd ? process.env.APP_URL : process.env.DEV_URL;
     const [firstName, ...lastParts] = args.fullName.split(" ");
     const lastName = lastParts.join(" ") || firstName;
     const depositAmount = (result.servicePrice / 100) * 0.5;
@@ -42,8 +40,8 @@ export const bookSlot = action({
       merchant: {
         merchant_id: process.env.PAYFAST_MERCHANT_ID!,
         merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
-        return_url: `${appUrl}/bookings?status=success`,
-        cancel_url: `${appUrl}/payment/cancel`,
+        return_url: `${process.env.APP_URL}/bookings?status=success`,
+        cancel_url: `${process.env.APP_URL}/payment/cancel`,
         notify_url: `${process.env.HTTP_URL}/api/payfast/notify`,
       },
       customer: {
