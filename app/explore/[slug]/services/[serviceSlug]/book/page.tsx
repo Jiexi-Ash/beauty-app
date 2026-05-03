@@ -2,7 +2,7 @@
 
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { useQuery } from "convex/react"
+import { useAction, useQuery } from "convex/react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import { useState, useMemo } from "react"
@@ -19,6 +19,7 @@ import { useForm } from "@tanstack/react-form"
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import MainLayout from "@/components/main-layout"
+import { toast } from "sonner"
 
 const toNoonUTC = (d: Date) =>
   new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0))
@@ -40,6 +41,12 @@ const bookingSchema = z.object({
 
 function BookServicePage() {
   const params = useParams<{ slug: string; serviceSlug: string }>()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [weekOffset, setWeekOffset] = useState(0)
+  const [selectedDate, setSelectedDate] = useState<Date>(() => toNoonUTC(new Date()))
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
+
+  const bookSlot = useAction(api.booking.actions.bookSlot);
   const { user } = useUser()
 
   const service = useQuery(api.business.public.getBusinessServiceBySlug, {
@@ -58,14 +65,56 @@ function BookServicePage() {
     validators: {
       onSubmit: bookingSchema
     },
-    onSubmit: ({ value }) => {
-      console.log(value)
-    }
+    onSubmit: async ({ value }) => {
+      if (!selectedSlot) return;
+      setIsSubmitting(true)
+      try {
+        const paymentData = await bookSlot({
+          serviceSlug: params.serviceSlug,
+          businessSlug: params.slug,
+          date: format(new Date(selectedSlot.startTimestamp), "yyyy-MM-dd"),
+          time: format(new Date(selectedSlot.startTimestamp), "HH:mm"),
+          fullName: value.fullName,
+          phoneNumber: value.phoneNumber || undefined,
+          notes: value.notes || undefined,
+        });
+
+        // Build and submit hidden PayFast form
+        const payfastForm = document.createElement("form");
+        payfastForm.method = "POST";
+        payfastForm.action = "https://sandbox.payfast.co.za/eng/process"; // swap for prod
+
+        const { split_payment, ...fields } = paymentData;
+
+        // Add all regular fields
+        Object.entries(fields).forEach(([key, val]) => {
+          if (val === undefined || val === null) return;
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(val);
+          payfastForm.appendChild(input);
+        });
+
+        // Add split payment as JSON-encoded "setup" field — NOT included in signature
+        if (split_payment) {
+          const setup = document.createElement("input");
+          setup.type = "hidden";
+          setup.name = "setup";
+          setup.value = JSON.stringify({ split_payment });
+          payfastForm.appendChild(setup);
+        }
+
+        document.body.appendChild(payfastForm);
+        payfastForm.submit();
+      } catch (error) {
+        setIsSubmitting(false)
+        console.error("Booking failed:", error);
+        toast.error("Booking Failed")
+      }
+    },
   })
 
-  const [weekOffset, setWeekOffset] = useState(0)
-  const [selectedDate, setSelectedDate] = useState<Date>(() => toNoonUTC(new Date()))
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
 
   const weekDays = useMemo(() => {
     const now = new Date()
@@ -174,12 +223,12 @@ function BookServicePage() {
       : `${durationMinutes} min`
 
   // TODO: move to business settings or subscription tier config
-  const depositPercent = 0.15
-  const processingFee = 15
+  const depositPercent = 0.5
+
   // price stored in cents
   const priceRands = service.price / 100
-  const deposit = priceRands * depositPercent
-  const totalDue = deposit + processingFee
+  const depositDue = priceRands * 0.50
+
 
   const businessDisplayName = service.business.name ?? params.slug.replace(/-/g, " ")
 
@@ -394,14 +443,13 @@ function BookServicePage() {
 
             <div className="lg:hidden">
               <ConfirmBooking
+                isSubmitting={isSubmitting}
                 service={service}
                 businessDisplayName={businessDisplayName}
                 durationLabel={durationLabel}
                 priceRands={priceRands}
                 depositPercent={depositPercent}
-                deposit={deposit}
-                processingFee={processingFee}
-                totalDue={totalDue}
+                depositDue={depositDue}
                 selectedSlot={selectedSlot}
               />
             </div>
@@ -411,14 +459,13 @@ function BookServicePage() {
 
           <div className="hidden lg:block sticky top-8">
             <ConfirmBooking
+              isSubmitting={isSubmitting}
               service={service}
               businessDisplayName={businessDisplayName}
               durationLabel={durationLabel}
               priceRands={priceRands}
               depositPercent={depositPercent}
-              deposit={deposit}
-              processingFee={processingFee}
-              totalDue={totalDue}
+              depositDue={depositDue}
               selectedSlot={selectedSlot}
             />
           </div>
@@ -431,24 +478,22 @@ function BookServicePage() {
 
 
 function ConfirmBooking({
+  isSubmitting,
   service,
   businessDisplayName,
   durationLabel,
   priceRands,
   depositPercent,
-  deposit,
-  processingFee,
-  totalDue,
+  depositDue,
   selectedSlot,
 }: {
+  isSubmitting: boolean
   service: { name: string; primaryImage?: string | null; price: number }
   businessDisplayName: string
   durationLabel: string
   priceRands: number
   depositPercent: number
-  deposit: number
-  processingFee: number
-  totalDue: number
+  depositDue: number
   selectedSlot: Slot | null
 }) {
   return (
@@ -479,8 +524,8 @@ function ConfirmBooking({
         <div className="border-t border-foreground/8 pt-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold">{service.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{durationLabel}</p>
+              <p className="text-sm font-semibold capitalize">{service.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Duration: {durationLabel}</p>
             </div>
             <span className="text-sm font-bold shrink-0">R{priceRands.toFixed(2)}</span>
           </div>
@@ -498,35 +543,23 @@ function ConfirmBooking({
           </div>
         )}
 
-        <div className="border-t border-foreground/8 pt-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>R{priceRands.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
-              Deposit ({(depositPercent * 100).toFixed(0)}%)
-            </span>
-            <span>R{deposit.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Processing Fee</span>
-            <span>R{processingFee.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-black text-lg pt-3 border-t border-foreground/8">
-            <span>Total</span>
-            <span className="text-primary">R{totalDue.toFixed(2)}</span>
-          </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Deposit ({(depositPercent * 100).toFixed(0)}%)</span>
+          <span>R{depositDue.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-black text-lg pt-3 border-t border-foreground/8">
+          <span>Due Today</span>
+          <span className="text-primary">R{depositDue.toFixed(2)}</span>
         </div>
 
         <Button
           size="lg"
           className="w-full rounded-full text-base font-bold py-6 bg-primary hover:bg-primary/90"
-          disabled={!selectedSlot}
+          disabled={!selectedSlot || isSubmitting}
           type="submit"
           form="book-appointment"
         >
-          Confirm Appointment
+          {isSubmitting ? "Processing..." : "Confirm Appointment"}
         </Button>
 
         <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground font-semibold pt-1">
