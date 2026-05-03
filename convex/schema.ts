@@ -63,8 +63,9 @@ export default defineSchema({
   }).index("by_businessId", ["businessId"]),
 
   subscriptionTiers: defineTable({
-    tier: v.union(v.literal("free")),
+    tier: v.union(v.literal("free"), v.literal("pro"), v.literal("business")),
     price: v.number(),
+    commission: v.number(),
   }).index("by_tier", ["tier"]),
 
   service: defineTable({
@@ -81,7 +82,7 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index("by_name_and_business", ["name", "businessId"])
-    .index("by_business_and_slug", ["businessId","slug"])
+    .index("by_business_and_slug", ["businessId", "slug"])
     .index("by_business_visibility", ["businessId", "visibility"])
     .index("by_name_business_visiblity", ["name", "businessId", "visibility"])
     .index("by_business", ["businessId"])
@@ -133,11 +134,23 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("failed"),
       v.literal("refunded"),
+      v.literal("cancelled"),
     ),
+    commission: v.number(),
     paymentReference: v.optional(v.string()),
   })
     .index("by_booking", ["bookingId"])
     .index("by_booking_and_date", ["bookingId", "paymentDate"]),
+
+  paymentSplits: defineTable({
+    bookingPaymentId: v.id("bookingPayment"),
+    amountGross: v.number(),
+    amountFee: v.number(),
+    amountNet: v.number(),
+    platformAmount: v.number(),
+    merchantAmount: v.number(),
+    commission: v.number(),
+  }).index("by_booking_payment", ["bookingPaymentId"]),
 });
 
 export const businessDayValidator = v.object({
