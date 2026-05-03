@@ -8,10 +8,15 @@
  * @module
  */
 
+import type * as booking_actions from "../booking/actions.js";
+import type * as booking_admin from "../booking/admin.js";
+import type * as booking_public from "../booking/public.js";
 import type * as business_actions from "../business/actions.js";
 import type * as business_admin from "../business/admin.js";
 import type * as business_public from "../business/public.js";
 import type * as http from "../http.js";
+import type * as payfast from "../payfast.js";
+import type * as payment from "../payment.js";
 import type * as public_ from "../public.js";
 import type * as seed from "../seed.js";
 import type * as service_admin from "../service/admin.js";
@@ -24,10 +29,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "booking/actions": typeof booking_actions;
+  "booking/admin": typeof booking_admin;
+  "booking/public": typeof booking_public;
   "business/actions": typeof business_actions;
   "business/admin": typeof business_admin;
   "business/public": typeof business_public;
   http: typeof http;
+  payfast: typeof payfast;
+  payment: typeof payment;
   public: typeof public_;
   seed: typeof seed;
   "service/admin": typeof service_admin;
