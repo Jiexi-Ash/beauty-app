@@ -11,6 +11,7 @@
 import type * as booking_actions from "../booking/actions.js";
 import type * as booking_admin from "../booking/admin.js";
 import type * as booking_public from "../booking/public.js";
+import type * as booking_user from "../booking/user.js";
 import type * as business_actions from "../business/actions.js";
 import type * as business_admin from "../business/admin.js";
 import type * as business_public from "../business/public.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   "booking/actions": typeof booking_actions;
   "booking/admin": typeof booking_admin;
   "booking/public": typeof booking_public;
+  "booking/user": typeof booking_user;
   "business/actions": typeof business_actions;
   "business/admin": typeof business_admin;
   "business/public": typeof business_public;
