@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { MapPin, ShieldCheck, Check, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import { useUser } from "@clerk/nextjs"
+import { SignInButton, useUser } from "@clerk/nextjs"
 import * as z from "zod"
 import { useForm } from "@tanstack/react-form"
 import { Field, FieldGroup } from "@/components/ui/field"
@@ -234,7 +234,7 @@ function BookServicePage() {
 
   return (
     <MainLayout>
-      <div className="py-4">
+      <div className="py-4 px-6 ">
         <Link
           href={`/explore/${params.slug}`}
           className="inline-flex items-center gap-1.5 text-sm text-primary font-medium mb-6 hover:underline"
@@ -496,6 +496,7 @@ function ConfirmBooking({
   depositDue: number
   selectedSlot: Slot | null
 }) {
+  const { user, isSignedIn } = useUser()
   return (
     <div className="rounded-2xl bg-white shadow-sm border border-foreground/10 overflow-hidden">
       {service.primaryImage && (
@@ -552,15 +553,24 @@ function ConfirmBooking({
           <span className="text-primary">R{depositDue.toFixed(2)}</span>
         </div>
 
-        <Button
-          size="lg"
-          className="w-full rounded-full text-base font-bold py-6 bg-primary hover:bg-primary/90"
-          disabled={!selectedSlot || isSubmitting}
-          type="submit"
-          form="book-appointment"
-        >
-          {isSubmitting ? "Processing..." : "Confirm Appointment"}
-        </Button>
+        {isSignedIn ?
+          <Button
+            size="lg"
+            className="w-full rounded-full text-base font-bold py-6 bg-primary hover:bg-primary/90"
+            disabled={!selectedSlot || isSubmitting}
+            type="submit"
+            form="book-appointment"
+          >
+            {isSubmitting ? "Processing..." : "Confirm Appointment"}
+          </Button > : <SignInButton mode="modal" >
+            <Button
+              size="lg"
+              className="w-full rounded-full text-base font-bold py-6 bg-primary hover:bg-primary/90"
+            >
+              Sign In to Book An Appointment
+            </Button>
+          </SignInButton>
+        }
 
         <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground font-semibold pt-1">
           <ShieldCheck className="inline size-3 mr-1" />
