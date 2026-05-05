@@ -202,7 +202,7 @@ export const getBlockedSlots = query({
           .withIndex("by_service_status_date", (q) =>
             q
               .eq("serviceId", service._id)
-              .eq("status", "confirmed")
+              .eq("status", "upcoming")
               .gte("bookingStartDate", dayStart)
               .lte("bookingStartDate", dayEnd),
           )
