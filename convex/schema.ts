@@ -108,7 +108,10 @@ export default defineSchema({
     status: v.union(
       v.literal("pending"),
       v.literal("failed"),
-      v.literal("confirmed"),
+      v.literal("upcoming"),
+      v.literal("cancelled_by_user"),
+      v.literal("cancelled_by_business"),
+      v.literal("cancelled_by_payment_failed"),
     ),
   })
     .index("by_business", ["businessId"])
