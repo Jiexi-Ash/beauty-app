@@ -12,7 +12,7 @@ export const updateBookingStatus = internalMutation({
 
     if (status === "confirmed") {
       await Promise.all([
-        ctx.db.patch(booking._id, { status: "confirmed" }),
+        ctx.db.patch(booking._id, { status: "upcoming" }),
         ctx.db.patch(booking.bookingPaymentId, { status: "completed" }),
       ]);
     } else {
@@ -44,8 +44,6 @@ export const getBookingPayment = internalQuery({
       .query("bookingPayment")
       .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
       .unique();
-
-    
   },
 });
 
