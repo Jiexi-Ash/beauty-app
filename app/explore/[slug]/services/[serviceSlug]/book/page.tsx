@@ -574,7 +574,7 @@ function ConfirmBooking({
 
         <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground font-semibold pt-1">
           <ShieldCheck className="inline size-3 mr-1" />
-          Secure SSL Payment · No Pre-Payment Required
+          Secure SSL Payment
         </p>
       </div>
     </div>
