@@ -115,3 +115,94 @@ export const createBookingRecord = internalMutation({
     };
   },
 });
+
+export const rescheduleBookingRecord = internalMutation({
+  args: {
+    bookingId: v.id("booking"),
+    date: v.string(),
+    time: v.string(),
+    clerkId: v.string(),
+  },
+
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .unique();
+    if (!user) throw new ConvexError("User not found.");
+
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking) throw new ConvexError("Booking not found.");
+
+    if (booking.userId !== user._id)
+      throw new ConvexError("You are not allowed to reschedule this booking.");
+
+    if (booking.status !== "upcoming")
+      throw new ConvexError("This booking cannot be rescheduled.");
+
+    const business = await ctx.db.get(booking.businessId);
+    if (!business) throw new ConvexError("Business not found.");
+    if (business.visibility !== "visible")
+      throw new ConvexError("This business is not active at the moment.");
+
+    const service = await ctx.db.get(booking.serviceId);
+    if (!service) throw new ConvexError("Service not found.");
+    if (service.visibility !== "visible")
+      throw new ConvexError("This service is not available.");
+
+    const newStart = new Date(`${args.date}T${args.time}:00+02:00`);
+    if (Number.isNaN(newStart.getTime()))
+      throw new ConvexError("Invalid date or time.");
+
+    const newStartMs = newStart.getTime();
+    const newEndMs = newStartMs + service.duration * 60000;
+
+    if (newStartMs <= Date.now())
+      throw new ConvexError("New booking time must be in the future.");
+
+    if (
+      newStartMs === booking.bookingStartDate &&
+      newEndMs === booking.bookingEndDate
+    )
+      throw new ConvexError(
+        "New time is the same as the current booking time.",
+      );
+
+    const settings = await ctx.db
+      .query("businessSettings")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .unique();
+
+    const maxConcurrent = settings?.maxConcurrentBookings ?? 1;
+
+    const overlapping = await ctx.db
+      .query("booking")
+      .withIndex("by_business_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          .gte("bookingStartDate", newStartMs - service.duration * 60000)
+          .lte("bookingStartDate", newEndMs),
+      )
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("_id"), booking._id),
+          q.neq(q.field("status"), "failed"),
+          q.neq(q.field("status"), "pending"),
+          q.neq(q.field("status"), "cancelled_by_user"),
+          q.neq(q.field("status"), "cancelled_by_business"),
+          q.neq(q.field("status"), "cancelled_by_payment_failed"),
+          q.lt(q.field("bookingStartDate"), newEndMs),
+          q.gt(q.field("bookingEndDate"), newStartMs),
+        ),
+      )
+      .collect();
+
+    if (overlapping.length >= maxConcurrent)
+      throw new ConvexError("This time slot is fully booked.");
+
+    await ctx.db.patch(booking._id, {
+      bookingStartDate: newStartMs,
+      bookingEndDate: newEndMs,
+    });
+  },
+});
