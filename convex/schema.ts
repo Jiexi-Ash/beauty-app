@@ -109,6 +109,8 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("failed"),
       v.literal("upcoming"),
+      v.literal("in_progress"),
+      v.literal("completed"),
       v.literal("cancelled_by_user"),
       v.literal("cancelled_by_business"),
       v.literal("cancelled_by_payment_failed"),
