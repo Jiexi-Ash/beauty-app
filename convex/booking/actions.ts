@@ -40,7 +40,7 @@ export const bookSlot = action({
       merchant: {
         merchant_id: process.env.PAYFAST_MERCHANT_ID!,
         merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
-        return_url: `${process.env.APP_URL}/bookings?status=success`,
+        return_url: `${process.env.APP_URL}/profile/bookings?status=success`,
         cancel_url: `${process.env.APP_URL}/payment/cancel`,
         notify_url: `${process.env.HTTP_URL}/api/payfast/notify`,
       },
@@ -66,5 +66,25 @@ export const bookSlot = action({
     });
 
     return paymentData;
+  },
+});
+
+export const rescheduleBooking = action({
+  args: {
+    bookingId: v.id("booking"),
+    date: v.string(),
+    time: v.string(),
+  },
+  handler: async (ctx, { bookingId, date, time }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity)
+      throw new ConvexError("You must be logged in to reschedule.");
+
+    await ctx.runMutation(internal.booking.public.rescheduleBookingRecord, {
+      bookingId: bookingId,
+      date: date,
+      time: time,
+      clerkId: identity.subject,
+    });
   },
 });
