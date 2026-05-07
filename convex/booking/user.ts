@@ -1,5 +1,6 @@
-import { query } from "../_generated/server";
-import { getCurrentUser } from "../users";
+import { ConvexError, v } from "convex/values";
+import { mutation, query } from "../_generated/server";
+import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 
 export const getUserBookings = query({
   handler: async (ctx) => {
@@ -43,5 +44,30 @@ export const getUserBookings = query({
     );
 
     return bookingWithServiceInfo;
+  },
+});
+
+export const cancelBooking = mutation({
+  args: {
+    bookingId: v.id("booking"),
+  },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user)
+      throw new ConvexError("You need to be logged in to perform this action.");
+
+    const booking = await ctx.db.get(bookingId);
+
+    if (!booking || booking.userId != user._id)
+      throw new ConvexError("Booking not found.");
+
+    if (booking.status !== "upcoming") {
+      throw new ConvexError("This booking cannot be cancelled.");
+    }
+
+    await ctx.db.patch(booking._id, {
+      status: "cancelled_by_user",
+    });
   },
 });

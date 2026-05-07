@@ -68,3 +68,23 @@ export const bookSlot = action({
     return paymentData;
   },
 });
+
+export const rescheduleBooking = action({
+  args: {
+    bookingId: v.id("booking"),
+    date: v.string(),
+    time: v.string(),
+  },
+  handler: async (ctx, { bookingId, date, time }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity)
+      throw new ConvexError("You must be logged in to reschedule.");
+
+    await ctx.runMutation(internal.booking.public.rescheduleBookingRecord, {
+      bookingId: bookingId,
+      date: date,
+      time: time,
+      clerkId: identity.subject,
+    });
+  },
+});
