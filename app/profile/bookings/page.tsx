@@ -1,5 +1,5 @@
 import { getAuthToken } from '@/auth'
-import UserBookings from '@/components/user-bookings'
+import PreloadedUserBookings from '@/components/user-bookings'
 import { api } from '@/convex/_generated/api'
 import { preloadQuery } from 'convex/nextjs'
 import React from 'react'
@@ -10,7 +10,7 @@ async function UserBookingsPage() {
 
     const preloadBookings = await preloadQuery(api.booking.user.getUserBookings, {}, { token })
     return (
-        <UserBookings preloadedBookings={preloadBookings} />
+        <PreloadedUserBookings preloadedBookings={preloadBookings} />
     )
 }
 
