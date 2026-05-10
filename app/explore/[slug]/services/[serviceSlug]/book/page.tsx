@@ -234,7 +234,7 @@ function BookServicePage() {
 
   return (
     <MainLayout>
-      <div className="py-4 px-6 ">
+      <div className="mt-10">
         <Link
           href={`/explore/${params.slug}`}
           className="inline-flex items-center gap-1.5 text-sm text-primary font-medium mb-6 hover:underline"
