@@ -40,7 +40,7 @@ export const bookSlot = action({
       merchant: {
         merchant_id: process.env.PAYFAST_MERCHANT_ID!,
         merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
-        return_url: `${process.env.APP_URL}/profile/bookings?status=success`,
+        return_url: `${process.env.APP_URL}/profile/bookings/${result.bookingId}/confirmation`,
         cancel_url: `${process.env.APP_URL}/payment/cancel`,
         notify_url: `${process.env.HTTP_URL}/api/payfast/notify`,
       },
