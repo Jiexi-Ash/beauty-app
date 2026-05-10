@@ -75,7 +75,7 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
         <div className="w-full min-h-screen">
 
 
-            <div className="w-full h-[360px] md:h-[500px] relative">
+            <div className="w-[calc(100%+3rem)] md:w-full h-[360px] md:h-[500px] relative -mx-6 md:mx-0 -mt-4 md:mt-0 md:overflow-hidden md:rounded-4xl">
                 <Image
                     src={business.businessCoverImage ?? ""}
                     fill
@@ -83,7 +83,7 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
                     alt={`${business.name} cover`}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 max-w-[1440px] container mx-auto px-4 md:px-6 pb-5">
+                <div className="absolute bottom-0 left-0 right-0 px-6 md:px-5 pb-5">
                     <div className="flex items-end justify-between">
                         <div className="space-y-0.5">
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{business.name}</h1>
@@ -101,7 +101,7 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
                 </div>
             </div>
 
-            <div className="max-w-[1440px] container mx-auto px-4 md:px-6 mt-6">
+            <div className="mt-6">
                 <div className="flex flex-col lg:flex-row gap-8">
 
 

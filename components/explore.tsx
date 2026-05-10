@@ -22,15 +22,15 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
     const [focusedField, setFocusedField] = useState<"search" | "location" | null>(null)
 
     if (!businesses || businesses.length === 0) {
-        return <div className="max-w-[1440px] container mx-auto px-6">no business</div>
+        return <div>no business</div>
     }
 
     return (
-        <div className="max-w-[1440px] container mx-auto px-6">
+        <div>
             <div className="space-y-6 mt-10">
 
 
-                <div className="space-y-1">
+                <div className="space-y-1 mt-10">
                     <h1 className="text-4xl lg:text-5xl font-black tracking-tight leading-tight">
                         Find a{" "}
                         <span className="text-primary italic">Salon.</span>
@@ -41,7 +41,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
 
                 <div className={cn(
                     "flex items-center w-full max-w-2xl rounded-full border transition-all duration-200 overflow-hidden",
-                    focusedField ? "bg-white ring-2 ring-primary border-primary" : "border-gray-200 bg-stone-100"
+                    focusedField ? "bg-white ring-2 ring-primary border-primary" : "border-gray-300 bg-gray-50"
                 )}>
 
 

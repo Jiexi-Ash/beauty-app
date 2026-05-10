@@ -1,6 +1,7 @@
 
 import { getAuthToken } from '@/auth'
 import Explore from '@/components/explore'
+import MainLayout from '@/components/main-layout'
 import Navbar from '@/components/navbar'
 import { api } from '@/convex/_generated/api'
 import { preloadQuery } from 'convex/nextjs'
@@ -10,10 +11,10 @@ async function ExplorePage() {
     const token = await getAuthToken()
     const preloadBusinesses = await preloadQuery(api.business.public.getBusinesses, { limit: 12 }, { token })
     return (
-        <div className="w-full min-h-screen bg-stone-50">
-            <Navbar />
+        <MainLayout>
             <Explore preloadedBusinesses={preloadBusinesses} />
-        </div>
+        </MainLayout>
+
     )
 }
 

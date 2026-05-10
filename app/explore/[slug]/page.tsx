@@ -1,5 +1,6 @@
 import { getAuthToken } from '@/auth';
 import BusinessProfile from '@/components/business/business-profile';
+import MainLayout from '@/components/main-layout';
 import Navbar from '@/components/navbar';
 import { api } from '@/convex/_generated/api';
 import { preloadQuery } from 'convex/nextjs';
@@ -18,10 +19,13 @@ async function ExploreBusinessPage({ params }: ExploreBusinessPageProps) {
         { slug: slug },
         { token }
     )
-    return <div className="w-full min-h-screen bg-stone-50">
-        <Navbar />
-        <BusinessProfile preloadedBusiness={preloadedBusiness} />
-    </div>
+    return (
+        <MainLayout>
+            <BusinessProfile preloadedBusiness={preloadedBusiness} />
+        </MainLayout>
+    )
+
+
 
 
 }
