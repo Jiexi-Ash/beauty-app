@@ -11,7 +11,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
     Dialog,
@@ -27,7 +26,6 @@ import { api } from '@/convex/_generated/api'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { TZDate } from '@date-fns/tz'
 import { format, isSameDay } from 'date-fns'
 import Image from 'next/image'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -36,7 +34,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useConvexMutation } from '@convex-dev/react-query'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
-import { cn } from '@/lib/utils'
+import { cn, formatBookingShortDate } from '@/lib/utils'
 
 interface PreloadedUserBookingsProps {
     preloadedBookings: Preloaded<typeof api.booking.user.getUserBookings>;
@@ -100,11 +98,6 @@ type BookingCardVariant = "upcoming" | "completed" | "cancelled"
 interface BookingCardProps {
     booking: Booking
     variant: BookingCardVariant
-}
-
-const formatBookingShortDate = (timestamp: number, timezone?: string) => {
-    const zonedDate = timezone ? new TZDate(timestamp, timezone) : new Date(timestamp)
-    return format(zonedDate, "MMM d, p")
 }
 
 function BookingCard({ booking, variant }: BookingCardProps) {
@@ -530,9 +523,9 @@ function UserBookings({ bookings }: UserBookingsProps) {
     }
     return (
         <MainLayout>
-            <div className="py-4 space-y-4 w-full">
+            <div className="space-y-4 w-full">
                 {isSuccess && !dismissed && (
-                    <Card className="bg-green-400 rounded-none ">
+                    <Card className="bg-green-400 rounded-none -mx-6">
                         <CardContent className="px-6">
                             <div className="flex gap-2 justify-between items-center">
                                 <div className="flex gap-2 items-center">
@@ -547,7 +540,7 @@ function UserBookings({ bookings }: UserBookingsProps) {
                         </CardContent>
                     </Card>)
                 }
-                <div className="px-6">
+                <div>
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col gap-1">
                             <h1 className="font-bold text-2xl">My Bookings</h1>
