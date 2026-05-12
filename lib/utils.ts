@@ -40,3 +40,13 @@ export const formatBookingTime = (timestamp: number, timezone?: string) => {
     : new Date(timestamp);
   return format(zonedDate, "p"); // e.g. "2:30 PM"
 };
+
+
+export const getInitials = (fullName: string): string => {
+  return fullName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
