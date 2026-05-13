@@ -1,5 +1,6 @@
-import Image from 'next/image'
 import { CalendarDays, UserRoundSearch } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 function Features() {
     return (
@@ -11,7 +12,7 @@ function Features() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Feature Card 1 - Seamless Booking */}
+                    {/* Seamless Booking */}
                     <div className="md:col-span-2 bg-surface-container-lowest p-10 rounded-xl flex flex-col justify-between hover:shadow-lg transition-shadow duration-500">
                         <div>
                             <div className="w-14 h-14 bg-secondary-container-ds rounded-full flex items-center justify-center text-primary mb-8">
@@ -26,7 +27,7 @@ function Features() {
                         </div>
                     </div>
 
-                    {/* Feature Card 2 - Low-Cost Subscription */}
+                    {/*  Low-Cost Subscription */}
                     <div className="bg-gradient-to-br from-primary to-primary-container p-10 rounded-xl text-white flex flex-col justify-center">
                         <div className="mb-8">
                             <h3 className="text-2xl font-headline font-bold mb-4">Low-Cost Subscription</h3>
@@ -36,7 +37,7 @@ function Features() {
                         <p className="text-xs uppercase tracking-widest opacity-70">No hidden fees. Cancel anytime.</p>
                     </div>
 
-                    {/* Feature Card 3 - Customer Records */}
+                    {/* Customer Records */}
                     <div className="bg-surface-container-lowest p-10 rounded-xl hover:shadow-lg transition-shadow duration-500">
                         <div className="w-14 h-14 bg-secondary-container-ds rounded-full flex items-center justify-center text-primary mb-8">
                             <UserRoundSearch className="size-6" />
@@ -45,19 +46,17 @@ function Features() {
                         <p className="text-on-surface-variant">Store preferences, allergy alerts, and visit history to provide that personalized service every single time.</p>
                     </div>
 
-                    {/* Feature Card 4 - Dashboard Preview */}
-                    <div className="md:col-span-2 bg-surface p-1 rounded-xl flex items-center justify-center overflow-hidden">
-                        <div className="w-full h-64 bg-surface-container-high rounded-lg relative overflow-hidden">
-                            <Image
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz8gJecoPGf9wpA_leuy9N33YQQfhdKV7yZ6jS60uc1slUOMR6Ljo6jn3jHTy757Sk10sIOvXGZqWo4U_Vw59w6Qmroc1NgTJ_WaPCnx8P10VvmCxaW4DV01Ysk-6tlauPL4o3wBqK8ypjboLmQ97cmeNR120J8evINfku9wstL1r9PRHJByfCj9N6wj6Alyh3BYmrW00RLR7Pm1OOPfOnGZtuPdf_EPNS8IZ9PpbEDQMQiOA-o41XBlChpworORmNrvmA6726q67H"
-                                alt="Salon Dashboard"
-                                fill
-                                className="object-cover grayscale opacity-50"
-                            />
-                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                <button className="bg-white text-primary px-6 py-3 rounded-full font-bold shadow-xl cursor-pointer">Watch Demo</button>
-                            </div>
+                    {/*  CTA */}
+                    <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-10 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h3 className="text-2xl font-headline font-bold text-white mb-2">Ready to grow your business?</h3>
+                            <p className="text-white/80 text-sm">Join thousands of local entrepreneurs scaling their salon today.</p>
                         </div>
+                        <Link href="/onboarding" className="shrink-0">
+                            <Button className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 rounded-full text-sm whitespace-nowrap">
+                                List Your Business
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
