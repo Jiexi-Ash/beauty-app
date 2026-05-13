@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from './ui/button';
 import { CalendarDays, Compass, Heart, Home, MenuIcon, Settings } from 'lucide-react';
-import { SignInButton, SignOutButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
+import { SignInButton, SignOutButton, UserButton, useUser } from '@clerk/nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 type NavLink = {
@@ -21,12 +21,19 @@ function Navbar() {
     const { user } = useUser()
     const pathname = usePathname()
 
+    const navLinkClass = (href: string) => cn(
+        "text-sm font-medium transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:rounded-sm after:transition-opacity",
+        pathname === href
+            ? "text-primary after:bg-primary after:opacity-100"
+            : "text-gray-500 after:opacity-0 hover:text-primary hover:after:opacity-100 hover:after:bg-primary"
+    )
+
     return (
         <header className="w-full bg-white sticky top-0 z-50 border-b border-gray-100">
             <nav className="w-full flex justify-between items-center max-w-[1440px] mx-auto px-6 py-4">
 
                 <div className="flex items-center gap-6">
-                    <Link href="/">
+                    <Link href="/" className="flex items-center">
                         <div className="flex items-center gap-0.5 text-2xl font-bold tracking-tight select-none">
                             <span className="text-foreground">The</span>
                             <span className="text-primary">Beauty</span>
@@ -37,39 +44,19 @@ function Navbar() {
                     {/* Desktop nav links */}
                     <div className="hidden md:flex gap-3 items-center">
                         {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    "text-sm font-medium border-b border-transparent transition-colors duration-200",
-                                    pathname === link.href
-                                        ? "text-primary border-primary font-bold"
-                                        : "text-gray-500 hover:text-primary hover:border-primary"
-                                )}
-                            >
+                            <Link key={link.label} href={link.href} className={cn("mt-1", navLinkClass(link.href))}>
                                 {link.label}
                             </Link>
                         ))}
-
-                        {user && (
-                            <Link
-                                href="/bookings"
-                                className={cn(
-                                    "text-sm font-medium border-b border-transparent transition-colors duration-200",
-                                    pathname === "/bookings"
-                                        ? "text-primary border-primary font-bold"
-                                        : "text-gray-500 hover:text-primary hover:border-primary"
-                                )}
-                            >
-                                My Bookings
-                            </Link>
-                        )}
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-4">
                     {user ? (
                         <div className="hidden md:flex items-center space-x-3">
+                            <Link href="/bookings" className={navLinkClass("/bookings")}>
+                                My Bookings
+                            </Link>
                             <UserButton />
                         </div>
                     ) : (
@@ -79,9 +66,9 @@ function Navbar() {
                                     Sign In
                                 </Button>
                             </SignInButton>
-                            <SignUpButton>
-                                <Button className="cursor-pointer hover:bg-primary/80">Join for Free</Button>
-                            </SignUpButton>
+                            <Link href="/onboarding">
+                                <Button className="cursor-pointer hover:bg-primary/80">List Your Business</Button>
+                            </Link>
                         </div>
                     )}
 
@@ -92,28 +79,31 @@ function Navbar() {
                             </div>
                         </SheetTrigger>
                         <SheetContent side="left" className="flex flex-col p-0 w-[85%] max-w-[340px]">
-                            {/* Profile Header */}
-                            <div className="p-6 pb-6 border-b border-border">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="w-16 h-16 border-2 border-primary">
-                                        <AvatarImage src={user?.imageUrl} alt={user?.fullName ?? ""} />
-                                        <AvatarFallback>{getInitials(user?.fullName ?? "")}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-lg text-foreground truncate">{user?.fullName}</p>
+
+                            {/* Profile Header - only show when logged in */}
+                            {user && (
+                                <div className="p-6 pb-6 border-b border-border mt-6">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="w-16 h-16 border-2 border-primary">
+                                            <AvatarImage src={user?.imageUrl} alt={user?.fullName ?? ""} />
+                                            <AvatarFallback>{getInitials(user?.fullName ?? "")}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-lg text-foreground truncate">{user?.fullName}</p>
+                                        </div>
+                                        <Link href="/profile">
+                                            <Settings className="size-5 text-muted-foreground hover:text-foreground transition-colors" />
+                                        </Link>
                                     </div>
-                                    <Link href="/profile">
-                                        <Settings className="size-5 text-muted-foreground hover:text-foreground transition-colors" />
-                                    </Link>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Nav Links */}
-                            <nav className="flex-1 px-4 py-6 space-y-1">
+                            <nav className="flex-1 px-4 py-6 mt-6 space-y-1">
                                 <Link
                                     href="/"
                                     className={cn(
-                                        "flex items-center gap-4 px-4 py-3 rounded-full text-sm font-semibold transition-all",
+                                        "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
                                         pathname === "/"
                                             ? "bg-primary text-white shadow-md"
                                             : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -128,14 +118,14 @@ function Navbar() {
                                 <Link
                                     href="/explore"
                                     className={cn(
-                                        "flex items-center gap-4 px-4 py-3 rounded-full text-sm font-semibold transition-all",
+                                        "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
                                         pathname === "/explore"
                                             ? "bg-primary text-white shadow-md"
                                             : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                     )}
                                 >
                                     <Compass className="size-5" />
-                                    Explore
+                                    Find a Salon
                                 </Link>
 
                                 {user && (
@@ -144,7 +134,7 @@ function Navbar() {
                                         <Link
                                             href="/bookings"
                                             className={cn(
-                                                "flex items-center gap-4 px-4 py-3 rounded-full text-sm font-semibold transition-all",
+                                                "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
                                                 pathname === "/bookings"
                                                     ? "bg-primary text-white shadow-md"
                                                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -158,7 +148,7 @@ function Navbar() {
                                         <Link
                                             href="/favorites"
                                             className={cn(
-                                                "flex items-center gap-4 px-4 py-3 rounded-full text-sm font-semibold transition-all",
+                                                "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
                                                 pathname === "/favorites"
                                                     ? "bg-primary text-white shadow-md"
                                                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -181,12 +171,18 @@ function Navbar() {
                                     </SignOutButton>
                                 ) : (
                                     <div className="flex flex-col gap-3">
-                                        <SignUpButton>
-                                            <Button className="w-full font-semibold rounded-2xl h-12">Join for Free</Button>
-                                        </SignUpButton>
+                                        <p className="font-bold text-lg text-foreground">Join the Community</p>
+                                        <p className="text-sm text-muted-foreground -mt-2">Sign in to book appointments, save favorites, and get personalized recommendations.</p>
                                         <SignInButton>
-                                            <Button variant="outline" className="w-full font-semibold rounded-2xl h-12">Sign In</Button>
+                                            <Button className="w-full font-semibold rounded-sm h-12 mt-2">
+                                                Sign In / Register
+                                            </Button>
                                         </SignInButton>
+                                        <Link href="/onboarding">
+                                            <Button variant="outline" className="w-full font-semibold rounded-sm h-12">
+                                                List Your Business
+                                            </Button>
+                                        </Link>
                                     </div>
                                 )}
                             </div>
