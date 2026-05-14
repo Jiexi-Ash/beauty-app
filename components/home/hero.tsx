@@ -1,9 +1,20 @@
+"use client"
 import { Search, Verified } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { useRouter } from 'next/navigation';
+import { useState } from "react"
 
 
 function Hero() {
+    const router = useRouter()
+    const [search, setSearch] = useState("")
+
+    const handleSearch = () => {
+        if (!search.trim()) return
+        if (search.trim().length < 2) return
+        router.push(`/explore?search=${encodeURIComponent(search.trim())}`)
+    }
     return (
         <section className="max-w-[1440px] mx-auto px-6 py-20 grid grid-cols-12 gap-8 items-center" id="search">
             <div className="col-span-12 md:col-span-7">
@@ -22,13 +33,15 @@ function Hero() {
                             <Search className="size-6 text-primary" />
                         </div>
                         <input
+                            onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             className="w-full bg-transparent border-none focus:outline-none text-on-surface placeholder:text-on-surface-variant/60 font-medium py-3"
                             placeholder="Search for salons, barbers, or spas..."
                             type="text"
                         />
-                        <button className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/20 whitespace-nowrap cursor-pointer">
+                        <Button size="lg" onClick={handleSearch} className="bg-primary text-white px-8 py-3 h-10 rounded-full font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/20 whitespace-nowrap cursor-pointer">
                             Search
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
