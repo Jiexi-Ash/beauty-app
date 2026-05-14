@@ -22,7 +22,7 @@ function Navbar() {
     const pathname = usePathname()
 
     const navLinkClass = (href: string) => cn(
-        "text-sm font-medium transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:rounded-sm after:transition-opacity",
+        "text-sm font-medium transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full group after:rounded-sm after:transition-opacity",
         pathname === href
             ? "text-primary after:bg-primary after:opacity-100"
             : "text-gray-500 after:opacity-0 hover:text-primary hover:after:opacity-100 hover:after:bg-primary"
@@ -54,8 +54,11 @@ function Navbar() {
                 <div className="flex items-center gap-4">
                     {user ? (
                         <div className="hidden md:flex items-center space-x-3">
-                            <Link href="/bookings" className={navLinkClass("/bookings")}>
-                                My Bookings
+                            <Link href="/profile/bookings" className={cn("flex items-center gap-0.5", navLinkClass("/profile/bookings"))}>
+                                <CalendarDays className="size-4 text-gray-400 mr-1 group-hover:text-primary" />  My Bookings
+                            </Link>
+                            <Link href="/profile/Favorites" className={cn("flex items-center gap-0.5", navLinkClass("/profile/favorites"))}>
+                                <Heart className="size-4 text-gray-400 mr-1 group-hover:text-primary" /> Favorites
                             </Link>
                             <UserButton />
                         </div>
@@ -132,10 +135,10 @@ function Navbar() {
                                     <>
                                         <div className="h-px bg-border mx-2" />
                                         <Link
-                                            href="/bookings"
+                                            href="/profile/bookings"
                                             className={cn(
                                                 "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
-                                                pathname === "/bookings"
+                                                pathname === "/profile/bookings"
                                                     ? "bg-primary text-white shadow-md"
                                                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                             )}
@@ -146,7 +149,7 @@ function Navbar() {
 
                                         <div className="h-px bg-border mx-2" />
                                         <Link
-                                            href="/favorites"
+                                            href="/profile/favorites"
                                             className={cn(
                                                 "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
                                                 pathname === "/favorites"
