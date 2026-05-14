@@ -22,8 +22,8 @@ function Features() {
                             <p className="text-on-surface-variant max-w-md text-lg">Automated scheduling, reminders, and cancellations that keep your chairs full without the headache of manual logs.</p>
                         </div>
                         <div className="mt-12 flex gap-4">
-                            <span className="bg-surface-container-low px-4 py-2 rounded-full text-sm font-semibold">Real-time Sync</span>
-                            <span className="bg-surface-container-low px-4 py-2 rounded-full text-sm font-semibold">Whatsapp Reminders</span>
+                            <span className="bg-surface-container-low px-4 py-2 rounded-full  text-xs md:text-sm font-semibold">Real-time Sync</span>
+                            <span className="bg-surface-container-low px-4 py-2 rounded-full text-xs md:text-sm font-semibold">Whatsapp Reminders</span>
                         </div>
                     </div>
 
@@ -53,7 +53,7 @@ function Features() {
                             <p className="text-white/80 text-sm">Join thousands of local entrepreneurs scaling their salon today.</p>
                         </div>
                         <Link href="/onboarding" className="shrink-0">
-                            <Button className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 rounded-full text-sm whitespace-nowrap">
+                            <Button className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 rounded-sm text-sm whitespace-nowrap">
                                 List Your Business
                             </Button>
                         </Link>
