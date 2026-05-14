@@ -135,7 +135,7 @@ export const saveBusiness = internalMutation({
       city,
     },
   ) => {
-    const businessSlug = slugify(name)
+    const businessSlug = slugify(name);
 
     for (const day of businessDays) {
       const isValidDay = BUSINESS_DAYS.some(
@@ -194,6 +194,7 @@ export const saveBusiness = internalMutation({
       timezone: "Africa/Johannesburg",
       visibility: "hidden",
       tags: formattedTags,
+      searchText: `${name} ${city}`,
     });
 
     await geospatial.insert(
