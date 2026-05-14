@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { startOfDay, endOfDay, format, isSameDay } from "date-fns";
 import { TZDate } from "@date-fns/tz";
+import { filter } from "convex-helpers/server/filter";
 
 export const getBusinesses = query({
   args: {
@@ -16,13 +17,13 @@ export const getBusinesses = query({
 
     return Promise.all(
       businesses.map(async (business) => ({
-        id: business._id,
+        _id: business._id,
         name: business.name,
         location: business.location,
         city: business.city,
         tags: business.tags,
         slug: business.slug,
-        coverImage:
+        coverImageUrl:
           (await ctx.storage.getUrl(business.coverImageStorageId)) ?? null,
       })),
     );
@@ -78,6 +79,35 @@ export const getBusinessBySlug = query({
   },
 });
 
+export const searchBusinessByQuery = query({
+  args: {
+    query: v.optional(v.string()),
+    city: v.optional(v.string()),
+  },
+  handler: async (ctx, { query, city }) => {
+    const searchTerm = [query, city].filter(Boolean).join(" ").trim();
+
+    if (searchTerm.length >= 2) {
+      const businesses = await ctx.db
+        .query("business")
+        .withSearchIndex("search_all", (q) =>
+          q.search("searchText", searchTerm).eq("visibility", "visible"),
+        )
+        .take(20);
+
+      return Promise.all(
+        businesses.map(async (business) => ({
+          ...business,
+          coverImageUrl: business.coverImageStorageId
+            ? await ctx.storage.getUrl(business.coverImageStorageId)
+            : null,
+        })),
+      );
+    }
+
+    return [];
+  },
+});
 export const getBusinessServiceById = query({
   args: {
     businessSlug: v.string(),

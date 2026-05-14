@@ -1,17 +1,21 @@
 import Image from 'next/image'
 import { ArrowRight, Star } from 'lucide-react'
+import Link from 'next/link'
 
 function PopularSalons() {
     return (
         <section className="py-24 px-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-end mb-16">
-                <div>
-                    <h2 className="text-4xl font-headline font-bold tracking-tight mb-2">Local <span className="text-primary">Gems</span></h2>
+                <div className="w-full">
+                    <div className="w-full flex items-center justify-between ">
+                        <h2 className="text-4xl font-headline font-bold tracking-tight mb-2">Local <span className="text-primary">Gems</span></h2>
+                        <Link className="text-xs text-primary font-bold flex items-center gap-2 hover:underline underline-offset-4" href="/explore">
+                            View All <ArrowRight className="size-4" />
+                        </Link>
+                    </div>
                     <p className="text-on-surface-variant">The most booked salons in your neighborhood right now.</p>
                 </div>
-                <a className="text-primary font-bold flex items-center gap-2 hover:underline underline-offset-4" href="#">
-                    View All <ArrowRight className="size-4" />
-                </a>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
