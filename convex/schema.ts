@@ -32,13 +32,15 @@ export default defineSchema({
     ),
     LastVerified: v.optional(v.number()),
     tags: v.array(v.string()),
+    searchText: v.string(),
   })
     .index("by_owner", ["ownerId"])
     .index("by_visibility", ["visibility"])
     .index("by_slug_visibility", ["slug", "visibility"])
     .index("by_slug", ["slug"])
-    .searchIndex("search_index", {
-      searchField: "name",
+    .searchIndex("search_all", {
+      searchField: "searchText",
+      filterFields: ["visibility"],
     }),
 
   businessVerified: defineTable({
