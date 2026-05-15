@@ -25,7 +25,7 @@ function Navbar() {
         "text-sm font-medium transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full group after:rounded-sm after:transition-opacity",
         pathname === href
             ? "text-primary after:bg-primary after:opacity-100"
-            : "text-gray-500 after:opacity-0 hover:text-primary hover:after:opacity-100 hover:after:bg-primary"
+            : "text-gray-500 after:opacity-0 hover:text-primary"
     )
 
     return (
