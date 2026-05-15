@@ -158,6 +158,14 @@ export default defineSchema({
     merchantAmount: v.number(),
     commission: v.number(),
   }).index("by_booking_payment", ["bookingPaymentId"]),
+
+  favorites: defineTable({
+    userId: v.id("users"),
+    businessId: v.id("business"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_business", ["businessId"])
+    .index("by_user_and_business", ["userId", "businessId"]),
 });
 
 export const businessDayValidator = v.object({
