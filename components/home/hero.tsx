@@ -23,7 +23,7 @@ function Hero() {
                     <span className="text-primary italic">Beauty,</span> Booked.
                 </h1>
                 <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed mb-8">
-                    Bridge the gap between editorial luxury and local pride. Premium booking management for business owners, effortless self-care for everyone else.
+                    Bridge the gap between editorial luxury and local pride. Premium booking management for salon  owners, effortless self-care for everyone else.
                 </p>
 
                 {/* Search Bar */}
