@@ -1,7 +1,7 @@
 "use client"
 import { api } from '@/convex/_generated/api';
 import { Preloaded, usePreloadedQuery } from 'convex/react';
-import { Heart, MapPin, Star } from 'lucide-react';
+import { Heart, Loader2, MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
@@ -10,7 +10,12 @@ import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Doc, Id } from '@/convex/_generated/dataModel';
-import { useRouter } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
+import { useConvexMutation } from '@convex-dev/react-query';
+import { ConvexError } from 'convex/values';
+import { toast } from 'sonner';
+
 
 type Service = Doc<"service"> & {
     primaryImage: string | null;
@@ -61,9 +66,25 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
     const [detailService, setDetailService] = useState<Service | null>(null)
     const business = usePreloadedQuery(preloadedBusiness)
 
-    if (!business) {
-        return <div>business not found</div>
-    }
+    const { mutate: toggleFavorites, isPending } = useMutation({
+        mutationFn: useConvexMutation(api.users.toggleFavorites),
+        onSuccess: () => {
+
+        },
+        onError: (error) => {
+            if (error instanceof ConvexError) {
+                toast.error(
+                    error.data || "An unknown error occurred while adding salon to favorites.",
+                );
+            } else if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unknown error occurred while adding salon to favorites.");
+            }
+        },
+    })
+
+    if (!business) notFound()
 
     const handleSelectService = (serviceId: Id<"service">) => {
         setSelectedServiceId(prev => prev === serviceId ? null : serviceId)
@@ -94,9 +115,9 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
                                 </div>
                             )}
                         </div>
-                        <button className="bg-white rounded-full p-2.5 md:p-3 shadow-md hover:scale-105 transition-transform cursor-pointer">
-                            <Heart className="size-4 md:size-5 text-primary" />
-                        </button>
+                        <Button variant="ghost" disabled={isPending} size="icon" className="bg-white rounded-full p-2.5 md:p-3 shadow-md hover:scale-105 transition-transform cursor-pointer" onClick={() => toggleFavorites({ businessId: business._id })}>
+                            {isPending ? <Loader2 className="size-4 text-gray-400 animate-spin" /> : business.isFavorite ? <Heart fill="#EB3368" className="size-4 md:size-5 text-primary" /> : <Heart className="size-4 md:size-5 text-primary" />}
+                        </Button>
                     </div>
                 </div>
             </div>

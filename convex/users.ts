@@ -98,3 +98,33 @@ export const updateUserPhoneNumber = mutation({
     });
   },
 });
+
+export const toggleFavorites = mutation({
+  args: {
+    businessId: v.id("business"),
+  },
+  handler: async (ctx, { businessId }) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const business = await ctx.db.get(businessId);
+
+    if (!business) throw new ConvexError("Business not found.");
+
+    const exists = await ctx.db
+      .query("favorites")
+      .withIndex("by_user_and_business", (q) =>
+        q.eq("userId", user._id).eq("businessId", business._id),
+      )
+      .unique();
+
+    if (exists) {
+      await ctx.db.delete(exists._id);
+      return;
+    }
+
+    await ctx.db.insert("favorites", {
+      userId: user._id,
+      businessId: business._id,
+    });
+  },
+});
