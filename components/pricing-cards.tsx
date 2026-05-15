@@ -38,13 +38,13 @@ const plans: PricingPlan[] = [
       { text: "Unlimited services listed" },
       { text: "Verified badge" },
       { text: "Automated WhatsApp reminders" },
-      { text: 'Priority "Kasi Gem" placement' },
+      { text: 'Verified status' },
       { text: "Customer loyalty analytics" },
     ],
     cta: "Get Pro Access",
   },
   {
-    name: "Business",
+    name: "Premium",
     description: "For salons, barbershops and clinics with a team.",
     price: "R149",
     priceSuffix: "/mo",
@@ -55,7 +55,7 @@ const plans: PricingPlan[] = [
       { text: "Full business analytics dashboard" },
       { text: "Priority support" },
     ],
-    cta: "Get Business Access",
+    cta: "Get Premium Access",
   },
 ];
 
