@@ -3,6 +3,7 @@ import { query } from "../_generated/server";
 import { startOfDay, endOfDay, format, isSameDay } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { filter } from "convex-helpers/server/filter";
+import { getCurrentUser } from "../users";
 
 export const getBusinesses = query({
   args: {
@@ -35,6 +36,7 @@ export const getBusinessBySlug = query({
     slug: v.string(),
   },
   handler: async (ctx, { slug }) => {
+    const user = await getCurrentUser(ctx)
     const business = await ctx.db
       .query("business")
       .withIndex("by_slug_visibility", (q) =>
@@ -75,7 +77,9 @@ export const getBusinessBySlug = query({
       }),
     );
 
-    return { ...business, businessCoverImage, services };
+    const isFavorite = user ? await ctx.db.query("favorites").withIndex("by_user_and_business", q => q.eq("userId", user._id).eq("businessId", business._id)).unique() : null
+
+    return { ...business, businessCoverImage, services, isFavorite: !!isFavorite };
   },
 });
 
