@@ -49,12 +49,12 @@ function Features() {
                     {/*  CTA */}
                     <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-10 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
                         <div>
-                            <h3 className="text-2xl font-headline font-bold text-white mb-2">Ready to grow your business?</h3>
+                            <h3 className="text-2xl font-headline font-bold text-white mb-2">Ready to grow your salon?</h3>
                             <p className="text-white/80 text-sm">Join thousands of local entrepreneurs scaling their salon today.</p>
                         </div>
                         <Link href="/onboarding" className="shrink-0">
                             <Button className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 rounded-sm text-sm whitespace-nowrap">
-                                List Your Business
+                                List Your Salon
                             </Button>
                         </Link>
                     </div>
