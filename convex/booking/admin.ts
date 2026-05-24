@@ -17,7 +17,7 @@ export const updateBookingStatus = internalMutation({
       ]);
     } else {
       await Promise.all([
-        ctx.db.patch(booking._id, { status: "failed" }),
+        ctx.db.patch(booking._id, { status: "cancelled_by_payment_failed" }),
         ctx.db.patch(booking.bookingPaymentId, { status: "cancelled" }),
       ]);
     }
@@ -44,6 +44,15 @@ export const getBookingPayment = internalQuery({
       .query("bookingPayment")
       .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
       .unique();
+  },
+});
+
+export const queryBusinessById = internalQuery({
+  args: {
+    businessId: v.id("business"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.businessId)
   },
 });
 
