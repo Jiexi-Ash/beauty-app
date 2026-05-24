@@ -109,7 +109,6 @@ export default defineSchema({
     bookingPaymentId: v.optional(v.id("bookingPayment")),
     status: v.union(
       v.literal("pending"),
-      v.literal("failed"),
       v.literal("upcoming"),
       v.literal("in_progress"),
       v.literal("completed"),
