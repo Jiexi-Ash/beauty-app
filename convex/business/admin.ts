@@ -1,6 +1,7 @@
 import {
   action,
   internalMutation,
+  internalQuery,
   mutation,
   query,
   QueryCtx,
@@ -258,6 +259,15 @@ export const verifyUserBusiness = query({
     const business = await getBusinessByUserId(ctx, user._id);
 
     return !!business;
+  },
+});
+
+export const queryBusinessById = internalQuery({
+  args: {
+    businessId: v.id("business"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.businessId)
   },
 });
 
