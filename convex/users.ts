@@ -1,5 +1,6 @@
 import {
   internalMutation,
+  internalQuery,
   mutation,
   query,
   QueryCtx,
@@ -128,3 +129,13 @@ export const toggleFavorites = mutation({
     });
   },
 });
+
+export const queryUserById = internalQuery({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId)
+  },
+});
+
