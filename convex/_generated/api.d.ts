@@ -17,6 +17,7 @@ import type * as business_actions from "../business/actions.js";
 import type * as business_admin from "../business/admin.js";
 import type * as business_public from "../business/public.js";
 import type * as http from "../http.js";
+import type * as notifications_messages from "../notifications/messages.js";
 import type * as payfast from "../payfast.js";
 import type * as payment from "../payment.js";
 import type * as public_ from "../public.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   "business/admin": typeof business_admin;
   "business/public": typeof business_public;
   http: typeof http;
+  "notifications/messages": typeof notifications_messages;
   payfast: typeof payfast;
   payment: typeof payment;
   public: typeof public_;
