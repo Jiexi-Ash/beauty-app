@@ -41,7 +41,6 @@ export const formatBookingTime = (timestamp: number, timezone?: string) => {
   return format(zonedDate, "p"); // e.g. "2:30 PM"
 };
 
-
 export const getInitials = (fullName: string): string => {
   return fullName
     .split(" ")
