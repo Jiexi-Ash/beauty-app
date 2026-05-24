@@ -147,8 +147,9 @@ export const handleITN = internalAction({
       return false;
     }
 
+    const bookingId = itn.custom_str1 as Id<"booking">
     await ctx.runMutation(internal.booking.admin.updateBookingStatus, {
-      bookingId: itn.custom_str1 as Id<"booking">,
+      bookingId: bookingId,
       status: itn.payment_status === "COMPLETE" ? "confirmed" : "cancelled",
     });
 
@@ -171,6 +172,9 @@ export const handleITN = internalAction({
         merchantAmount,
         commission: bookingPayment.commission,
       });
+      await ctx.runAction(internal.notifications.messages.SendWhatsAppBookingConfirmedMessage, {
+        bookingId:bookingId
+      })
     }
   },
 });
