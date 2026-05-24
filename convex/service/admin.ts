@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "../_generated/server";
+import { internalQuery, mutation, query } from "../_generated/server";
 import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { slugify } from "../../lib/utils";
@@ -294,5 +294,15 @@ export const getServiceById = query({
       image: serviceWithPrimaryImage,
       galleryImages: galleryImagesWithIds.filter((img) => img.url !== null),
     };
+  },
+});
+
+
+export const queryServiceById = internalQuery({
+  args: {
+    serviceId: v.id("service"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.serviceId)
   },
 });
