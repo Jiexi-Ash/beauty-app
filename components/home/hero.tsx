@@ -39,7 +39,7 @@ function Hero() {
                             placeholder="Search for salons, barbers, or spas..."
                             type="text"
                         />
-                        <Button size="lg" onClick={handleSearch} className="bg-primary text-white px-8 py-3 h-10 rounded-full font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/20 whitespace-nowrap cursor-pointer">
+                        <Button size="lg" onClick={handleSearch} className="bg-primary text-white px-8 py-3 h-12 rounded-full font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/20 whitespace-nowrap cursor-pointer">
                             Search
                         </Button>
                     </div>
