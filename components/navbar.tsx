@@ -33,7 +33,7 @@ function Navbar() {
 
   const navLinkClass = (href: string) =>
     cn(
-      "text-sm font-medium transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full group after:rounded-sm after:transition-opacity",
+      "text-sm font-medium transition-colors duration-200 hover:text-primary relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full group after:rounded-sm after:transition-opacity",
       pathname === href ? "text-primary" : "text-gray-500 ",
     );
 
@@ -150,7 +150,7 @@ function Navbar() {
                 <Link
                   href="/"
                   className={cn(
-                    "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
+                    "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all hover:text-primary duration-200 ease-in-out",
                     pathname === "/"
                       ? "bg-primary text-white shadow-md"
                       : "text-muted-foreground hover:bg-accent hover:text-foreground",
