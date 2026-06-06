@@ -35,6 +35,7 @@ import { useConvexMutation } from '@convex-dev/react-query'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 import { cn, formatBookingShortDate } from '@/lib/utils'
+import NoBookings from './bookings/no-boookings'
 
 interface PreloadedUserBookingsProps {
     preloadedBookings: Preloaded<typeof api.booking.user.getUserBookings>;
@@ -42,8 +43,9 @@ interface PreloadedUserBookingsProps {
 
 function PreloadedUserBookings({ preloadedBookings }: PreloadedUserBookingsProps) {
     const bookings = usePreloadedQuery(preloadedBookings);
+    console.log(bookings)
 
-    if (!bookings || bookings?.length === 0) return <div>No bookings</div>
+    if (!bookings) return <NoBookings />
 
     return <UserBookings bookings={bookings} />
 }
@@ -495,7 +497,6 @@ function UserBookings({ bookings }: UserBookingsProps) {
     const [dismissed, setDismissed] = useState(false)
     const searchParams = useSearchParams()
     const isSuccess = searchParams.get("status") === "success"
-
     const [now] = useState(() => Date.now())
 
     const upcomingBookings = useMemo(() =>
@@ -510,17 +511,10 @@ function UserBookings({ bookings }: UserBookingsProps) {
         bookings?.filter(b => b.status === "cancelled_by_user" || b.status === "cancelled_by_business" || b.status === "cancelled_by_payment_failed") ?? []
         , [bookings])
 
-    if (!bookings) {
-        return <MainLayout>
-            <Link
-                href={`/explore`}
-                className="inline-flex items-center gap-1.5 text-sm text-primary font-medium mb-6 hover:underline"
-            >
-                <ChevronLeft className="size-4" />
-                Browse  Salons
-            </Link>
-        </MainLayout>
-    }
+    const hasVisibleBookings = upcomingBookings.length > 0 || completedBookings.length > 0 || cancelledBookings.length > 0
+
+    if (!hasVisibleBookings) return <NoBookings />
+    
     return (
         <MainLayout>
             <div className="space-y-4 w-full">
@@ -555,7 +549,7 @@ function UserBookings({ bookings }: UserBookingsProps) {
 
                             <TabsContent value="upcoming" className="mt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {upcomingBookings.map((booking) => (
+                                    { upcomingBookings.map((booking) => (
                                         <BookingCard key={booking._id} booking={booking} variant="upcoming" />
                                     ))}
                                 </div>
