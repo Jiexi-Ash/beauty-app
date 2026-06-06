@@ -16,6 +16,7 @@ import type * as booking_user from "../booking/user.js";
 import type * as business_actions from "../business/actions.js";
 import type * as business_admin from "../business/admin.js";
 import type * as business_public from "../business/public.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as notifications_messages from "../notifications/messages.js";
 import type * as payfast from "../payfast.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   "business/actions": typeof business_actions;
   "business/admin": typeof business_admin;
   "business/public": typeof business_public;
+  crons: typeof crons;
   http: typeof http;
   "notifications/messages": typeof notifications_messages;
   payfast: typeof payfast;
