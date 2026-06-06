@@ -3,7 +3,7 @@
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useAction, useQuery } from "convex/react"
-import { useParams } from "next/navigation"
+import { notFound, useParams } from "next/navigation"
 import Image from "next/image"
 import { useState, useMemo } from "react"
 import { format, isSameDay } from "date-fns"
@@ -19,6 +19,7 @@ import { useForm } from "@tanstack/react-form"
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import MainLayout from "@/components/main-layout"
+import { BookingPageSkeleton } from "@/components/skeletons/booking-page"
 import { toast } from "sonner"
 
 const toNoonUTC = (d: Date) =>
@@ -189,19 +190,11 @@ function BookServicePage() {
   }, [blockedData, selectedDate, service])
 
   if (service === undefined) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    )
+    return <BookingPageSkeleton />
   }
 
   if (!service) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-muted-foreground">Service not found</p>
-      </div>
-    )
+    return notFound()
   }
 
 
@@ -231,6 +224,7 @@ function BookServicePage() {
 
 
   const businessDisplayName = service.business.name ?? params.slug.replace(/-/g, " ")
+
 
   return (
     <MainLayout>
@@ -496,7 +490,8 @@ function ConfirmBooking({
   depositDue: number
   selectedSlot: Slot | null
 }) {
-  const { user, isSignedIn } = useUser()
+  const {  isSignedIn } = useUser()
+    const fullUrl = typeof window !== "undefined" ? window.location.href : "";
   return (
     <div className="rounded-2xl bg-white shadow-sm border border-foreground/10 overflow-hidden">
       {service.primaryImage && (
@@ -562,7 +557,7 @@ function ConfirmBooking({
             form="book-appointment"
           >
             {isSubmitting ? "Processing..." : "Confirm Appointment"}
-          </Button > : <SignInButton mode="modal" >
+          </Button > : <SignInButton mode="modal" fallbackRedirectUrl={fullUrl} >
             <Button
               size="lg"
               className="w-full rounded-full text-base font-bold py-6 bg-primary hover:bg-primary/90"
