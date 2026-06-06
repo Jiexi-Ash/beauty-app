@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { Calendar, Clock, MapPin, Check } from "lucide-react";
 import Navbar from "@/components/navbar";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
@@ -22,7 +22,7 @@ function BookingConfirmationPage() {
 
   if (isLoading) return <BookingConfirmationSkeleton />;
 
-  if (!data) return <p>no booking</p>;
+  if (!data) return notFound();
 
   const price = ((data.paymentDetails.amountPaid ?? 0) / 100).toFixed(2);
 
