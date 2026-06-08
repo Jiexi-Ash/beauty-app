@@ -44,17 +44,10 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
             </p>
           </div>
 
-          <Button
-            className="text-sm md:hidden cursor-pointer hover:bg-primary/70 h-10 px-6 flex items-center gap-2"
-            size="lg"
-          >
-            <PlusIcon className="size-4 text-white" />
-            New Booking
-          </Button>
         </div>
       </div>
-      <div className="hidden lg:flex justify-between items-center px-6 py-4">
-        <div className="bg-gray-100 w-full max-w-[250px] sm:max-w-[350px] flex items-center gap-2 pl-3 pr-2 py-3 rounded-lg transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+      <div className="flex gap-3 justify-between items-center px-6 py-4">
+        <div className="bg-gray-100 flex-1 lg:flex-none lg:w-full lg:max-w-[350px] flex items-center gap-2 pl-3 pr-2 py-3 rounded-lg transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
           <Search className="size-4 text-gray-400 shrink-0" />
           <Input
             autoComplete="none"
@@ -63,11 +56,12 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           />
         </div>
         <Button
-          className="text-sm cursor-pointer hover:bg-primary/70 h-10"
+          className="text-sm cursor-pointer hover:bg-primary/70 h-10 shrink-0"
           size="lg"
         >
           <PlusIcon className="size-4 text-white" />
-          Add New Booking
+          <span className="hidden lg:inline">Add New Booking</span>
+          <span className="sr-only lg:hidden">Add new booking</span>
         </Button>
       </div>
       <div className="w-full px-6 space-y-4 lg:space-y-4">
