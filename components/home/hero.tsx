@@ -1,81 +1,102 @@
 "use client"
-import { Search, Verified } from "lucide-react"
+import {  BadgeCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { useRouter } from 'next/navigation';
-import { useState } from "react"
-
+import { useRouter } from 'next/navigation'
+import { Card } from "../ui/card"
 
 function Hero() {
     const router = useRouter()
-    const [search, setSearch] = useState("")
 
-    const handleSearch = () => {
-        if (!search.trim()) return
-        if (search.trim().length < 2) return
-        router.push(`/explore?search=${encodeURIComponent(search.trim())}`)
-    }
     return (
         <section className="max-w-[1440px] mx-auto px-6 py-20 grid grid-cols-12 gap-8 items-center" id="search">
-            <div className="col-span-12 md:col-span-7">
+
+          
+            <div className="col-span-12 md:col-span-6">
                 <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tighter leading-[0.9] mb-8">
-                    Your Community <br />
-                    <span className="text-primary italic">Beauty,</span> Booked.
+                    Verified <span className="text-primary italic">Businesses,</span>{" "}
+                    <span>Transparent Pricing.</span>
                 </h1>
-                <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed mb-8">
-                    Bridge the gap between editorial luxury and local pride. Premium booking management for salon  owners, effortless self-care for everyone else.
+
+                <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed mb-10">
+                    Every salon on our platform is vetted to ensure you get the service you deserve — with zero hidden fees and total price transparency
                 </p>
 
-                {/* Search Bar */}
-                <div className="mb-10 w-full max-w-xl">
-                    <div className="flex items-center bg-white rounded-full p-2 shadow-xl shadow-primary/5 border border-surface-container-high focus-within:border-primary/30 transition-all duration-300">
-                        <div className="pl-4 pr-2 text-on-surface-variant flex items-center">
-                            <Search className="size-6 text-primary" />
-                        </div>
-                        <input
-                            onChange={(e) => setSearch(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                            className="w-full bg-transparent border-none focus:outline-none text-on-surface placeholder:text-on-surface-variant/60 font-medium py-3"
-                            placeholder="Search for salons, barbers, or spas..."
-                            type="text"
-                        />
-                        <Button size="lg" onClick={handleSearch} className="bg-primary text-white px-8 py-3 h-12 rounded-full font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/20 whitespace-nowrap cursor-pointer">
-                            Search
-                        </Button>
-                    </div>
-                </div>
-
                 <div className="flex flex-col sm:flex-row gap-4">
-                    <Button className="h-14 px-12 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer" size="lg">
-                        Get Your Salon Listed
+                    <Button
+                        size="lg"
+                        onClick={() => router.push("/onboarding")}
+                        className="h-14 px-10 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer"
+                    >
+                         Get Your Salon Listed
                     </Button>
-                    <Button variant="outline" size="lg" className="text-primary border-outline-variant border-2 h-14 px-12 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => router.push("/explore?location=true")}
+                        className="text-primary border-outline-variant border-2 h-14 px-10 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer"
+                    >
                         Find a Salon Near You
                     </Button>
                 </div>
             </div>
 
-            <div className="col-span-12 md:col-span-5 relative mt-12 md:mt-0">
-                <div className="aspect-[4/5] bg-surface-container-low rounded-3xl overflow-hidden relative">
-                    <Image
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaL_hYhfXMZK7dBQo2WHoOSIM0L27OwqncYsU4lSayXWABNlFwBX1vpfaWM1WTIguzLczZmaAhWBqkq_wWev8p4DegLiuqJ9OYc_PXxzUPh24sULw-kunmBGW17bWJ60q4wsgjwsYAOCQ5fPXEe6ZGfdtG5p1KXhrQTu4IgF71ZqKnj8D33PNbtKfPrc_XUvsXANMra6DZvw93paJDJ48kSaQpA9U_bL4eUJEUg5F2Lv9_INXeC0tmMmn7n8jYXZkfvhFODHwwMST6"
-                        alt="Modern salon interior"
-                        fill
-                        className="object-cover"
-                    />
-                    <div className="absolute bottom-6 left-6 right-6 p-6 bg-white/90 backdrop-blur-md rounded-lg shadow-2xl">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
-                                <Verified className="size-5" />
+            
+            <div className="col-span-12 md:col-span-6 relative mt-12 md:mt-0">
+                <div className="grid grid-cols-2 gap-3">
+
+                 
+                    <div className="flex flex-col gap-3">
+                        <div className="relative rounded-3xl overflow-hidden aspect-[3/4]">
+                            <Image
+                                src="/salon-1.jpg"
+                                alt="Modern salon interior"
+                                fill
+                                className="object-cover"
+                            />
+                         
+                            <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
+                                <BadgeCheck className="size-4 text-primary" />
+                                <span className="text-xs font-bold text-on-surface tracking-wide">VERIFIED</span>
                             </div>
-                            <div>
-                                <p className="font-bold text-sm">Verified Local Talent</p>
-                                <p className="text-xs text-on-surface-variant">Over 2,500 salons across the community</p>
+                        </div>
+
+                     
+                        <Card className="bg-surface-container rounded-2xl p-5 flex flex-col justify-between">
+                            <p className="font-bold text-sm">100% Vetted</p>
+                            <p className="text-xs leading-relaxed">
+                                Every business on our platform undergoes a rigorous quality and safety check.
+                            </p>
+                        </Card>
+                    </div>
+
+                  
+                    <div className="flex flex-col gap-3">
+                        {/* No Hidden Fees card */}
+                        <Card className="bg-primary rounded-2xl p-5 flex flex-col justify-between">
+                                <p className="font-bold text-white text-base leading-tight">No Hidden Fees</p>
+                                <p className="text-white/75 text-xs leading-relaxed">
+                                    What you see is what you pay. We believe in fair, community-first pricing models.
+                                </p>
+                        </Card>
+
+                    
+                        <div className="relative rounded-3xl overflow-hidden flex-1 min-h-[220px]">
+                            <Image
+                                src="/salon-2.jpg"
+                                alt="Luxury hair salon"
+                                fill
+                                className="object-cover"
+                            />
+                            <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
+                                <span className="text-xs font-bold text-on-surface tracking-wide">FAIR TRADE</span>
                             </div>
                         </div>
                     </div>
+
                 </div>
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-fixed rounded-full blur-3xl opacity-40" />
+
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-fixed rounded-full blur-3xl opacity-40 pointer-events-none" />
             </div>
         </section>
     )
