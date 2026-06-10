@@ -14,6 +14,7 @@ import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
 import { BUSINESS_DAYS } from "../../constants";
 import { slugify } from "../../lib/utils";
+import { endOfMonth, getMonth, getTime, startOfMonth } from "date-fns";
 
 const geospatial = new GeospatialIndex(components.geospatial);
 
@@ -277,3 +278,66 @@ export const getBusinessByUserId = (ctx: QueryCtx, userId: Id<"users">) => {
     .withIndex("by_owner", (q) => q.eq("ownerId", userId))
     .unique();
 };
+
+export const getDashboardAnalytics  = query({
+  handler: async (ctx) => {
+    const date = new Date()
+const monthStart = getTime(startOfMonth(date))
+const endMonth = getTime(endOfMonth(date))
+
+    const user = await getCurrentUserOrThrow(ctx);
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) return undefined
+
+    // total bookings
+   const totalBookings = await ctx.db
+  .query("booking")
+  .withIndex("by_business_and_date", (q) =>
+    q
+      .eq("businessId", business._id)
+      .gte("bookingStartDate", monthStart)
+      .lte("bookingStartDate", endMonth)
+  ).filter((q) => q.or(q.eq(q.field("status"), "in_progress"), q.eq(q.field("status"), "upcoming"), q.eq(q.field("status"), "completed")))
+  .collect();
+
+
+  // unique clients
+  const uniqueClientCount = new Set(totalBookings.map(b => b.userId)).size
+
+  // revenue process
+
+  const bookingPayments = await Promise.all(
+    totalBookings.map(async (booking) => {
+      return await ctx.db
+        .query("bookingPayment")
+        .withIndex("by_booking_and_status", (q) => q.eq("bookingId", booking._id).eq("status", "completed"))
+        .unique();
+    }))
+
+  const businessPayments = await Promise.all(
+  bookingPayments.map(async (payment) => {
+    if (!payment) return 0;
+    const split = await ctx.db
+      .query("paymentSplits")
+      .withIndex("by_booking_payment", (q) =>
+        q.eq("bookingPaymentId", payment._id)
+      )
+      .first();
+    return split?.merchantAmount ?? 0;
+  })
+)
+
+  const revenue = businessPayments.reduce((sum, amount) => sum + amount, 0) as number
+  
+
+    return {
+      revenue,
+      reviews: {averageReviews: 0, count: 0},
+      totalBookings: totalBookings.length,
+      uniqueClients: uniqueClientCount,
+      
+
+    }
+  },
+
+})
