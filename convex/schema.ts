@@ -127,6 +127,7 @@ export default defineSchema({
     ])
     .index("by_status", ["status"])
     .index("by_business_and_date", ["businessId", "bookingStartDate"])
+    .index("by_business_and_status_and_date", ["businessId", "status", "bookingStartDate",])
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "bookingStartDate"]),
 
@@ -146,6 +147,7 @@ export default defineSchema({
     paymentReference: v.optional(v.string()),
   })
     .index("by_booking", ["bookingId"])
+    .index("by_booking_and_status", ["bookingId", "status"])
     .index("by_booking_and_date", ["bookingId", "paymentDate"]),
 
   paymentSplits: defineTable({
