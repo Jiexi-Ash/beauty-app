@@ -9,7 +9,7 @@ import {
 import { GeospatialIndex } from "@convex-dev/geospatial";
 import { components, internal } from "../_generated/api";
 import { getCurrentUser, getCurrentUserOrThrow } from "../users";
-import { Id } from "../_generated/dataModel";
+import { Doc, Id } from "../_generated/dataModel";
 import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
 import { BUSINESS_DAYS } from "../../constants";
@@ -341,3 +341,49 @@ const endMonth = getTime(endOfMonth(date))
   },
 
 })
+
+export const getUpcomingAppointments = query({
+  args: {
+    limit: v.optional(v.number())
+  },
+  handler: async (ctx, {limit}) => {
+    const take = limit ?? 5
+    const user = await getCurrentUser(ctx)
+
+    if (!user) return []
+      const now = Date.now();
+
+    const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
+
+    if (!business) return []
+
+    const appointments = await ctx.db.query("booking").withIndex("by_business_and_status_and_date", q => q.eq("businessId", business._id).eq("status", "upcoming").gte("bookingStartDate", now)).order("asc").take(take)
+
+    const appointmentsWithDetails = await Promise.all(
+      appointments.map(async (appointment) => {
+        const client = await ctx.db.get(appointment.userId);
+        const service = await ctx.db.get(appointment.serviceId);
+        const payment = appointment.bookingPaymentId ? await ctx.db.get(appointment.bookingPaymentId) : null;
+
+        return {
+          ...appointment,
+          client: { name: client?.fullname, avatar: client?.image, email:client?.email },
+          service: { _id: service?._id, name: service?.name, duration: service?.duration },
+          payment: payment ? {amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
+          business: {timezone:business.timezone}
+        };
+      })
+    );
+
+    return appointmentsWithDetails
+  }
+})
+
+
+// types
+export type AppointmentWithDetails = Doc<"booking"> & {
+  client: { name?: string; avatar?: string, email?:string };
+  service: { _id?: Id<"service">; name?: string, duration?: number };
+  payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type:"deposit" | "full-payment" } | null;
+  business: {timezone: string}
+};
