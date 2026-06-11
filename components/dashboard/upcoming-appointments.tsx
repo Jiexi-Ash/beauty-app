@@ -1,3 +1,4 @@
+"use client"
 import {
   Card,
   CardContent,
@@ -7,56 +8,38 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { DotIcon, EllipsisVertical } from "lucide-react";
-import { Avatar } from "../ui/avatar";
-import { cn } from "@/lib/utils";
+import { DotIcon, EllipsisVertical, StickyNote } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { cn, formatBookingDateTime, formatBookingTime } from "@/lib/utils";
 import { Badge } from "../ui/badge";
-
-const appointments = [
-  {
-    _id: 1,
-    name: "Zanele Khumalo",
-    cellNumber: "081 332 6756",
-    service: "Wash and Blow",
-    paymentType: "Deposit",
-    duration: "2 hrs",
-    time: "Today, 14:00",
-    status: "Confirmed",
-  },
-  {
-    _id: 2,
-    name: "Thabo Molefe",
-    cellNumber: "081 553 6756",
-    service: "Fade",
-    paymentType: "Full",
-    duration: "1 hr",
-    time: "Today, 16:00",
-    status: "Confirmed",
-  },
-  {
-    _id: 3,
-    name: "Thembi Mbatha",
-    cellNumber: "073 555 3490",
-    service: "box Braids",
-    paymentType: "Deposit",
-    duration: "4 hrs",
-    time: "Today, 12:00",
-    status: "Confirmed",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@/convex/_generated/api";
+import { AppointmentWithDetails } from "@/convex/business/admin";
+import { CalendarX2 } from "lucide-react";
+import { Skeleton } from "../ui/skeleton";
 
 function UpcomingAppointments() {
+  const { data, isLoading } = useQuery({
+    ...convexQuery(api.business.admin.getUpcomingAppointments),
+  });
   return (
     <div className="mb-6">
-      <AppointmentsMobile />
-      <AppointmentsDesktop />
+      <AppointmentsMobile appointments={data} isLoading={isLoading} />
+      <AppointmentsDesktop appointments={data} isLoading={isLoading} />
     </div>
   );
 }
 
 export default UpcomingAppointments;
 
-const AppointmentsDesktop = () => {
+const AppointmentsDesktop = ({
+  appointments,
+  isLoading,
+}: {
+  appointments: AppointmentWithDetails[] | undefined;
+  isLoading: boolean;
+}) => {
   return (
     <Card className="hidden sm:block">
       <CardHeader>
@@ -76,7 +59,7 @@ const AppointmentsDesktop = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="w-full grid grid-cols-6 bg-gray-50 py-3 px-2 rounded">
+        <div className="w-full grid grid-cols-5 bg-gray-50 py-3 px-2 rounded">
           <div className="uppercase text-gray-400  text-xs font-semibold">
             Client
           </div>
@@ -87,9 +70,6 @@ const AppointmentsDesktop = () => {
             Date & Time
           </div>
           <div className="uppercase text-gray-400  text-xs font-semibold">
-            Status
-          </div>
-          <div className="uppercase text-gray-400  text-xs font-semibold">
             Payment
           </div>
           <div className="uppercase text-gray-400  text-xs font-semibold">
@@ -97,57 +77,69 @@ const AppointmentsDesktop = () => {
           </div>
         </div>
 
-        {appointments.map((a) => (
-          <div key={a._id} className="w-full grid grid-cols-6">
+        {isLoading ? (
+          <DesktopRowsSkeleton />
+        ) : !appointments || appointments.length === 0 ? (
+          <EmptyAppointments />
+        ) : (
+          appointments.map((a) => (
+          <div key={a._id} className="w-full grid grid-cols-5 items-center">
             <div className="flex items-center gap-3">
-              <Avatar
-                size="lg"
-                className={cn("flex items-center justify-center text-center")}
-              >
-                JK
+              <Avatar size="lg">
+                <AvatarImage
+                  src={a.client.avatar}
+                  alt={a.client.name ?? "Client"}
+                />
+                <AvatarFallback>{getInitials(a.client.name)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-0.5 ">
-                <span className="font-bold text-xs">{a.name}</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-xs">{a.client.name}</span>
+                  {a.notes && (
+                    <StickyNote
+                      className="size-3 text-gray-400 shrink-0"
+                      aria-label="Has a note"
+                    >
+                      <title>This booking has a note</title>
+                    </StickyNote>
+                  )}
+                </div>
                 <span className="text-muted-foreground text-xs">
-                  {a.cellNumber}
+                  {a.client.email}
                 </span>
               </div>
             </div>
 
-            <div className="text-muted-foreground text-sm">{a.service}</div>
+            <div className="text-muted-foreground text-sm capitalize">{a.service.name}</div>
             <div className="flex flex-col gap-0.5 ">
-              <span className="font-bold text-xs">{a.time}</span>
+              <span className="font-bold text-xs">{formatBookingDateTime(a.bookingStartDate, a.business.timezone)}</span>
               <span className="text-muted-foreground text-xs">
-                Duration: {a.duration}
+                Duration: {a.service.duration}
               </span>
             </div>
 
-            <Badge className="bg-green-400/25 text-green-400 font-medium text-xs">
-              {a.status}
-            </Badge>
-
-            <Badge
-              className={cn(
-                "font-medium text-xs",
-                a.paymentType === "Deposit"
-                  ? "bg-gray-50 text-gray-400"
-                  : "bg-primary/10 text-primary",
-              )}
-            >
-              {a.paymentType}
-            </Badge>
+            <div className="flex items-center">
+              <PaymentBadge type={a.payment?.type} />
+            </div>
 
             <Button variant="ghost" size="icon">
               <EllipsisVertical className="size-6 text-gray-400" />
             </Button>
           </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );
 };
 
-const AppointmentsMobile = () => {
+const AppointmentsMobile = ({
+  appointments,
+  isLoading,
+}: {
+  appointments: AppointmentWithDetails[] | undefined;
+  isLoading: boolean;
+}) => {
   return (
     <Card className="block sm:hidden rounded-lg mb-6">
       <CardHeader>
@@ -167,38 +159,42 @@ const AppointmentsMobile = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {appointments.map((a) => (
+        {isLoading ? (
+          <MobileRowsSkeleton />
+        ) : !appointments || appointments.length === 0 ? (
+          <EmptyAppointments />
+        ) : (
+          appointments.map((a) => (
           <div key={a._id} className="flex items-center gap-3 justify-between">
             <div className="flex items-center gap-3 mt-4">
-              <Avatar
-                size="lg"
-                className={cn("flex items-center justify-center text-center")}
-              >
-                JK
+              <Avatar size="lg">
+                <AvatarImage
+                  src={a.client.avatar}
+                  alt={a.client.name ?? "Client"}
+                />
+                <AvatarFallback>{getInitials(a.client.name)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center">
-                  <span className="font-bold text-xs">{a.name}</span>
+                  <span className="font-bold text-xs">{a.client.name}</span>
                   <DotIcon className="size-4 text-gray-400" />
-                  <div className="text-muted-foreground text-xs">
-                    <span>{a.service}</span>
+                  <div className="text-muted-foreground text-xs capitalize">
+                    <span>{a.service.name}</span>
                   </div>
+                  {a.notes && (
+                    <StickyNote
+                      className="size-3 text-gray-400 shrink-0 ml-1"
+                      aria-label="Has a note"
+                    >
+                      <title>This booking has a note</title>
+                    </StickyNote>
+                  )}
                 </div>
 
-                <span className="text-xs text-gray-400">{a.time}</span>
+                <span className="text-xs text-gray-400">{formatBookingTime(a.bookingStartDate, a.business.timezone)}</span>
 
                 <div className="flex items-center text-xs">
-                  <Badge
-                    className={cn(
-                      a.status === "Confirmed"
-                        ? "bg-green-400/25 text-green-400"
-                        : "",
-                    )}
-                  >
-                    {a.status}
-                  </Badge>
-                  <DotIcon className="size-4 text-gray-400" />
-                  <span>{a.paymentType}</span>
+                  <PaymentBadge type={a.payment?.type} />
                 </div>
               </div>
             </div>
@@ -207,8 +203,95 @@ const AppointmentsMobile = () => {
               <EllipsisVertical className="size-6 text-gray-400" />
             </Button>
           </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
+  );
+};
+
+const EmptyAppointments = () => {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+      <div className="flex size-12 items-center justify-center rounded-full bg-gray-50">
+        <CalendarX2 className="size-6 text-gray-400" />
+      </div>
+      <p className="text-sm font-semibold">No upcoming appointments</p>
+      <p className="max-w-xs text-xs text-muted-foreground">
+        Your schedule is clear. New bookings will appear here as soon as clients
+        reserve a spot.
+      </p>
+    </div>
+  );
+};
+
+const getInitials = (name?: string) => {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+};
+
+const DesktopRowsSkeleton = () => {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="w-full grid grid-cols-5 items-center">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-12 rounded-full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </div>
+          <Skeleton className="h-3 w-24" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <Skeleton className="h-5 w-28 rounded-full" />
+          <Skeleton className="size-8 rounded-md" />
+        </div>
+      ))}
+    </>
+  );
+};
+
+const MobileRowsSkeleton = () => {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-12 rounded-full" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-5 w-24 rounded-full" />
+            </div>
+          </div>
+          <Skeleton className="size-8 rounded-md" />
+        </div>
+      ))}
+    </>
+  );
+};
+
+const PaymentBadge = ({ type }: { type?: "deposit" | "full-payment" }) => {
+  const isDeposit = type === "deposit";
+  return (
+    <Badge
+      className={cn(
+        "font-medium text-xs",
+        isDeposit
+          ? "bg-amber-400/20 text-amber-600"
+          : "bg-green-400/25 text-green-500",
+      )}
+    >
+      {isDeposit ? "Deposit · balance due" : "Paid in full"}
+    </Badge>
   );
 };
