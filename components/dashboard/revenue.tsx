@@ -22,24 +22,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Skeleton } from "../ui/skeleton";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@/convex/_generated/api";
 
-const chartData = [
-  { month: "January", revenue: 8400 },
-  { month: "February", revenue: 7600 },
-  { month: "March", revenue: 11200 },
-  { month: "April", revenue: 13500 },
-  { month: "May", revenue: 9800 },
-  { month: "June", revenue: 15000 },
-  { month: "July", revenue: 15000 },
-  { month: "August", revenue: 9000 },
-  { month: "September", revenue: 7000 },
-  { month: "October", revenue: 10000 },
-  { month: "Novermber", revenue: 20000 },
-  { month: "December", revenue: 5000 },
-];
+type Period = "week" | "month" | "year";
 
-type Period = "Week" | "Month" | "Year";
+const PERIOD_DESCRIPTION: Record<Period, string> = {
+  week: "This week's daily performance",
+  month: "This month's weekly performance",
+  year: "This year's monthly performance",
+};
+
 const chartConfig = {
   revenue: {
     label: "Revenue",
@@ -47,7 +43,16 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 function Revenue() {
-  const [selectedPeriod, setPeriod] = useState<Period>("Month");
+  const [selectedPeriod, setPeriod] = useState<Period>("month");
+
+  const { data, isLoading } = useQuery({
+    ...convexQuery(api.booking.admin.getRevenueData, {
+      period: selectedPeriod,
+    }),
+  });
+
+  const chartData = data ?? [];
+
   return (
     <div className="flex-1 h-full">
       <Card className="rounded-lg h-full">
@@ -55,7 +60,9 @@ function Revenue() {
           <div className="w-full flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <CardTitle>Revenue</CardTitle>
-              <CardDescription>Last 7 days performance</CardDescription>
+              <CardDescription>
+                {PERIOD_DESCRIPTION[selectedPeriod]}
+              </CardDescription>
             </div>
             <Select
               value={selectedPeriod}
@@ -66,13 +73,13 @@ function Revenue() {
               </SelectTrigger>
               <SelectContent className="">
                 <SelectGroup>
-                  <SelectItem className="capitalize" value="Week">
+                  <SelectItem className="capitalize" value="week">
                     Week
                   </SelectItem>
-                  <SelectItem className="capitalize" value="Month">
+                  <SelectItem className="capitalize" value="month">
                     Month
                   </SelectItem>
-                  <SelectItem className="capitalize" value="Year">
+                  <SelectItem className="capitalize" value="year">
                     Year
                   </SelectItem>
                 </SelectGroup>
@@ -81,26 +88,49 @@ function Revenue() {
           </div>
         </CardHeader>
         <CardContent className="flex-1 min-h-0 px-4">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <BarChart accessibilityLayer data={chartData}>
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    cursor={false}
-                    formatter={(value) => `R${Number(value).toFixed(2)}`}
+          {isLoading ? (
+            <Skeleton className="h-full w-full min-h-[200px]" />
+          ) : chartData.every((d) => d.revenue === 0) ? (
+            <div className="flex h-full min-h-[200px] items-center justify-center">
+              <p className="text-sm text-muted-foreground">
+                No revenue for this period yet.
+              </p>
+            </div>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <BarChart accessibilityLayer data={chartData}>
+                <XAxis
+                  dataKey="label"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tickFormatter={(value: string) =>
+                    selectedPeriod === "month" ? value : value.slice(0, 3)
+                  }
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      cursor={false}
+                      formatter={(value) => `R${Number(value).toFixed(2)}`}
+                    />
+                  }
+                />
+                <Bar dataKey="revenue" fill="var(--primary)" radius={10}>
+                  <LabelList
+                    dataKey="revenue"
+                    position="top"
+                    offset={8}
+                    className="fill-foreground"
+                    fontSize={10}
+                    formatter={(value: number) =>
+                      value > 0 ? `R${value.toFixed(0)}` : ""
+                    }
                   />
-                }
-              />
-              <Bar dataKey="revenue" fill="var(--primary)" radius={10} />
-            </BarChart>
-          </ChartContainer>
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          )}
         </CardContent>
       </Card>
     </div>

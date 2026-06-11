@@ -1,6 +1,20 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, internalQuery } from "../_generated/server";
-import { Context } from "twilio/lib/rest/intelligence/v3/configuration";
+import { internalMutation, internalQuery, query } from "../_generated/server";
+import { getCurrentUser } from "../users";
+import { tz } from "@date-fns/tz";
+import {
+  startOfYear,
+  endOfYear,
+  eachMonthOfInterval,
+  startOfMonth,
+  endOfMonth,
+  eachWeekOfInterval,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  getTime,
+  format,
+} from "date-fns";
 
 export const updateBookingStatus = internalMutation({
   args: {
@@ -71,6 +85,12 @@ export const createPaymentSplit = internalMutation({
     const payment = await ctx.db.get(args.bookingPaymentId);
     if (!payment) throw new ConvexError("Booking payment not found.");
 
+    // Denormalize the business's net amount onto the payment so revenue
+    // queries don't need to join paymentSplits.
+    await ctx.db.patch(args.bookingPaymentId, {
+      merchantAmount: args.merchantAmount,
+    });
+
     return await ctx.db.insert("paymentSplits", {
       bookingPaymentId: args.bookingPaymentId,
       amountGross: args.amountGross,
@@ -115,5 +135,103 @@ export const updateCompletedBookings = internalMutation({
     await Promise.all(
       bookings.map((b) => ctx.db.patch(b._id, { status: "completed" }))
     );
+  },
+});
+
+
+
+/**
+ * Returns the business's revenue bucketed by the requested period:
+ * - "year"  -> one bucket per month (Jan - Dec)
+ * - "month" -> one bucket per week of the current month (Week 1 - Week n)
+ * - "week"  -> one bucket per day of the current week (Mon - Sun)
+ *
+ * Revenue is the business's net share (paymentSplits.merchantAmount) of
+ * completed payments, attributed to the payment date (when the money was
+ * received). Amounts are in rands (same unit as getDashboardAnalytics).
+ */
+export const getRevenueData = query({
+  args: {
+    period: v.union(v.literal("week"), v.literal("month"), v.literal("year")),
+  },
+  handler: async (ctx, { period }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
+
+    const business = await ctx.db
+      .query("business")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .unique();
+    if (!business) return [];
+
+    const zone = tz(business.timezone);
+    const now = new Date();
+
+    // Build the time buckets for the requested period.
+    let points: Date[];
+    let rangeEnd: Date;
+    let labelFor: (date: Date, index: number) => string;
+
+    if (period === "year") {
+      const start = startOfYear(now, { in: zone });
+      rangeEnd = endOfYear(now, { in: zone });
+      points = eachMonthOfInterval({ start, end: rangeEnd }, { in: zone });
+      labelFor = (date) => format(date, "MMM", { in: zone });
+    } else if (period === "month") {
+      const start = startOfMonth(now, { in: zone });
+      rangeEnd = endOfMonth(now, { in: zone });
+      points = eachWeekOfInterval(
+        { start, end: rangeEnd },
+        { weekStartsOn: 1, in: zone },
+      );
+      labelFor = (_date, index) => `Week ${index + 1}`;
+    } else {
+      const start = startOfWeek(now, { weekStartsOn: 1, in: zone });
+      rangeEnd = endOfWeek(now, { weekStartsOn: 1, in: zone });
+      points = eachDayOfInterval({ start, end: rangeEnd }, { in: zone });
+      labelFor = (date) => format(date, "EEE", { in: zone });
+    }
+
+    const buckets = points.map((point, index) => {
+      const next = points[index + 1];
+      return {
+        label: labelFor(point, index),
+        startTs: getTime(point),
+        endTs: next ? getTime(next) : getTime(rangeEnd) + 1,
+        revenue: 0,
+      };
+    });
+
+    if (buckets.length === 0) return [];
+
+    const rangeStartTs = buckets[0].startTs;
+    const rangeEndTs = getTime(rangeEnd);
+
+    // Completed payments for this business whose paymentDate falls in range.
+    // merchantAmount is denormalized onto the payment, so no join is needed.
+    const payments = await ctx.db
+      .query("bookingPayment")
+      .withIndex("by_business_and_status_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          .eq("status", "completed")
+          .gte("paymentDate", rangeStartTs)
+          .lte("paymentDate", rangeEndTs),
+      )
+      .collect();
+
+    // Sum each payment's net revenue into the bucket of its payment date.
+    for (const payment of payments) {
+      const amount = payment.merchantAmount ?? 0;
+      if (amount === 0) continue;
+
+      const paidAt = payment.paymentDate;
+      const bucket = buckets.find(
+        (b) => paidAt >= b.startTs && paidAt < b.endTs,
+      );
+      if (bucket) bucket.revenue += amount;
+    }
+
+    return buckets.map(({ label, revenue }) => ({ label, revenue }));
   },
 });

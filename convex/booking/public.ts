@@ -93,6 +93,7 @@ export const createBookingRecord = internalMutation({
 
     const bookingPaymentId = await ctx.db.insert("bookingPayment", {
       bookingId,
+      businessId: business._id,
       paymentType: "deposit",
       amount: depositPrice,
       paymentDate: Date.now(),

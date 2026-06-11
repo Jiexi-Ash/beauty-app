@@ -304,31 +304,23 @@ const endMonth = getTime(endOfMonth(date))
   // unique clients
   const uniqueClientCount = new Set(totalBookings.map(b => b.userId)).size
 
-  // revenue process
+  // revenue earned this month, attributed by payment date (when money was
+  // received). Uses the denormalized merchantAmount, so no paymentSplits join.
+  const payments = await ctx.db
+    .query("bookingPayment")
+    .withIndex("by_business_and_status_and_date", (q) =>
+      q
+        .eq("businessId", business._id)
+        .eq("status", "completed")
+        .gte("paymentDate", monthStart)
+        .lte("paymentDate", endMonth),
+    )
+    .collect();
 
-  const bookingPayments = await Promise.all(
-    totalBookings.map(async (booking) => {
-      return await ctx.db
-        .query("bookingPayment")
-        .withIndex("by_booking_and_status", (q) => q.eq("bookingId", booking._id).eq("status", "completed"))
-        .unique();
-    }))
-
-  const businessPayments = await Promise.all(
-  bookingPayments.map(async (payment) => {
-    if (!payment) return 0;
-    const split = await ctx.db
-      .query("paymentSplits")
-      .withIndex("by_booking_payment", (q) =>
-        q.eq("bookingPaymentId", payment._id)
-      )
-      .first();
-    return split?.merchantAmount ?? 0;
-  })
-)
-
-  const revenue = businessPayments.reduce((sum, amount) => sum + amount, 0) as number
-  
+  const revenue = payments.reduce(
+    (sum, payment) => sum + (payment.merchantAmount ?? 0),
+    0,
+  );
 
     return {
       revenue,
