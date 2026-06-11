@@ -1,6 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { clsx, type ClassValue } from "clsx";
-import { format } from "date-fns";
+import { format, isSameDay, addDays } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -39,6 +39,19 @@ export const formatBookingTime = (timestamp: number, timezone?: string) => {
     ? new TZDate(timestamp, timezone)
     : new Date(timestamp);
   return format(zonedDate, "p"); // e.g. "2:30 PM"
+};
+
+export const formatBookingDateTime = (timestamp: number, timezone?: string) => {
+  const zonedDate = timezone
+    ? new TZDate(timestamp, timezone)
+    : new Date(timestamp);
+  const now = timezone ? new TZDate(Date.now(), timezone) : new Date();
+  const time = formatBookingTime(timestamp, timezone);
+
+  if (isSameDay(zonedDate, now)) return `Today, ${time}`;
+  if (isSameDay(zonedDate, addDays(now, 1))) return `Tomorrow, ${time}`;
+
+  return `${formatBookingDate(timestamp, timezone)}, ${time}`; // e.g. "Jun 11, 2026, 2:30 PM"
 };
 
 export const getInitials = (fullName: string): string => {
