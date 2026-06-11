@@ -17,24 +17,29 @@ interface DashboardContentProps {
 function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
   return (
     <div className="min-h-screen w-full">
-      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-        <div className="flex gap-3 items-center h-20">
-          <div className="relative w-12 h-12 rounded-full">
-            <Image
-              src={coverImageUrl ?? "/salon-image-placeholder"}
-              alt={`${business.name} cover image`}
-              fill
-              className="rounded-full object-cover"
-            />
+      <header className="top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
+        <div className="flex w-full justify-between items-center 2xl:max-w-[1600px] 2xl:mx-auto">
+          <div className="flex gap-3 items-center h-20">
+            <div className="relative w-12 h-12 rounded-full">
+              <Image
+                src={coverImageUrl ?? "/salon-image-placeholder"}
+                alt={`${business.name} cover image`}
+                fill
+                className="rounded-full object-cover"
+              />
+            </div>
+
+            <h1 className="text-base text-primary font-bold">
+              {business.name}
+            </h1>
           </div>
 
-          <h1 className="text-base text-primary font-bold">{business.name}</h1>
-        </div>
-
-        <div className="flex gap-4 items-center">
-          <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
+          <div className="flex gap-4 items-center">
+            <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
+          </div>
         </div>
       </header>
+      <div className="w-full 2xl:max-w-[1600px] 2xl:mx-auto">
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center px-6 py-4">
         <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
           <div className="flex flex-col">
@@ -71,6 +76,7 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           <ServiceHighlight />
         </div>
         <UpcomingAppointments />
+      </div>
       </div>
     </div>
   );
