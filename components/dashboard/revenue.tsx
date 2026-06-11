@@ -68,7 +68,7 @@ function Revenue() {
               value={selectedPeriod}
               onValueChange={(value) => setPeriod(value as Period)}
             >
-              <SelectTrigger className="bg-muted">
+              <SelectTrigger className="bg-muted capitalize">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent className="">
@@ -97,8 +97,15 @@ function Revenue() {
               </p>
             </div>
           ) : (
-            <ChartContainer config={chartConfig} className="h-full w-full">
-              <BarChart accessibilityLayer data={chartData}>
+            <ChartContainer
+              config={chartConfig}
+              className="h-full w-full min-h-[260px]"
+            >
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{ top: 24 }}
+              >
                 <XAxis
                   dataKey="label"
                   tickLine={false}

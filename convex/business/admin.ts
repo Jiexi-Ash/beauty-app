@@ -379,3 +379,66 @@ export type AppointmentWithDetails = Doc<"booking"> & {
   payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type:"deposit" | "full-payment" } | null;
   business: {timezone: string}
 };
+
+
+/**
+ * Top-performing services for the business this month, ranked by number of
+ * bookings (statuses that count as real demand). Returns up to `limit`
+ * services with their booking counts, plus the total bookings considered.
+ */
+export const getServiceHighlights = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit }) => {
+    const take = limit ?? 3;
+
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) return null;
+
+    const date = new Date();
+    const monthStart = getTime(startOfMonth(date));
+    const monthEnd = getTime(endOfMonth(date));
+
+    const bookings = await ctx.db
+      .query("booking")
+      .withIndex("by_business_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          .gte("bookingStartDate", monthStart)
+          .lte("bookingStartDate", monthEnd),
+      )
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "in_progress"),
+          q.eq(q.field("status"), "upcoming"),
+          q.eq(q.field("status"), "completed"),
+        ),
+      )
+      .collect();
+
+    const counts = new Map<Id<"service">, number>();
+    for (const booking of bookings) {
+      counts.set(booking.serviceId, (counts.get(booking.serviceId) ?? 0) + 1);
+    }
+
+    const top = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, take);
+
+    const services = await Promise.all(
+      top.map(async ([serviceId, count]) => {
+        const service = await ctx.db.get(serviceId);
+        return { serviceId, name: service?.name ?? "Unknown service", count };
+      }),
+    );
+
+    return {
+      services,
+      totalBookings: bookings.length,
+    };
+  },
+});

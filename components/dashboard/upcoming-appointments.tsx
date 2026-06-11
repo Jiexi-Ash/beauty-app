@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { DotIcon, EllipsisVertical, StickyNote } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { cn, formatBookingDateTime, formatBookingTime } from "@/lib/utils";
+import { cn, formatBookingDateTime, formatBookingTime, formatDuration } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
@@ -114,7 +114,7 @@ const AppointmentsDesktop = ({
             <div className="flex flex-col gap-0.5 ">
               <span className="font-bold text-xs">{formatBookingDateTime(a.bookingStartDate, a.business.timezone)}</span>
               <span className="text-muted-foreground text-xs">
-                Duration: {a.service.duration}
+                Duration: {formatDuration(a.service.duration)}
               </span>
             </div>
 

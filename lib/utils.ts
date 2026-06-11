@@ -62,3 +62,11 @@ export const getInitials = (fullName: string): string => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+export const formatDuration = (minutes?: number) => {
+  if (minutes === undefined) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = minutes / 60;
+  const formatted = hours.toFixed(1).replace(".0", "");
+  return `${formatted} ${hours === 1 ? "hour" : "hours"}`;
+};
