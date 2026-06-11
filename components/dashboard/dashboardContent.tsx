@@ -22,7 +22,7 @@ function DashboardContent({ business, coverImageUrl }: DashboardContentProps) {
           <div className="flex gap-3 items-center h-20">
             <div className="relative w-12 h-12 rounded-full">
               <Image
-                src={coverImageUrl ?? "/salon-image-placeholder"}
+                src={coverImageUrl ?? "/salon-image-placeholder.jpg"}
                 alt={`${business.name} cover image`}
                 fill
                 className="rounded-full object-cover"

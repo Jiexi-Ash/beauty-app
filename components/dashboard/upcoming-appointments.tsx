@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Link from "next/link";
 import { Button } from "../ui/button";
 import { DotIcon, EllipsisVertical, StickyNote } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -50,12 +49,6 @@ const AppointmentsDesktop = ({
               Your schedule for today and tomorrow
             </CardDescription>
           </div>
-          <Link
-            href="/dashboard/booking"
-            className="uppercase text-primary text-xs font-medium"
-          >
-            View all
-          </Link>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,12 +143,6 @@ const AppointmentsMobile = ({
               Your schedule for today and tomorrow
             </CardDescription>
           </div>
-          <Link
-            href="/dashboard/booking"
-            className="uppercase text-primary text-xs font-medium"
-          >
-            View all
-          </Link>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
