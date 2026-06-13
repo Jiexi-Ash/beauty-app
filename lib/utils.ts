@@ -70,3 +70,11 @@ export const formatDuration = (minutes?: number) => {
   const formatted = hours.toFixed(1).replace(".0", "");
   return `${formatted} ${hours === 1 ? "hour" : "hours"}`;
 };
+
+/** Formats an amount stored in cents as ZAR, e.g. 45000 -> "R450.00". */
+export const formatZar = (cents: number) => {
+  return `R${(cents / 100).toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};

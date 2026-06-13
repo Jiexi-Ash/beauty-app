@@ -1,6 +1,12 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, internalQuery, query } from "../_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "../_generated/server";
 import { getCurrentUser } from "../users";
+import { getBusinessByUserId } from "../business/admin";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -136,15 +142,28 @@ export const cancelStalePendingBookings = internalMutation({
 export const updateCompletedBookings = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
+    // Grace window before auto-completing an appointment the owner started but
+    // hasn't marked complete — gives them time to close it out manually.
+    const inProgressCutoff = now - 15 * 60 * 1000;
 
-    const bookings = await ctx.db
+    // Upcoming appointments the owner never started: complete at end time.
+    const endedUpcoming = await ctx.db
       .query("booking")
       .withIndex("by_status", (q) => q.eq("status", "upcoming"))
       .filter((q) => q.lt(q.field("bookingEndDate"), now))
       .collect();
 
+    // In-progress appointments left open past the grace window.
+    const staleInProgress = await ctx.db
+      .query("booking")
+      .withIndex("by_status", (q) => q.eq("status", "in_progress"))
+      .filter((q) => q.lt(q.field("bookingEndDate"), inProgressCutoff))
+      .collect();
+
     await Promise.all(
-      bookings.map((b) => ctx.db.patch(b._id, { status: "completed" }))
+      [...endedUpcoming, ...staleInProgress].map((b) =>
+        ctx.db.patch(b._id, { status: "completed" }),
+      ),
     );
   },
 });
@@ -244,5 +263,62 @@ export const getRevenueData = query({
     }
 
     return buckets.map(({ label, revenue }) => ({ label, revenue }));
+  },
+});
+
+
+/**
+ * Starts an upcoming appointment: transitions it to "in_progress".
+ * Ownership-checked (the booking must belong to the caller's business) and
+ * only valid from the "upcoming" state.
+ */
+export const startAppointment = mutation({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "upcoming") {
+      throw new ConvexError("Only upcoming appointments can be started.");
+    }
+
+    await ctx.db.patch(booking._id, { status: "in_progress" });
+    return { ok: true };
+  },
+});
+
+
+/**
+ * Completes an in-progress appointment: transitions it to "completed".
+ * Ownership-checked and only valid from the "in_progress" state.
+ */
+export const completeAppointment = mutation({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "in_progress") {
+      throw new ConvexError("Only in-progress appointments can be completed.");
+    }
+
+    await ctx.db.patch(booking._id, { status: "completed" });
+    return { ok: true };
   },
 });

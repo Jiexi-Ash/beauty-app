@@ -7,14 +7,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "../ui/button";
-import { DotIcon, EllipsisVertical, StickyNote } from "lucide-react";
+import { DotIcon, EllipsisVertical, Eye, StickyNote } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import Link from "next/link";
 import { cn, formatBookingDateTime, formatBookingTime, formatDuration } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
 import { AppointmentWithDetails } from "@/convex/business/admin";
+import { Id } from "@/convex/_generated/dataModel";
 import { CalendarX2 } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 
@@ -115,9 +123,7 @@ const AppointmentsDesktop = ({
               <PaymentBadge type={a.payment?.type} />
             </div>
 
-            <Button variant="ghost" size="icon">
-              <EllipsisVertical className="size-6 text-gray-400" />
-            </Button>
+            <AppointmentActions bookingId={a._id} />
           </div>
           ))
         )}
@@ -186,9 +192,7 @@ const AppointmentsMobile = ({
               </div>
             </div>
 
-            <Button variant="ghost" size="icon">
-              <EllipsisVertical className="size-6 text-gray-400" />
-            </Button>
+            <AppointmentActions bookingId={a._id} />
           </div>
           ))
         )}
@@ -280,5 +284,27 @@ const PaymentBadge = ({ type }: { type?: "deposit" | "full-payment" }) => {
     >
       {isDeposit ? "Deposit · balance due" : "Paid in full"}
     </Badge>
+  );
+};
+
+const AppointmentActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon" aria-label="Actions" />}
+      >
+        <EllipsisVertical className="size-6 text-gray-400" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+         
+        >
+          <Link href={`/dashboard/bookings/${bookingId}`} className="flex items-center gap-2">
+            <Eye className="size-4" />
+          View
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
