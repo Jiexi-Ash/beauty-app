@@ -23,7 +23,18 @@ export const updateBookingStatus = internalMutation({
   },
   handler: async (ctx, { bookingId, status }) => {
     const booking = await ctx.db.get(bookingId);
-    if (!booking || !booking.bookingPaymentId) return false;
+    if (!booking || !booking.bookingPaymentId)
+      return { transitioned: false as const };
+
+    const payment = await ctx.db.get(booking.bookingPaymentId);
+    if (!payment) return { transitioned: false as const };
+
+    // Idempotency guard: only act on a payment that is still pending.
+    // PayFast delivers ITNs at-least-once, so a duplicate notification finds a
+    // terminal status here and becomes a no-op. The check-and-set runs inside
+    // this single mutation transaction, so concurrent duplicates can't both
+    // pass (the second conflicts and re-reads the terminal status).
+    if (payment.status !== "pending") return { transitioned: false as const };
 
     if (status === "confirmed") {
       await Promise.all([
@@ -37,7 +48,7 @@ export const updateBookingStatus = internalMutation({
       ]);
     }
 
-    return booking._id;
+    return { transitioned: true as const };
   },
 });
 

@@ -148,10 +148,20 @@ export const handleITN = internalAction({
     }
 
     const bookingId = itn.custom_str1 as Id<"booking">
-    await ctx.runMutation(internal.booking.admin.updateBookingStatus, {
-      bookingId: bookingId,
-      status: itn.payment_status === "COMPLETE" ? "confirmed" : "cancelled",
-    });
+    const { transitioned } = await ctx.runMutation(
+      internal.booking.admin.updateBookingStatus,
+      {
+        bookingId: bookingId,
+        status: itn.payment_status === "COMPLETE" ? "confirmed" : "cancelled",
+      },
+    );
+
+    // Already finalized by an earlier ITN delivery — skip all side effects
+    // (split creation, notification) to keep this handler idempotent.
+    if (!transitioned) {
+      console.log("ITN already processed for this payment; skipping.");
+      return true;
+    }
 
     if (itn.payment_status === "COMPLETE") {
       const amountGross = parseFloat(itn.amount_gross as unknown as string);
