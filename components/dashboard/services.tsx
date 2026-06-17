@@ -2,7 +2,6 @@
 import { api } from "@/convex/_generated/api";
 import { Preloaded, usePreloadedQuery } from "convex/react";
 import {
-  Bell,
   CalendarCheck,
   Clock,
   EllipsisVertical,
@@ -30,6 +29,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useConvexMutation } from "@convex-dev/react-query";
 import { toast } from "sonner";
 import { ConvexError } from "convex/values";
+import { formatDuration } from "@/lib/utils";
 
 interface ServicesProps {
   preloadedServices: Preloaded<typeof api.service.admin.getBusinessServices>;
@@ -64,27 +64,6 @@ function Services({ preloadedServices }: ServicesProps) {
   if (services.length === 0) {
     return (
       <div className="min-h-screen w-full flex flex-col">
-        <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-          <div className="flex gap-3 items-center h-20">
-            <div className="relative w-12 h-12 rounded-full">
-              <Image
-                src={"/salon-image-placeholder.jpg"}
-                alt={`${"Katlego nail's bar"} cover image`}
-                fill
-                className="rounded-full object-cover"
-              />
-            </div>
-
-            <h1 className="text-base capitalize text-primary font-bold">
-              {"Katlego's Nail Bar"}
-            </h1>
-          </div>
-
-          <div className="flex gap-4 items-center overflow-hidden">
-            <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
-          </div>
-        </header>
-
         <div className="flex-1 flex flex-col items-center justify-center ">
           <Image
             src="/no_data.svg"
@@ -121,27 +100,6 @@ function Services({ preloadedServices }: ServicesProps) {
 
   return (
     <div className="min-h-screen w-full">
-      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-        <div className="flex gap-3 items-center h-20">
-          <div className="relative w-12 h-12 rounded-full">
-            <Image
-              src={"/salon-image-placeholder.jpg"}
-              alt={`${"Katlego nail's bar"} cover image`}
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
-
-          <h1 className="text-base capitalize text-primary font-bold">
-            {"Katlego's nail Bar"}
-          </h1>
-        </div>
-
-        <div className="flex gap-4 items-center">
-          <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
-        </div>
-      </header>
-
       <div className="px-6 flex flex-col space-y-4 mt-6">
         <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
           <div className="flex flex-col">
@@ -332,7 +290,7 @@ const ServiceCard = ({
 
                 <div className="flex items-center gap-1">
                   <Clock className="size-4 text-muted-foreground overflow-hidden" />
-                  <span className="text-xs">{duration}m</span>
+                  <span className="text-xs">{formatDuration(duration)}</span>
                 </div>
               </div>
             </div>

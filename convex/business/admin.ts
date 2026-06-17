@@ -442,3 +442,91 @@ export const getServiceHighlights = query({
     };
   },
 });
+
+
+/**
+ * Client roster for the business: every user who has a real booking (upcoming,
+ * in_progress or completed), with their total bookings, total net revenue
+ * (denormalized merchantAmount of completed payments) and last visit (most
+ * recent completed booking). Sorted by most recent activity.
+ */
+export const getClients = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) return [];
+
+    const bookings = await ctx.db
+      .query("booking")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .collect();
+
+    type Agg = {
+      totalBookings: number;
+      revenue: number;
+      lastVisit: number | null;
+    };
+    const map = new Map<Id<"users">, Agg>();
+    const bookingToUser = new Map<Id<"booking">, Id<"users">>();
+
+    for (const b of bookings) {
+      const isReal =
+        b.status === "upcoming" ||
+        b.status === "in_progress" ||
+        b.status === "completed";
+      if (!isReal) continue;
+
+      bookingToUser.set(b._id, b.userId);
+
+      const agg = map.get(b.userId) ?? {
+        totalBookings: 0,
+        revenue: 0,
+        lastVisit: null,
+      };
+      agg.totalBookings += 1;
+      if (b.status === "completed") {
+        agg.lastVisit =
+          agg.lastVisit === null
+            ? b.bookingStartDate
+            : Math.max(agg.lastVisit, b.bookingStartDate);
+      }
+      map.set(b.userId, agg);
+    }
+
+    // Attribute revenue via completed payments (mapped back to the client).
+    const payments = await ctx.db
+      .query("bookingPayment")
+      .withIndex("by_business_and_status_and_date", (q) =>
+        q.eq("businessId", business._id).eq("status", "completed"),
+      )
+      .collect();
+
+    for (const p of payments) {
+      const userId = bookingToUser.get(p.bookingId);
+      if (!userId) continue;
+      const agg = map.get(userId);
+      if (agg) agg.revenue += p.merchantAmount ?? 0;
+    }
+
+    const clients = await Promise.all(
+      [...map.entries()].map(async ([userId, agg]) => {
+        const u = await ctx.db.get(userId);
+        return {
+          _id: userId,
+          name: u?.fullname ?? "Unknown client",
+          email: u?.email ?? null,
+          phone: u?.phone ?? null,
+          image: u?.image ?? null,
+          totalBookings: agg.totalBookings,
+          revenue: agg.revenue,
+          lastVisit: agg.lastVisit,
+        };
+      }),
+    );
+
+    clients.sort((a, b) => (b.lastVisit ?? 0) - (a.lastVisit ?? 0));
+    return clients;
+  },
+});

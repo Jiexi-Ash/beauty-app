@@ -5,7 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import Actions from "./actions";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import VisibilityToggle from "./visibility-toggle";
 
 export type Service = {
@@ -93,7 +93,7 @@ export const columns: ColumnDef<Service>[] = [
     cell: ({ row }) => {
       const duration = parseInt(row.getValue("duration"));
 
-      return <div className="text-muted-foreground">{duration} mins</div>;
+      return <div className="text-muted-foreground">{formatDuration(duration)}</div>;
     },
   },
   {

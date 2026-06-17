@@ -96,6 +96,11 @@ function BookingDetails({
         : "Deposit received"
       : "Awaiting payment";
 
+  const isFullySettled =
+    payment?.status === "completed" && payment.type === "full-payment";
+
+  const statusBadge = getStatusBadge(booking.status);
+
   return (
     <div className="w-full px-6 py-6 2xl:max-w-[1600px] 2xl:mx-auto">
       {/* Header */}
@@ -154,12 +159,7 @@ function BookingDetails({
               </Avatar>
 
               <div className="flex flex-1 flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold">{client.name}</h2>
-                  <Badge className="bg-primary/10 text-primary text-[10px] capitalize">
-                    {booking.status.replace(/_/g, " ")}
-                  </Badge>
-                </div>
+                <h2 className="text-xl font-bold">{client.name}</h2>
 
                 <div className="flex flex-wrap gap-2">
                   {client.phone && (
@@ -191,7 +191,14 @@ function BookingDetails({
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <h3 className="font-bold capitalize">{service.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold capitalize">{service.name}</h3>
+                  <Badge
+                    className={cn("text-[10px] font-medium", statusBadge.className)}
+                  >
+                    {statusBadge.label}
+                  </Badge>
+                </div>
                 <p className="flex items-center gap-1 text-xs text-gray-400">
                   <Clock className="size-3" />
                   Duration: {formatDuration(service.duration)}
@@ -240,7 +247,7 @@ function BookingDetails({
                 <Badge
                   className={cn(
                     "text-[10px] font-bold",
-                    payment?.status === "completed"
+                    isFullySettled
                       ? "bg-primary text-primary-foreground"
                       : "bg-amber-400/20 text-amber-600",
                   )}
@@ -251,7 +258,10 @@ function BookingDetails({
 
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-full rounded-full bg-primary transition-all"
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    isFullySettled ? "bg-primary" : "bg-amber-500",
+                  )}
                   style={{ width: `${paidRatio * 100}%` }}
                 />
               </div>
@@ -379,3 +389,31 @@ function BookingDetails({
 }
 
 export default BookingDetails;
+
+const getStatusBadge = (status: string): { label: string; className: string } => {
+  switch (status) {
+    case "upcoming":
+      return { label: "Upcoming", className: "bg-blue-400/20 text-blue-600" };
+    case "in_progress":
+      return {
+        label: "In progress",
+        className: "bg-amber-400/20 text-amber-600",
+      };
+    case "completed":
+      return { label: "Completed", className: "bg-green-400/25 text-green-600" };
+    case "pending":
+      return { label: "Pending", className: "bg-gray-100 text-gray-500" };
+    case "cancelled_by_user":
+    case "cancelled_by_business":
+    case "cancelled_by_payment_failed":
+      return {
+        label: "Cancelled",
+        className: "bg-destructive/10 text-destructive",
+      };
+    default:
+      return {
+        label: status.replace(/_/g, " "),
+        className: "bg-gray-100 text-gray-500",
+      };
+  }
+};

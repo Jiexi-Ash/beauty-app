@@ -306,27 +306,6 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
 
   return (
     <div className="min-h-screen w-full">
-      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-        <div className="flex gap-3 items-center h-20">
-          <div className="relative w-12 h-12 rounded-full">
-            <Image
-              src={"/salon-image-placeholder.jpg"}
-              alt={`${"Katlego nail's bar"} cover image`}
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
-
-          <h1 className="text-base text-primary font-bold">
-            {"Katlego's nail Bar"}
-          </h1>
-        </div>
-
-        <div className="flex gap-4 items-center">
-          <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
-        </div>
-      </header>
-
       <div className="space-y-6 px-6 pt-4 pb-6">
         <div>
           <h1 className="text-2xl font-bold">Create New Service</h1>

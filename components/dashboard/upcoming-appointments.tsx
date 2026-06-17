@@ -279,7 +279,7 @@ const PaymentBadge = ({ type }: { type?: "deposit" | "full-payment" }) => {
         "font-medium text-xs",
         isDeposit
           ? "bg-amber-400/20 text-amber-600"
-          : "bg-green-400/25 text-green-500",
+          : "bg-primary/10 text-primary",
       )}
     >
       {isDeposit ? "Deposit · balance due" : "Paid in full"}
