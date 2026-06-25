@@ -27,6 +27,59 @@ export const generateUploadUrl = mutation({
   },
 });
 
+export const updateBusinessSettings = mutation({
+  args: {
+    businessId: v.id("business"),
+    allowBookingBeyondCloseTime: v.optional(v.boolean()),
+    enableBusinessBufferTime: v.optional(v.boolean()),
+    bufferTimeMinutes: v.optional(v.number()),
+    maxConcurrentBookings: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx)
+
+    const business = await ctx.db.get(args.businessId)
+
+    if (!business) throw new ConvexError("Business not found.")
+    if (business.ownerId !== user._id)
+      throw new ConvexError("You can only update a business you own.")
+
+    const businessSettings = await ctx.db
+      .query("businessSettings")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .unique()
+
+    if (!businessSettings)
+      throw new ConvexError("Settings for this business were not found.")
+
+    if (args.bufferTimeMinutes !== undefined && args.bufferTimeMinutes < 0)
+      throw new ConvexError("Buffer time cannot be negative.")
+    if (args.maxConcurrentBookings !== undefined && args.maxConcurrentBookings < 1)
+      throw new ConvexError("Maximum concurrent bookings must be at least 1.")
+
+    // Only patch the fields that were actually provided.
+    const updates: {
+      allowBookingBeyondCloseTime?: boolean
+      enableBusinessBufferTime?: boolean
+      bufferTimeMinutes?: number
+      maxConcurrentBookings?: number
+    } = {}
+
+    if (args.allowBookingBeyondCloseTime !== undefined)
+      updates.allowBookingBeyondCloseTime = args.allowBookingBeyondCloseTime
+    if (args.enableBusinessBufferTime !== undefined)
+      updates.enableBusinessBufferTime = args.enableBusinessBufferTime
+    if (args.bufferTimeMinutes !== undefined)
+      updates.bufferTimeMinutes = args.bufferTimeMinutes
+    if (args.maxConcurrentBookings !== undefined)
+      updates.maxConcurrentBookings = args.maxConcurrentBookings
+
+    if (Object.keys(updates).length === 0) return
+
+    await ctx.db.patch(businessSettings._id, updates)
+  }
+})
+
 export const searchAddressPublic = action({
   args: { input: v.string() },
   handler: async (ctx, { input }) => {
@@ -240,12 +293,21 @@ export const getUserBusiness = query({
 
     const business = await getBusinessByUserId(ctx, user._id);
     if (!business) return null;
+
     const coverImageUrl = await ctx.storage.getUrl(
       business.coverImageStorageId,
     );
 
+    const [settings, hours] = await Promise.all([
+      ctx.db.query("businessSettings").withIndex("by_business", q => q.eq("businessId", business._id)).unique(),
+      ctx.db.query("businessHours").withIndex("by_businessId", q => q.eq("businessId", business._id)).collect()
+
+    ])
+
     return {
       ...business,
+      settings,
+      businessHours:hours,
       coverImageUrl,
     };
   },
@@ -379,6 +441,12 @@ export type AppointmentWithDetails = Doc<"booking"> & {
   payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type:"deposit" | "full-payment" } | null;
   business: {timezone: string}
 };
+
+export type UserBusinessResult = {
+  settings: Doc<"businessSettings"> | null;
+  businessHours: Doc<"businessHours">[]
+  coverImageUrl: string | null;
+} & Doc<"business"> | null
 
 
 /**
@@ -528,5 +596,128 @@ export const getClients = query({
 
     clients.sort((a, b) => (b.lastVisit ?? 0) - (a.lastVisit ?? 0));
     return clients;
+  },
+});
+
+
+/**
+ * Replaces a business's operating hours. `days` should contain only the days
+ * the business is open; any day omitted is treated as closed (its row removed).
+ */
+export const updateBusinessHours = mutation({
+  args: {
+    businessId: v.id("business"),
+    days: v.array(businessDayValidator),
+  },
+  handler: async (ctx, { businessId, days }) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const business = await ctx.db.get(businessId);
+    if (!business) throw new ConvexError("Business not found.");
+    if (business.ownerId !== user._id)
+      throw new ConvexError("You can only update a business you own.");
+
+    for (const day of days) {
+      const isValidDay = BUSINESS_DAYS.some(
+        (d) => d.shortName === day.shortName && d.fullName === day.fullName,
+      );
+      if (!isValidDay)
+        throw new ConvexError(`Invalid business day: ${day.fullName}`);
+      if (day.openTime >= day.closeTime)
+        throw new ConvexError(
+          `Opening time must be before closing time for ${day.fullName}.`,
+        );
+    }
+
+    // Replace all existing hours rows with the provided open days.
+    const existing = await ctx.db
+      .query("businessHours")
+      .withIndex("by_businessId", (q) => q.eq("businessId", businessId))
+      .collect();
+
+    await Promise.all(existing.map((h) => ctx.db.delete(h._id)));
+    await Promise.all(
+      days.map((day) =>
+        ctx.db.insert("businessHours", {
+          businessId,
+          fullName: day.fullName,
+          shortName: day.shortName,
+          openTime: day.openTime,
+          closeTime: day.closeTime,
+        }),
+      ),
+    );
+  },
+});
+
+
+/**
+ * Updates a business's address. Re-geocodes the selected place to refresh
+ * coordinates and city, then persists via an internal mutation.
+ */
+export const updateBusinessAddress = action({
+  args: {
+    businessId: v.id("business"),
+    address: v.string(),
+    placesId: v.string(),
+  },
+  handler: async (ctx, { businessId, address, placesId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity === null) throw new ConvexError("User is unauthenticated.");
+
+    const coordinates = await ctx.runAction(
+      internal.business.actions.getBusinessCoordinates,
+      { placesId },
+    );
+    if (!coordinates)
+      throw new ConvexError("Could not resolve that address.");
+
+    const city =
+      (await ctx.runAction(internal.business.actions.getCityFromCoordinates, {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      })) ?? "";
+
+    await ctx.runMutation(internal.business.admin.saveBusinessAddress, {
+      businessId,
+      address,
+      city,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    });
+  },
+});
+
+export const saveBusinessAddress = internalMutation({
+  args: {
+    businessId: v.id("business"),
+    address: v.string(),
+    city: v.string(),
+    latitude: v.float64(),
+    longitude: v.float64(),
+  },
+  handler: async (ctx, { businessId, address, city, latitude, longitude }) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const business = await ctx.db.get(businessId);
+    if (!business) throw new ConvexError("Business not found.");
+    if (business.ownerId !== user._id)
+      throw new ConvexError("You can only update a business you own.");
+
+    await ctx.db.patch(businessId, {
+      location: address,
+      city,
+      latitude,
+      longitude,
+      searchText: `${business.name} ${city}`,
+    });
+
+    // Keep the geospatial index in sync with the new coordinates.
+    await geospatial.insert(
+      ctx,
+      businessId,
+      { latitude, longitude },
+      { slug: business.slug },
+    );
   },
 });

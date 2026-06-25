@@ -120,24 +120,47 @@ export const createPaymentSplit = internalMutation({
   },
 });
 
-export const cancelStalePendingBookings = internalMutation({
-  handler: async (ctx) => {
-    const cutoff = Date.now() - 15 * 60 * 1000
+export const markCompleted = internalMutation({
+  args: { paymentId: v.id("bookingPayment") },
+  returns: v.null(),
+  handler: async (ctx, { paymentId }) => {
+    const payment = await ctx.db.get(paymentId);
+    if (!payment) return null;
 
-    const stale = await ctx.db
-      .query("booking")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .filter((q) => q.lt(q.field("_creationTime"), cutoff))
-      .collect();
+    const booking = await ctx.db.get(payment.bookingId);
+    // Only complete a booking that is still awaiting payment. If it was
+    // cancelled after the retry window, do NOT revive it — there is no retry
+    // once cancelled (a late success here is a refund case, not a completion).
+    if (!booking || booking.status !== "pending") return null;
 
-      await Promise.all(
-      stale.map((b) => ctx.db.patch(b._id, { 
-        status: "cancelled_by_payment_failed" 
-      }))
-    )
-  }
-})
+    await ctx.db.patch(paymentId, { status: "completed" });
+    await ctx.db.patch(booking._id, { status: "upcoming" });
 
+    return null;
+  },
+});
+
+export const markFailed = internalMutation({
+  args: { paymentId: v.id("bookingPayment") },
+  returns: v.null(),
+  handler: async (ctx, { paymentId }) => {
+    const payment = await ctx.db.get(paymentId);
+    if (!payment) return null;
+
+    // only act if still pending
+    if (payment.status !== "pending") return null;
+
+    await ctx.db.patch(paymentId, { status: "failed" });
+
+    // This runs only after Paystack verified the transaction as
+    // failed/abandoned (past the retry window), so cancel the booking too.
+    const booking = await ctx.db.get(payment.bookingId);
+    if (booking && booking.status === "pending") {
+      await ctx.db.patch(booking._id, { status: "cancelled_by_payment_failed" });
+    }
+    return null;
+  },
+});
 
 export const updateCompletedBookings = internalMutation({
   handler: async (ctx) => {

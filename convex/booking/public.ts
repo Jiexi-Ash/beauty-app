@@ -90,6 +90,7 @@ export const createBookingRecord = internalMutation({
     });
 
     const depositPrice = Math.round(service.price * 0.5);
+    const reference = `${bookingId}_${Date.now()}`
 
     const bookingPaymentId = await ctx.db.insert("bookingPayment", {
       bookingId,
@@ -98,7 +99,7 @@ export const createBookingRecord = internalMutation({
       amount: depositPrice,
       paymentDate: Date.now(),
       status: "pending",
-      paymentReference: "payfast",
+      paymentReference: reference,
       commission: subTier?.commission ?? 10,
     });
 
@@ -114,6 +115,8 @@ export const createBookingRecord = internalMutation({
       servicePrice: service.price,
       merchantId: business.merchantId,
       commission: subTier?.commission ?? 10,
+      reference,
+      email: user.email,
     };
   },
 });

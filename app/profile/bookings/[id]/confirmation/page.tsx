@@ -11,14 +11,34 @@ import { formatBookingTime } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import Footer from "@/components/footer";
 import { BookingConfirmationSkeleton } from "@/components/skeletons/booking-confirmation";
+import { useAction } from "convex/react";
+import { useEffect, useRef } from "react";
 
 function BookingConfirmationPage() {
   const { id } = useParams();
+  const bookingId = id as Id<"booking">;
+
   const { data, isLoading } = useQuery({
     ...convexQuery(api.booking.queries.getUserBookingById, {
-      bookingId: id as Id<"booking">,
+      bookingId,
     }),
   });
+
+  const verifyPayment = useAction(
+    api.booking.actions.verifyAndSyncPaymentForBooking,
+  );
+  const hasVerified = useRef(false);
+
+  useEffect(() => {
+    if (!data || hasVerified.current) return;
+    if (data.status === "pending") {
+      hasVerified.current = true;
+      verifyPayment({ bookingId }).catch((err) => {
+        console.error("Verify payment failed:", err);
+        hasVerified.current = false; // allow retry if it errored, not just "not success"
+      });
+    }
+  }, [data, bookingId, verifyPayment]);
 
   if (isLoading) return <BookingConfirmationSkeleton />;
 

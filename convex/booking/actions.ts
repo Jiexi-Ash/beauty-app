@@ -1,8 +1,8 @@
 "use node";
 import { ConvexError, v } from "convex/values";
-import { action } from "../_generated/server";
+import { action, internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { initiatePayment } from "../payment";
+import { initiatePaystackCheckout } from "../payment";
 
 export const bookSlot = action({
   args: {
@@ -34,38 +34,21 @@ export const bookSlot = action({
 
     const [firstName, ...lastParts] = args.fullName.split(" ");
     const lastName = lastParts.join(" ") || firstName;
-    const depositAmount = (result.servicePrice / 100) * 0.5;
+    const depositAmount = Math.round(result.servicePrice * 0.5);
 
-    const paymentData = initiatePayment({
-      merchant: {
-        merchant_id: process.env.PAYFAST_MERCHANT_ID!,
-        merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
-        return_url: `${process.env.APP_URL}/profile/bookings/${result.bookingId}/confirmation`,
-        cancel_url: `${process.env.APP_URL}/payment/cancel`,
-        notify_url: `${process.env.HTTP_URL}/api/payfast/notify`,
+    const paystackCheckoutUrl = await initiatePaystackCheckout({
+      amount: depositAmount,
+      callback_url: `${process.env.DEV_URL}/profile/bookings/${result.bookingId}/confirmation`,
+      email: result.email,
+      metadata: {
+        clientName: firstName,
+        clientSurname: lastName,
+        service: result.serviceName,
       },
-      customer: {
-        name_first: firstName,
-        name_last: lastName,
-        email_address: identity.email!,
-        ...(args.phoneNumber && { cell_number: args.phoneNumber }),
-      },
-      transactions: {
-        m_payment_id: result.bookingPaymentId,
-        amount: depositAmount.toFixed(2),
-        item_name:
-          result.serviceName.charAt(0).toUpperCase() +
-          result.serviceName.slice(1),
-        custom_str1: result.bookingId,
-        custom_str2: result.userId,
-      },
-      split_payment: {
-        merchant_id: result.merchantId,
-        percentage: 100 - result.commission,
-      },
-    });
+      reference: result.reference,
+    })
 
-    return paymentData;
+    return paystackCheckoutUrl
   },
 });
 
@@ -86,5 +69,70 @@ export const rescheduleBooking = action({
       time: time,
       clerkId: identity.subject,
     });
+  },
+});
+
+export const verifyAndSyncPaymentForBooking = action({
+  args: { bookingId: v.id("booking") },
+  returns: v.null(),
+  handler: async (ctx, { bookingId }) => {
+    const payment = await ctx.runQuery(
+      internal.booking.queries.getLatestForBooking,
+      { bookingId },
+    );
+
+    if (!payment || payment.status !== "pending" || !payment.paymentReference) {
+      return null; // already resolved or nothing to check
+    }
+
+    const result = await ctx.runAction(
+      internal.paystack.actions.verifyPaystackTransaction,
+      { reference: payment.paymentReference },
+    );
+
+    if (result.status === "success") {
+      await ctx.runMutation(internal.booking.admin.markCompleted, {
+        paymentId: payment._id,
+      });
+    }
+
+    return null;
+  },
+});
+
+
+export const sweepStalePendingPayments = internalAction({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const staleThreshold = Date.now() - 15 * 60 * 1000; // retry window; matches the cancel boundary
+
+    const stalePending = await ctx.runQuery(
+      internal.booking.queries.getStalePending,
+      { staleThreshold },
+    );
+
+    for (const payment of stalePending) {
+      if (!payment.paymentReference) continue;
+
+      const result = await ctx.runAction(
+        internal.paystack.actions.verifyPaystackTransaction,
+        { reference: payment.paymentReference },
+      );
+
+      if (result.status === "success") {
+        await ctx.runMutation(internal.booking.admin.markCompleted, {
+          paymentId: payment._id,
+        });
+      } else if (result.status === "failed" || result.status === "abandoned") {
+        await ctx.runMutation(internal.booking.admin.markFailed, {
+          paymentId: payment._id,
+        });
+      }
+      // "unknown" (e.g. transient Paystack/API error) → leave pending and
+      // retry on the next sweep rather than wrongly failing a valid payment.
+    }
+
+    return null;
   },
 });

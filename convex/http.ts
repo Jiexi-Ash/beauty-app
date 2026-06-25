@@ -3,6 +3,8 @@ import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { WebhookEvent } from "@clerk/backend";
 import { Webhook } from "svix";
+import { isValidPaystackIP } from "./paystack/utils";
+
 
 const http = httpRouter();
 
@@ -32,24 +34,67 @@ http.route({
 });
 
 http.route({
-  path: "/api/payfast/notify",
+  path: "/api/paystack/notify",
   method: "POST",
-  handler: httpAction(async (ctx, request) => {
-    const body = await request.text();
-    const pfIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      request.headers.get("cf-connecting-ip") ??
-      null;
+  handler: httpAction(async (ctx, req) => {
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const clientIp = forwardedFor?.split(",")[0]?.trim() ?? null;
 
-    try {
-      await ctx.runAction(internal.payfast.handleITN, { body, pfIp });
-    } catch (e) {
-      console.error("ITN handler failed:", e);
+    if (!isValidPaystackIP(clientIp)) {
+      console.warn("Paystack webhook from unrecognized IP:", clientIp);
     }
 
-    return new Response(null, { status: 200 }); // always 200
-  }),
-});
+    const rawBody = await req.text();
+    const signature = req.headers.get("x-paystack-signature") ?? "";
+
+    const isValid = await ctx.runAction(internal.paystack.actions.verifySignature, {
+      rawBody,
+      signature,
+    });
+
+    if (!isValid) {
+      return new Response("Invalid signature", { status: 401 });
+    }
+
+    const event = JSON.parse(rawBody);
+
+    if (!event?.event) {
+      console.warn("Webhook missing event field");
+      return new Response(null, { status: 200 });
+    }
+
+    switch (event.event) {
+      case "charge.success": {
+        if (!event.data) {
+          console.warn("charge.success missing data field");
+          break;
+        }
+
+        await ctx.runMutation(internal.paystack.mutations.handlePaystackEvent, {
+          event: {
+            event: event.event,
+            data: {
+              reference: event.data.reference,
+              status: event.data.status,
+              amount: event.data.amount,
+              paid_at: event.data.paid_at,
+              channel: event.data.channel,
+              currency: event.data.currency,
+              metadata: event.data.metadata,
+            },
+          },
+        });
+        break;
+      }
+
+      default: {
+        console.log("Ignoring unhandled event type:", event.event);
+        break;
+      }
+    }
+    return new Response(null, { status: 200 });
+  })
+})
 
 async function validateRequest(req: Request): Promise<WebhookEvent | null> {
   const payloadString = await req.text();

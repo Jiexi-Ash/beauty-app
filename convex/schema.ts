@@ -132,12 +132,14 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "bookingStartDate"]),
 
+
+
   bookingPayment: defineTable({
     bookingId: v.id("booking"),
-    businessId: v.id("business"), // denormalized for revenue range scans
+    businessId: v.id("business"),
     paymentType: v.union(v.literal("deposit"), v.literal("full-payment")),
     amount: v.number(),
-    merchantAmount: v.optional(v.number()), // denormalized from paymentSplits; set on completion
+    merchantAmount: v.optional(v.number()),
     paymentDate: v.number(),
     status: v.union(
       v.literal("pending"),
@@ -152,11 +154,13 @@ export default defineSchema({
     .index("by_booking", ["bookingId"])
     .index("by_booking_and_status", ["bookingId", "status"])
     .index("by_booking_and_date", ["bookingId", "paymentDate"])
+    .index("by_status_and_date", ["status", "paymentDate"])
     .index("by_business_and_status_and_date", [
       "businessId",
       "status",
       "paymentDate",
-    ]),
+    ])
+    .index("by_reference", ["paymentReference"]),
 
   paymentSplits: defineTable({
     bookingPaymentId: v.id("bookingPayment"),

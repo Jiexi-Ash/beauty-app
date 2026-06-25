@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { internalQuery, query } from "../_generated/server";
 import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { formatBookingDate } from "../../lib/utils";
@@ -56,6 +56,8 @@ export const getUserBookingById = query({
     };
   },
 });
+
+
 
 /**
  * Full detail for a single booking, scoped to the business owned by the
@@ -139,14 +141,68 @@ export const getBookingDetails = query({
       },
       payment: payment
         ? {
-            amount: payment.amount,
-            status: payment.status,
-            type: payment.paymentType,
-          }
+          amount: payment.amount,
+          status: payment.status,
+          type: payment.paymentType,
+        }
         : null,
       financials: { totalFee, paid, remaining },
       history,
       business: { timezone: business.timezone },
     };
+  },
+});
+
+export const getLatestForBooking = internalQuery({
+  args: { bookingId: v.id("booking") },
+  returns: v.union(
+    v.object({
+      _id: v.id("bookingPayment"),
+      status: v.string(),
+      paymentReference: v.optional(v.string()),
+      amount: v.number(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { bookingId }) => {
+    const payment = await ctx.db
+      .query("bookingPayment")
+      .withIndex("by_booking_and_date", (q) => q.eq("bookingId", bookingId))
+      .order("desc")
+      .first();
+
+    if (!payment) return null;
+
+    return {
+      _id: payment._id,
+      status: payment.status,
+      paymentReference: payment.paymentReference,
+      amount: payment.amount,
+    };
+  },
+});
+
+// convex/bookingPayment.ts (alongside getLatestForBooking, markCompleted, markFailed)
+
+export const getStalePending = internalQuery({
+  args: { staleThreshold: v.number() },
+  returns: v.array(
+    v.object({
+      _id: v.id("bookingPayment"),
+      paymentReference: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, { staleThreshold }) => {
+    const stale = await ctx.db
+      .query("bookingPayment")
+      .withIndex("by_status_and_date", (q) =>
+        q.eq("status", "pending").lt("paymentDate", staleThreshold),
+      )
+      .collect();
+
+    return stale.map((p) => ({
+      _id: p._id,
+      paymentReference: p.paymentReference,
+    }));
   },
 });

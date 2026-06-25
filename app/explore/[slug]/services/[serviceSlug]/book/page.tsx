@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label"
 import MainLayout from "@/components/main-layout"
 import { BookingPageSkeleton } from "@/components/skeletons/booking-page"
 import { toast } from "sonner"
+import { ConvexError } from "convex/values"
 
 const toNoonUTC = (d: Date) =>
   new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0))
@@ -70,7 +71,7 @@ function BookServicePage() {
       if (!selectedSlot) return;
       setIsSubmitting(true)
       try {
-        const paymentData = await bookSlot({
+        const checkoutUrl = await bookSlot({
           serviceSlug: params.serviceSlug,
           businessSlug: params.slug,
           date: format(new Date(selectedSlot.startTimestamp), "yyyy-MM-dd"),
@@ -80,38 +81,27 @@ function BookServicePage() {
           notes: value.notes || undefined,
         });
 
-        // Build and submit hidden PayFast form
-        const payfastForm = document.createElement("form");
-        payfastForm.method = "POST";
-        payfastForm.action = "https://sandbox.payfast.co.za/eng/process"; // swap for prod
-
-        const { split_payment, ...fields } = paymentData;
-
-        // Add all regular fields
-        Object.entries(fields).forEach(([key, val]) => {
-          if (val === undefined || val === null) return;
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = String(val);
-          payfastForm.appendChild(input);
-        });
-
-        // Add split payment as JSON-encoded "setup" field — NOT included in signature
-        if (split_payment) {
-          const setup = document.createElement("input");
-          setup.type = "hidden";
-          setup.name = "setup";
-          setup.value = JSON.stringify({ split_payment });
-          payfastForm.appendChild(setup);
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl
+        } else {
+          toast.error("Failed to create booking session");
         }
 
-        document.body.appendChild(payfastForm);
-        payfastForm.submit();
+
+
+
+
       } catch (error) {
         setIsSubmitting(false)
+        if (error instanceof ConvexError) {
+          // Access your structured data payload
+          const { message, code } = error.data as { message: string; code: string };
+          toast.error(message)
+
+        } else {
+          toast.error("An unexpected error occurred");
+        }
         console.error("Booking failed:", error);
-        toast.error("Booking Failed")
       }
     },
   })
@@ -490,8 +480,8 @@ function ConfirmBooking({
   depositDue: number
   selectedSlot: Slot | null
 }) {
-  const {  isSignedIn } = useUser()
-    const fullUrl = typeof window !== "undefined" ? window.location.href : "";
+  const { isSignedIn } = useUser()
+  const fullUrl = typeof window !== "undefined" ? window.location.href : "";
   return (
     <div className="rounded-2xl bg-white shadow-sm border border-foreground/10 overflow-hidden">
       {service.primaryImage && (
