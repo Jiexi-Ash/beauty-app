@@ -14,7 +14,7 @@ import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
 import { BUSINESS_DAYS } from "../../constants";
 import { slugify } from "../../lib/utils";
-import { endOfMonth, getMonth, getTime, startOfMonth } from "date-fns";
+import { endOfMonth, getTime, startOfMonth } from "date-fns";
 
 const geospatial = new GeospatialIndex(components.geospatial);
 

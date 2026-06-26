@@ -94,10 +94,8 @@ function BookServicePage() {
       } catch (error) {
         setIsSubmitting(false)
         if (error instanceof ConvexError) {
-          // Access your structured data payload
-          const { message, code } = error.data as { message: string; code: string };
+          const { message } = error.data as { message: string; code: string };
           toast.error(message)
-
         } else {
           toast.error("An unexpected error occurred");
         }

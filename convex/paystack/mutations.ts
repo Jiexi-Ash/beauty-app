@@ -27,11 +27,6 @@ export const handlePaystackEvent = internalMutation({
                     return null;
                 }
 
-                if (event.data.status !== "success") {
-                    console.error("Unexpected status on charge.success event:", event.data.status);
-                    return null;
-                }
-
                 if (payment.amount !== event.data.amount) {
                     console.error(
                         `Amount mismatch for ${event.data.reference}: expected ${payment.amount}, got ${event.data.amount}`,

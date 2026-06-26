@@ -43,7 +43,6 @@ interface PreloadedUserBookingsProps {
 
 function PreloadedUserBookings({ preloadedBookings }: PreloadedUserBookingsProps) {
     const bookings = usePreloadedQuery(preloadedBookings);
-    console.log(bookings)
 
     if (!bookings) return <NoBookings />
 
