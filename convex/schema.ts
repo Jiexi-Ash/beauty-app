@@ -24,7 +24,7 @@ export default defineSchema({
     ownerId: v.id("users"),
     subscriptionTierId: v.id("subscriptionTiers"),
     timezone: v.literal("Africa/Johannesburg"),
-    merchantId: v.number(),
+    merchantId: v.optional(v.number()),
     visibility: v.union(
       v.literal("hidden"),
       v.literal("visible"),
@@ -179,6 +179,19 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_business", ["businessId"])
     .index("by_user_and_business", ["userId", "businessId"]),
+
+  businessBanking: defineTable({
+    businessId: v.id("business"),
+    businessName: v.string(),
+    settlementBank: v.string(),
+    accountNumber: v.string(),
+    businessEmail: v.string(),
+    phone: v.string(),
+    isActive: v.boolean(),
+    settlementBankName: v.optional(v.string()),
+    subAccountCode: v.optional(v.string()),
+    paystackId: v.optional(v.number()),
+  }).index("by_business", ["businessId"]),
 });
 
 export const businessDayValidator = v.object({
