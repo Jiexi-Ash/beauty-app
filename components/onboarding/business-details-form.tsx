@@ -175,11 +175,12 @@ const BusinessDetailForm = ({
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="w-full max-w-xl"
+        className="w-full"
       >
-        <div className="w-full h-full">
-          <FieldGroup className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
+          {/* Left column: business info */}
+          <FieldGroup className="space-y-3">
 
             <form.Field name="coverImage">
               {(field) => {
@@ -195,7 +196,7 @@ const BusinessDetailForm = ({
                       ref={fileInputRef}
                       onChange={(e) => handleSelectCoverImage(e, field)}
                     />
-                    <div className="relative w-full h-40 md:h-72 bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="relative w-full h-40 md:h-64 bg-white rounded-lg shadow-lg overflow-hidden">
                       <Image
                         src={coverImage ?? "/salon-image-placeholder.jpg"}
                         fill
@@ -244,7 +245,6 @@ const BusinessDetailForm = ({
               }}
             </form.Field>
 
-           
             <form.Field name="description">
               {(field) => {
                 const isInvalid =
@@ -276,7 +276,6 @@ const BusinessDetailForm = ({
               }}
             </form.Field>
 
-        
             <form.Field name="address">
               {(field) => {
                 const isInvalid =
@@ -332,7 +331,6 @@ const BusinessDetailForm = ({
               }}
             </form.Field>
 
-           
             <form.Field name="tags">
               {(field) => {
                 const isInvalid =
@@ -391,7 +389,15 @@ const BusinessDetailForm = ({
               }}
             </form.Field>
 
-          
+          </FieldGroup>
+
+          {/* Right column: business hours */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Business Hours</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Set your weekly operating schedule</p>
+            </div>
+
             <form.Field name="businessDays">
               {(field) => {
                 const isInvalid =
@@ -401,7 +407,6 @@ const BusinessDetailForm = ({
 
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Business Days</FieldLabel>
                     <div className="flex flex-col gap-2">
                       {visibleDays.map((day) => {
                         const isSelected = field.state.value.some(
@@ -504,8 +509,8 @@ const BusinessDetailForm = ({
                 );
               }}
             </form.Field>
+          </div>
 
-          </FieldGroup>
         </div>
       </form>
 

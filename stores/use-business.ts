@@ -95,13 +95,15 @@ export const businessSchema = z.object({
 })
 
 export const paymentSchema = z.object({
-  merchantId: z.number()
-    .int("Merchant ID must be a whole number")
-    .positive("Merchant ID must be a positive number")
-    .max(99999999, "Merchant ID must be at most 8 digits"),
-}).refine((data) => data.merchantId !== undefined && data.merchantId !== null, {
-  message: "Merchant ID is required",
-  path: ["merchantId"],
+  businessName: z.string().min(2, "Business name is required"),
+  settlementBank: z.string().min(1, "Please select your settlement bank"),
+  settlementBankName: z.string(),
+  accountNumber: z.string()
+    .min(6, "Account number must be at least 6 digits")
+    .max(12, "Account number must be at most 12 digits")
+    .regex(/^\d+$/, "Account number must contain only digits"),
+  businessEmail: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(10, "Please enter a valid phone number"),
 });
 
 
