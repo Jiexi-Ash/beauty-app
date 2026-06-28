@@ -14,7 +14,7 @@ export async function initiatePaystackCheckout(args: {
 }) {
   const { amount, email, reference, callback_url, metadata } = args
 
-  const response = await fetch(`${process.env.PAYSTACK_CHECKOUT_URL}/transaction/initialize`, {
+  const response = await fetch(`${process.env.PAYSTACK_URL}/transaction/initialize`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
