@@ -14,6 +14,13 @@ import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
 import { BUSINESS_DAYS } from "../../constants";
 import { slugify } from "../../lib/utils";
+
+const ALLOWED_TAGS = [
+  "Hair Styling", "Nails", "Barbershop", "Massage",
+  "Lashes", "Makeup", "Luxury Spa", "Skincare",
+] as const;
+
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 import { endOfMonth, getTime, startOfMonth } from "date-fns";
 
 const geospatial = new GeospatialIndex(components.geospatial);
@@ -104,10 +111,14 @@ export const createBusiness = action({
     description: v.string(),
     address: v.string(),
     coverImageStorageId: v.id("_storage"),
-    merchantId: v.number(),
     businessDays: v.array(businessDayValidator),
     placesId: v.string(),
     tags: v.array(v.string()),
+    paystackBusinessName: v.string(),
+    paystackBank: v.string(),
+    paystackAccountNumber: v.string(),
+    paystackEmail: v.string(),
+    paystackPhone: v.string(),
   },
   handler: async (
     ctx,
@@ -119,7 +130,11 @@ export const createBusiness = action({
       description,
       placesId,
       businessDays,
-      merchantId,
+      paystackBusinessName,
+      paystackBank,
+      paystackAccountNumber,
+      paystackEmail,
+      paystackPhone,
     },
   ) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -127,6 +142,22 @@ export const createBusiness = action({
     if (identity === null) {
       throw new ConvexError("User is unauthenticated");
     }
+
+    const alreadyHasBusiness = await ctx.runQuery(internal.business.admin.checkUserHasBusiness);
+    if (alreadyHasBusiness) {
+      throw new ConvexError("You already have a business registered.");
+    }
+
+    const freeTier = await ctx.runQuery(internal.business.admin.getFreeTier);
+
+    const subAccount = await ctx.runAction(internal.paystack.actions.createSubAccount, {
+      businessName: paystackBusinessName,
+      settlementBank: paystackBank,
+      accountNumber: paystackAccountNumber,
+      percentageCharge: freeTier.commission,
+      primaryContactEmail: paystackEmail,
+      primaryContactPhone: paystackPhone,
+    });
 
     const coordinates = await ctx.runAction(
       internal.business.actions.getBusinessCoordinates,
@@ -142,6 +173,7 @@ export const createBusiness = action({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
       })) ?? "";
+
     const businessId: Id<"business"> = await ctx.runMutation(
       internal.business.admin.saveBusiness,
       {
@@ -152,11 +184,23 @@ export const createBusiness = action({
         description,
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
-        merchantId,
         name,
         tags,
+        subscriptionTierId: freeTier._id,
       },
     );
+
+    await ctx.runMutation(internal.business.admin.saveBusinessBanking, {
+      businessId,
+      businessName: paystackBusinessName,
+      settlementBank: paystackBank,
+      settlementBankName: subAccount.settlementBankName,
+      accountNumber: paystackAccountNumber,
+      businessEmail: paystackEmail,
+      phone: paystackPhone,
+      subAccountCode: subAccount.subAccountCode,
+      paystackId: subAccount.paystackId,
+    });
 
     return businessId;
   },
@@ -169,11 +213,11 @@ export const saveBusiness = internalMutation({
     address: v.string(),
     city: v.string(),
     coverImageStorageId: v.id("_storage"),
-    merchantId: v.number(),
     businessDays: v.array(businessDayValidator),
     latitude: v.float64(),
     longitude: v.float64(),
     tags: v.array(v.string()),
+    subscriptionTierId: v.id("subscriptionTiers"),
   },
   handler: async (
     ctx,
@@ -186,11 +230,22 @@ export const saveBusiness = internalMutation({
       latitude,
       longitude,
       businessDays,
-      merchantId,
       city,
+      subscriptionTierId,
     },
   ) => {
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const fileMeta = await ctx.storage.getMetadata(coverImageStorageId);
+    if (!fileMeta) throw new ConvexError("Cover image upload not found.");
+    if (!fileMeta.contentType || !ALLOWED_IMAGE_TYPES.includes(fileMeta.contentType)) {
+      await ctx.storage.delete(coverImageStorageId);
+      throw new ConvexError("Cover image must be a JPEG, PNG, or WebP file.");
+    }
+
     const businessSlug = slugify(name);
+
+    if (businessDays.length === 0)
+      throw new ConvexError("At least one business day is required.");
 
     for (const day of businessDays) {
       const isValidDay = BUSINESS_DAYS.some(
@@ -198,6 +253,11 @@ export const saveBusiness = internalMutation({
       );
       if (!isValidDay)
         throw new ConvexError(`Invalid business day: ${day.shortName}`);
+
+      if (!TIME_REGEX.test(day.openTime) || !TIME_REGEX.test(day.closeTime))
+        throw new ConvexError(
+          `Invalid time format for ${day.fullName}. Expected HH:MM.`,
+        );
 
       if (day.openTime >= day.closeTime) {
         throw new ConvexError(
@@ -219,20 +279,16 @@ export const saveBusiness = internalMutation({
     if (businessBySlug)
       throw new ConvexError("A business with that name already exists.");
 
-    const subscription = await ctx.db
-      .query("subscriptionTiers")
-      .withIndex("by_tier", (q) => q.eq("tier", "free"))
-      .unique();
+    if (tags.length > 3)
+      throw new ConvexError("You can only select a maximum of 3 tags.");
 
-    if (!subscription)
-      throw new ConvexError(
-        "Error pulling the subscription tiers, please try again later.",
-      );
+    const invalidTag = tags.find(
+      (tag) => !ALLOWED_TAGS.includes(tag as typeof ALLOWED_TAGS[number]),
+    );
+    if (invalidTag)
+      throw new ConvexError(`Invalid tag: "${invalidTag}"`);
 
     const formattedTags = tags.map((tag) => tag.toLowerCase());
-
-    if (formattedTags.length > 3)
-      throw new ConvexError("You can only select a maximum of 3 tags.");
 
     const businessId = await ctx.db.insert("business", {
       ownerId: user._id,
@@ -244,8 +300,7 @@ export const saveBusiness = internalMutation({
       latitude,
       longitude,
       slug: businessSlug,
-      merchantId,
-      subscriptionTierId: subscription._id,
+      subscriptionTierId,
       timezone: "Africa/Johannesburg",
       visibility: "hidden",
       tags: formattedTags,
@@ -285,6 +340,35 @@ export const saveBusiness = internalMutation({
     return businessId;
   },
 });
+
+export const saveBusinessBanking = internalMutation({
+  args: {
+    businessId: v.id("business"),
+    businessName: v.string(),
+    settlementBank: v.string(),
+    settlementBankName: v.optional(v.string()),
+    accountNumber: v.string(),
+    businessEmail: v.string(),
+    phone: v.string(),
+    subAccountCode: v.optional(v.string()),
+    paystackId: v.optional(v.number()),
+  },
+  handler: async (ctx, { businessId, businessName, settlementBank, settlementBankName, accountNumber, businessEmail, phone, subAccountCode, paystackId }) => {
+    await ctx.db.insert("businessBanking", {
+      businessId,
+      businessName,
+      settlementBank,
+      settlementBankName,
+      accountNumber,
+      businessEmail,
+      phone,
+      isActive: true,
+      subAccountCode,
+      paystackId,
+    });
+  },
+});
+
 export const getUserBusiness = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
@@ -307,7 +391,7 @@ export const getUserBusiness = query({
     return {
       ...business,
       settings,
-      businessHours:hours,
+      businessHours: hours,
       coverImageUrl,
     };
   },
@@ -334,6 +418,30 @@ export const queryBusinessById = internalQuery({
   },
 });
 
+export const checkUserHasBusiness = internalQuery({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return false;
+    const business = await getBusinessByUserId(ctx, user._id);
+    return !!business;
+  },
+});
+
+export const getFreeTier = internalQuery({
+  args: {},
+  returns: v.object({ commission: v.number(), _id: v.id("subscriptionTiers") }),
+  handler: async (ctx) => {
+    const tier = await ctx.db
+      .query("subscriptionTiers")
+      .withIndex("by_tier", (q) => q.eq("tier", "free"))
+      .unique();
+    if (!tier) throw new ConvexError("Subscription tier configuration missing.");
+    return { commission: tier.commission, _id: tier._id };
+  },
+});
+
 export const getBusinessByUserId = (ctx: QueryCtx, userId: Id<"users">) => {
   return ctx.db
     .query("business")
@@ -341,55 +449,55 @@ export const getBusinessByUserId = (ctx: QueryCtx, userId: Id<"users">) => {
     .unique();
 };
 
-export const getDashboardAnalytics  = query({
+export const getDashboardAnalytics = query({
   handler: async (ctx) => {
     const date = new Date()
-const monthStart = getTime(startOfMonth(date))
-const endMonth = getTime(endOfMonth(date))
+    const monthStart = getTime(startOfMonth(date))
+    const endMonth = getTime(endOfMonth(date))
 
     const user = await getCurrentUserOrThrow(ctx);
     const business = await getBusinessByUserId(ctx, user._id);
     if (!business) return undefined
 
     // total bookings
-   const totalBookings = await ctx.db
-  .query("booking")
-  .withIndex("by_business_and_date", (q) =>
-    q
-      .eq("businessId", business._id)
-      .gte("bookingStartDate", monthStart)
-      .lte("bookingStartDate", endMonth)
-  ).filter((q) => q.or(q.eq(q.field("status"), "in_progress"), q.eq(q.field("status"), "upcoming"), q.eq(q.field("status"), "completed")))
-  .collect();
+    const totalBookings = await ctx.db
+      .query("booking")
+      .withIndex("by_business_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          .gte("bookingStartDate", monthStart)
+          .lte("bookingStartDate", endMonth)
+      ).filter((q) => q.or(q.eq(q.field("status"), "in_progress"), q.eq(q.field("status"), "upcoming"), q.eq(q.field("status"), "completed")))
+      .collect();
 
 
-  // unique clients
-  const uniqueClientCount = new Set(totalBookings.map(b => b.userId)).size
+    // unique clients
+    const uniqueClientCount = new Set(totalBookings.map(b => b.userId)).size
 
-  // revenue earned this month, attributed by payment date (when money was
-  // received). Uses the denormalized merchantAmount, so no paymentSplits join.
-  const payments = await ctx.db
-    .query("bookingPayment")
-    .withIndex("by_business_and_status_and_date", (q) =>
-      q
-        .eq("businessId", business._id)
-        .eq("status", "completed")
-        .gte("paymentDate", monthStart)
-        .lte("paymentDate", endMonth),
-    )
-    .collect();
+    // revenue earned this month, attributed by payment date (when money was
+    // received). Uses the denormalized merchantAmount, so no paymentSplits join.
+    const payments = await ctx.db
+      .query("bookingPayment")
+      .withIndex("by_business_and_status_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          .eq("status", "completed")
+          .gte("paymentDate", monthStart)
+          .lte("paymentDate", endMonth),
+      )
+      .collect();
 
-  const revenue = payments.reduce(
-    (sum, payment) => sum + (payment.merchantAmount ?? 0),
-    0,
-  );
+    const revenue = payments.reduce(
+      (sum, payment) => sum + (payment.merchantAmount ?? 0),
+      0,
+    );
 
     return {
       revenue,
-      reviews: {averageReviews: 0, count: 0},
+      reviews: { averageReviews: 0, count: 0 },
       totalBookings: totalBookings.length,
       uniqueClients: uniqueClientCount,
-      
+
 
     }
   },
@@ -400,12 +508,12 @@ export const getUpcomingAppointments = query({
   args: {
     limit: v.optional(v.number())
   },
-  handler: async (ctx, {limit}) => {
+  handler: async (ctx, { limit }) => {
     const take = limit ?? 5
     const user = await getCurrentUser(ctx)
 
     if (!user) return []
-      const now = Date.now();
+    const now = Date.now();
 
     const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
 
@@ -421,10 +529,10 @@ export const getUpcomingAppointments = query({
 
         return {
           ...appointment,
-          client: { name: client?.fullname, avatar: client?.image, email:client?.email },
+          client: { name: client?.fullname, avatar: client?.image, email: client?.email },
           service: { _id: service?._id, name: service?.name, duration: service?.duration },
-          payment: payment ? {amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
-          business: {timezone:business.timezone}
+          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
+          business: { timezone: business.timezone }
         };
       })
     );
@@ -436,10 +544,10 @@ export const getUpcomingAppointments = query({
 
 // types
 export type AppointmentWithDetails = Doc<"booking"> & {
-  client: { name?: string; avatar?: string, email?:string };
+  client: { name?: string; avatar?: string, email?: string };
   service: { _id?: Id<"service">; name?: string, duration?: number };
-  payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type:"deposit" | "full-payment" } | null;
-  business: {timezone: string}
+  payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type: "deposit" | "full-payment" } | null;
+  business: { timezone: string }
 };
 
 export type UserBusinessResult = {
