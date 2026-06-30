@@ -35,8 +35,6 @@ export const handlePaystackEvent = internalMutation({
                 }
 
                 const booking = await ctx.db.get(payment.bookingId);
-                // No retry once cancelled: if the booking is no longer pending (e.g.
-                // cancelled after the retry window), don't revive it from the webhook.
                 if (!booking || booking.status !== "pending") {
                     console.warn(
                         `Booking for ${event.data.reference} is not pending (status: ${booking?.status}); skipping completion.`,
@@ -44,8 +42,29 @@ export const handlePaystackEvent = internalMutation({
                     return null;
                 }
 
-                await ctx.db.patch(payment._id, { status: "completed" });
+                // Use Paystack's actual split breakdown (fees_split).
+                // Fall back to commission calc if fees_split is absent (e.g. subaccount not used).
+                // fees_split.integration = platform net after Paystack deducts its fee
+                // fees_split.subaccount  = merchant net
+                // fees_split.paystack    = Paystack processing fee
+                const fs = event.data.fees_split;
+                const paystackFee = fs?.paystack ?? 0;
+                const platformAmount = fs?.integration ?? Math.round(payment.amount * (payment.commission / 100)) - paystackFee;
+                const merchantAmount = fs?.subaccount ?? (payment.amount - payment.amount * (payment.commission / 100));
+                const amountNet = payment.amount - paystackFee;
+
+                await ctx.db.patch(payment._id, { status: "completed", merchantAmount });
                 await ctx.db.patch(booking._id, { status: "upcoming" });
+
+                await ctx.db.insert("paymentSplits", {
+                    bookingPaymentId: payment._id,
+                    amountGross: payment.amount,
+                    amountFee: paystackFee,
+                    amountNet,
+                    platformAmount,
+                    merchantAmount,
+                    commission: payment.commission,
+                });
                 break;
             }
 

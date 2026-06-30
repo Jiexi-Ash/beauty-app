@@ -81,6 +81,7 @@ http.route({
               channel: event.data.channel,
               currency: event.data.currency,
               metadata: event.data.metadata,
+              fees_split: event.data.fees_split,
             },
           },
         });

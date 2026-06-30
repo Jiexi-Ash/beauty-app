@@ -117,6 +117,11 @@ export const verifyPaystackTransaction = internalAction({
     returns: v.object({
         status: v.string(), // "success" | "failed" | "abandoned"
         amount: v.optional(v.number()),
+        fees_split: v.optional(v.object({
+            paystack: v.number(),
+            integration: v.number(),
+            subaccount: v.number(),
+        })),
     }),
     handler: async (_ctx, { reference }) => {
         const response = await fetch(
@@ -136,9 +141,15 @@ export const verifyPaystackTransaction = internalAction({
             return { status: "unknown" };
         }
 
+        const fs = result.data.fees_split;
         return {
-            status: result.data.status, // Paystack's own status string
+            status: result.data.status,
             amount: result.data.amount,
+            fees_split: fs && typeof fs.paystack === "number" ? {
+                paystack: fs.paystack,
+                integration: fs.integration,
+                subaccount: fs.subaccount,
+            } : undefined,
         };
     },
 });

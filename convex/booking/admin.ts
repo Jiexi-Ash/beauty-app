@@ -121,9 +121,16 @@ export const createPaymentSplit = internalMutation({
 });
 
 export const markCompleted = internalMutation({
-  args: { paymentId: v.id("bookingPayment") },
+  args: {
+    paymentId: v.id("bookingPayment"),
+    fees_split: v.optional(v.object({
+      paystack: v.number(),
+      integration: v.number(),
+      subaccount: v.number(),
+    })),
+  },
   returns: v.null(),
-  handler: async (ctx, { paymentId }) => {
+  handler: async (ctx, { paymentId, fees_split }) => {
     const payment = await ctx.db.get(paymentId);
     if (!payment) return null;
 
@@ -133,8 +140,23 @@ export const markCompleted = internalMutation({
     // once cancelled (a late success here is a refund case, not a completion).
     if (!booking || booking.status !== "pending") return null;
 
-    await ctx.db.patch(paymentId, { status: "completed" });
+    const paystackFee    = fees_split?.paystack    ?? 0;
+    const platformAmount = fees_split?.integration ?? Math.round(payment.amount * (payment.commission / 100)) - paystackFee;
+    const merchantAmount = fees_split?.subaccount  ?? Math.round(payment.amount * (1 - payment.commission / 100));
+    const amountNet      = payment.amount - paystackFee;
+
+    await ctx.db.patch(paymentId, { status: "completed", merchantAmount });
     await ctx.db.patch(booking._id, { status: "upcoming" });
+
+    await ctx.db.insert("paymentSplits", {
+      bookingPaymentId: paymentId,
+      amountGross: payment.amount,
+      amountFee: paystackFee,
+      amountNet,
+      platformAmount,
+      merchantAmount,
+      commission: payment.commission,
+    });
 
     return null;
   },
