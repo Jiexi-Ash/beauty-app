@@ -53,7 +53,7 @@ export const handlePaystackEvent = internalMutation({
                 const merchantAmount = fs?.subaccount ?? (payment.amount - payment.amount * (payment.commission / 100));
                 const amountNet = payment.amount - paystackFee;
 
-                await ctx.db.patch(payment._id, { status: "completed", merchantAmount });
+                await ctx.db.patch(payment._id, { status: "completed", merchantAmount, paymentDate: Date.now() });
                 await ctx.db.patch(booking._id, { status: "upcoming" });
 
                 await ctx.db.insert("paymentSplits", {

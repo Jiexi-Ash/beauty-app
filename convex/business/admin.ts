@@ -487,13 +487,15 @@ export const getDashboardAnalytics = query({
       )
       .collect();
 
-    const revenue = payments.reduce(
+    const revenueCents = payments.reduce(
       (sum, payment) => sum + (payment.merchantAmount ?? 0),
       0,
-    );
+    )
+
+    const revenueRands = revenueCents / 100
 
     return {
-      revenue,
+      revenue: revenueRands,
       reviews: { averageReviews: 0, count: 0 },
       totalBookings: totalBookings.length,
       uniqueClients: uniqueClientCount,
@@ -683,7 +685,7 @@ export const getClients = query({
       const userId = bookingToUser.get(p.bookingId);
       if (!userId) continue;
       const agg = map.get(userId);
-      if (agg) agg.revenue += p.merchantAmount ?? 0;
+      if (agg) agg.revenue += (p.merchantAmount ?? 0) / 100;
     }
 
     const clients = await Promise.all(

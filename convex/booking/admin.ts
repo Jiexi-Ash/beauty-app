@@ -140,12 +140,12 @@ export const markCompleted = internalMutation({
     // once cancelled (a late success here is a refund case, not a completion).
     if (!booking || booking.status !== "pending") return null;
 
-    const paystackFee    = fees_split?.paystack    ?? 0;
+    const paystackFee = fees_split?.paystack ?? 0;
     const platformAmount = fees_split?.integration ?? Math.round(payment.amount * (payment.commission / 100)) - paystackFee;
-    const merchantAmount = fees_split?.subaccount  ?? Math.round(payment.amount * (1 - payment.commission / 100));
-    const amountNet      = payment.amount - paystackFee;
+    const merchantAmount = fees_split?.subaccount ?? Math.round(payment.amount * (1 - payment.commission / 100));
+    const amountNet = payment.amount - paystackFee;
 
-    await ctx.db.patch(paymentId, { status: "completed", merchantAmount });
+    await ctx.db.patch(paymentId, { status: "completed", merchantAmount, paymentDate: Date.now() });
     await ctx.db.patch(booking._id, { status: "upcoming" });
 
     await ctx.db.insert("paymentSplits", {
@@ -213,18 +213,6 @@ export const updateCompletedBookings = internalMutation({
   },
 });
 
-
-
-/**
- * Returns the business's revenue bucketed by the requested period:
- * - "year"  -> one bucket per month (Jan - Dec)
- * - "month" -> one bucket per week of the current month (Week 1 - Week n)
- * - "week"  -> one bucket per day of the current week (Mon - Sun)
- *
- * Revenue is the business's net share (paymentSplits.merchantAmount) of
- * completed payments, attributed to the payment date (when the money was
- * received). Amounts are in rands (same unit as getDashboardAnalytics).
- */
 export const getRevenueData = query({
   args: {
     period: v.union(v.literal("week"), v.literal("month"), v.literal("year")),
@@ -297,7 +285,7 @@ export const getRevenueData = query({
 
     // Sum each payment's net revenue into the bucket of its payment date.
     for (const payment of payments) {
-      const amount = payment.merchantAmount ?? 0;
+      const amount = payment.merchantAmount ? (payment.merchantAmount / 100) : 0;
       if (amount === 0) continue;
 
       const paidAt = payment.paymentDate;
@@ -312,11 +300,6 @@ export const getRevenueData = query({
 });
 
 
-/**
- * Starts an upcoming appointment: transitions it to "in_progress".
- * Ownership-checked (the booking must belong to the caller's business) and
- * only valid from the "upcoming" state.
- */
 export const startAppointment = mutation({
   args: { bookingId: v.id("booking") },
   handler: async (ctx, { bookingId }) => {
