@@ -36,10 +36,8 @@ export async function initiatePaystackCheckout(args: {
   const result = await response.json()
 
   if (!result.status) {
-    throw new ConvexError({
-      message: `Paystack Gateway Error: ${result.message}`,
-      code: "PAYSTACK_ERROR"
-    });
+    console.error("Paystack checkout error:", result.message);
+    throw new ConvexError("We couldn't process your booking at this time. Please try again later.");
   }
 
   return result.data.authorization_url

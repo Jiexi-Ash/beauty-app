@@ -25,7 +25,7 @@ export const createBookingRecord = internalMutation({
 
     const businessBanking = await ctx.db.query("businessBanking").withIndex("by_business", q => q.eq("businessId", business._id)).unique()
 
-    if (!businessBanking || !businessBanking?.subAccountCode) throw new ConvexError("Failed Creating a business record please try again later.")
+    if (!businessBanking || !businessBanking?.subAccountCode) throw new ConvexError("This business is not yet set up to accept payments.")
 
     const service = await ctx.db
       .query("service")

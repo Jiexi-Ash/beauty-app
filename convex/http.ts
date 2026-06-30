@@ -41,7 +41,8 @@ http.route({
     const clientIp = forwardedFor?.split(",")[0]?.trim() ?? null;
 
     if (!isValidPaystackIP(clientIp)) {
-      console.warn("Paystack webhook from unrecognized IP:", clientIp);
+      console.warn("Paystack webhook from unrecognized IP, dropping:", clientIp);
+      return new Response(null, { status: 200 });
     }
 
     const rawBody = await req.text();
