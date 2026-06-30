@@ -190,6 +190,7 @@ export const getStalePending = internalQuery({
     v.object({
       _id: v.id("bookingPayment"),
       paymentReference: v.optional(v.string()),
+      amount: v.number(),
     }),
   ),
   handler: async (ctx, { staleThreshold }) => {
@@ -203,6 +204,7 @@ export const getStalePending = internalQuery({
     return stale.map((p) => ({
       _id: p._id,
       paymentReference: p.paymentReference,
+      amount: p.amount,
     }));
   },
 });

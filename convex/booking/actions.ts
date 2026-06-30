@@ -102,6 +102,12 @@ export const verifyAndSyncPaymentForBooking = action({
     );
 
     if (result.status === "success") {
+      if (result.amount !== undefined && result.amount !== payment.amount) {
+        console.error(
+          `Amount mismatch for ${payment.paymentReference}: expected ${payment.amount}, got ${result.amount}`,
+        );
+        return null;
+      }
       await ctx.runMutation(internal.booking.admin.markCompleted, {
         paymentId: payment._id,
         fees_split: result.fees_split,
@@ -133,10 +139,16 @@ export const sweepStalePendingPayments = internalAction({
       );
 
       if (result.status === "success") {
-        await ctx.runMutation(internal.booking.admin.markCompleted, {
-          paymentId: payment._id,
-          fees_split: result.fees_split,
-        });
+        if (result.amount !== undefined && result.amount !== payment.amount) {
+          console.error(
+            `Amount mismatch for ${payment.paymentReference}: expected ${payment.amount}, got ${result.amount}`,
+          );
+        } else {
+          await ctx.runMutation(internal.booking.admin.markCompleted, {
+            paymentId: payment._id,
+            fees_split: result.fees_split,
+          });
+        }
       } else if (result.status === "failed" || result.status === "abandoned") {
         await ctx.runMutation(internal.booking.admin.markFailed, {
           paymentId: payment._id,
