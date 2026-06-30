@@ -117,7 +117,6 @@ export const createBookingRecord = internalMutation({
       userId: user._id as string,
       serviceName: service.name,
       servicePrice: service.price,
-      merchantId: business.merchantId,
       commission: subTier?.commission ?? 10,
       reference,
       email: user.email,

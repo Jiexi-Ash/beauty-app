@@ -22,42 +22,6 @@ import {
   format,
 } from "date-fns";
 
-export const updateBookingStatus = internalMutation({
-  args: {
-    bookingId: v.id("booking"),
-    status: v.union(v.literal("cancelled"), v.literal("confirmed")),
-  },
-  handler: async (ctx, { bookingId, status }) => {
-    const booking = await ctx.db.get(bookingId);
-    if (!booking || !booking.bookingPaymentId)
-      return { transitioned: false as const };
-
-    const payment = await ctx.db.get(booking.bookingPaymentId);
-    if (!payment) return { transitioned: false as const };
-
-    // Idempotency guard: only act on a payment that is still pending.
-    // PayFast delivers ITNs at-least-once, so a duplicate notification finds a
-    // terminal status here and becomes a no-op. The check-and-set runs inside
-    // this single mutation transaction, so concurrent duplicates can't both
-    // pass (the second conflicts and re-reads the terminal status).
-    if (payment.status !== "pending") return { transitioned: false as const };
-
-    if (status === "confirmed") {
-      await Promise.all([
-        ctx.db.patch(booking._id, { status: "upcoming" }),
-        ctx.db.patch(booking.bookingPaymentId, { status: "completed" }),
-      ]);
-    } else {
-      await Promise.all([
-        ctx.db.patch(booking._id, { status: "cancelled_by_payment_failed" }),
-        ctx.db.patch(booking.bookingPaymentId, { status: "cancelled" }),
-      ]);
-    }
-
-    return { transitioned: true as const };
-  },
-});
-
 export const getBookingById = internalQuery({
   args: {
     bookingId: v.id("booking"),
@@ -85,38 +49,6 @@ export const queryBusinessById = internalQuery({
   },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.businessId)
-  },
-});
-
-export const createPaymentSplit = internalMutation({
-  args: {
-    bookingPaymentId: v.id("bookingPayment"),
-    amountGross: v.number(),
-    amountFee: v.number(),
-    amountNet: v.number(),
-    platformAmount: v.number(),
-    merchantAmount: v.number(),
-    commission: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const payment = await ctx.db.get(args.bookingPaymentId);
-    if (!payment) throw new ConvexError("Booking payment not found.");
-
-    // Denormalize the business's net amount onto the payment so revenue
-    // queries don't need to join paymentSplits.
-    await ctx.db.patch(args.bookingPaymentId, {
-      merchantAmount: args.merchantAmount,
-    });
-
-    return await ctx.db.insert("paymentSplits", {
-      bookingPaymentId: args.bookingPaymentId,
-      amountGross: args.amountGross,
-      amountFee: args.amountFee,
-      amountNet: args.amountNet,
-      platformAmount: args.platformAmount,
-      merchantAmount: args.merchantAmount,
-      commission: args.commission,
-    });
   },
 });
 
