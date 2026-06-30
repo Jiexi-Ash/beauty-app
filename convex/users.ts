@@ -139,3 +139,13 @@ export const queryUserById = internalQuery({
   },
 });
 
+export const queryUserByClerkId = internalQuery({
+  args: { clerkId: v.string() },
+  handler: async (ctx, { clerkId }) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+      .unique();
+  },
+});
+

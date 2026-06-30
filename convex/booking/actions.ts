@@ -18,6 +18,12 @@ export const bookSlot = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("You must be logged in to book.");
 
+    const SPLIT_MAX_CENTS = Number(process.env.SPLIT_MAX);
+    if (isNaN(SPLIT_MAX_CENTS) || SPLIT_MAX_CENTS <= 0) {
+      console.error("SPLIT_MAX env var is missing or invalid — payment split cannot be configured.");
+      throw new ConvexError("We couldn't process your booking at this time. Please try again later.");
+    }
+
     const result = await ctx.runMutation(
       internal.booking.public.createBookingRecord,
       {
@@ -36,11 +42,6 @@ export const bookSlot = action({
     const lastName = lastParts.join(" ") || firstName;
     const depositAmountCents = Math.round(result.servicePrice * 0.5);
     const platformFee = Math.round(depositAmountCents * (result.commission / 100));
-    const SPLIT_MAX_CENTS = Number(process.env.SPLIT_MAX);
-
-    if (isNaN(SPLIT_MAX_CENTS) || SPLIT_MAX_CENTS <= 0) {
-      throw new ConvexError("SPLIT_MAX environment variable is not configured.");
-    }
 
     const checkoutArgs: Parameters<typeof initiatePaystackCheckout>[0] = {
       amount: depositAmountCents,
@@ -87,6 +88,16 @@ export const verifyAndSyncPaymentForBooking = action({
   args: { bookingId: v.id("booking") },
   returns: v.null(),
   handler: async (ctx, { bookingId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("You must be logged in.");
+
+    const [caller, booking] = await Promise.all([
+      ctx.runQuery(internal.users.queryUserByClerkId, { clerkId: identity.subject }),
+      ctx.runQuery(internal.booking.admin.getBookingById, { bookingId }),
+    ]);
+
+    if (!caller || !booking || booking.userId !== caller._id) return null;
+
     const payment = await ctx.runQuery(
       internal.booking.queries.getLatestForBooking,
       { bookingId },

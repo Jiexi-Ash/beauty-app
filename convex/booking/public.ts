@@ -50,6 +50,11 @@ export const createBookingRecord = internalMutation({
     if (!user) throw new ConvexError("User not found.");
 
     const bookingStart = new Date(`${args.date}T${args.time}:00+02:00`);
+    if (Number.isNaN(bookingStart.getTime()))
+      throw new ConvexError("Invalid date or time.");
+    if (bookingStart.getTime() <= Date.now())
+      throw new ConvexError("Booking time must be in the future.");
+
     const bookingEnd = new Date(
       bookingStart.getTime() + service.duration * 60000,
     );
