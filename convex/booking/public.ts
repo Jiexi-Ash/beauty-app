@@ -196,7 +196,7 @@ export const rescheduleBookingRecord = internalMutation({
       .withIndex("by_business_and_date", (q) =>
         q
           .eq("businessId", business._id)
-          .gte("bookingStartDate", newStartMs - service.duration * 60000)
+          .gte("bookingStartDate", newStartMs - 24 * 60 * 60 * 1000)
           .lte("bookingStartDate", newEndMs),
       )
       .filter((q) =>

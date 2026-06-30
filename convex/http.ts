@@ -57,7 +57,14 @@ http.route({
       return new Response("Invalid signature", { status: 401 });
     }
 
-    const event = JSON.parse(rawBody);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let event: any;
+    try {
+      event = JSON.parse(rawBody);
+    } catch {
+      console.warn("Paystack webhook body is not valid JSON");
+      return new Response(null, { status: 200 });
+    }
 
     if (!event?.event) {
       console.warn("Webhook missing event field");

@@ -123,6 +123,10 @@ export const verifyAndSyncPaymentForBooking = action({
         paymentId: payment._id,
         fees_split: result.fees_split,
       });
+    } else if (result.status === "failed" || result.status === "abandoned") {
+      await ctx.runMutation(internal.booking.admin.markFailed, {
+        paymentId: payment._id,
+      });
     }
 
     return null;
