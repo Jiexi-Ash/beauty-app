@@ -130,8 +130,8 @@ function Revenue() {
                     offset={8}
                     className="fill-foreground"
                     fontSize={10}
-                    formatter={(value: number) =>
-                      value > 0 ? `R${value.toFixed(0)}` : ""
+                    formatter={(value) =>
+                      typeof value === "number" && value > 0 ? `R${value.toFixed(0)}` : ""
                     }
                   />
                 </Bar>
