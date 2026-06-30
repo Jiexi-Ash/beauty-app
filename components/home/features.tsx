@@ -1,6 +1,6 @@
-import { CalendarDays, UserRoundSearch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { CalendarDots, UsersThree } from '@phosphor-icons/react/dist/ssr'
 
 function Features() {
     return (
@@ -16,10 +16,10 @@ function Features() {
                     <div className="md:col-span-2 bg-surface-container-lowest p-10 rounded-xl flex flex-col justify-between hover:shadow-lg transition-shadow duration-500">
                         <div>
                             <div className="w-14 h-14 bg-secondary-container-ds rounded-full flex items-center justify-center text-primary mb-8">
-                                <CalendarDays className="size-6" />
+                                <CalendarDots size={24} weight="duotone" />
                             </div>
-                            <h3 className="text-3xl font-headline font-bold mb-4">Seamless Booking Management</h3>
-                            <p className="text-on-surface-variant max-w-md text-lg">Automated scheduling, reminders, and cancellations that keep your chairs full without the headache of manual logs.</p>
+                            <h3 className="text-3xl font-headline font-bold mb-4">Bookings That Run Themselves</h3>
+                            <p className="text-on-surface-variant max-w-md text-lg">Automated scheduling, reminders, and cancellations that keep your chairs full — no manual logs, no missed appointments.</p>
                         </div>
                         <div className="mt-12 flex gap-4">
                             <span className="bg-surface-container-low px-4 py-2 rounded-full  text-xs md:text-sm font-semibold">Real-time Sync</span>
@@ -40,7 +40,7 @@ function Features() {
                     {/* Customer Records */}
                     <div className="bg-surface-container-lowest p-10 rounded-xl hover:shadow-lg transition-shadow duration-500">
                         <div className="w-14 h-14 bg-secondary-container-ds rounded-full flex items-center justify-center text-primary mb-8">
-                            <UserRoundSearch className="size-6" />
+                            <UsersThree size={24} weight="duotone" />
                         </div>
                         <h3 className="text-2xl font-headline font-bold mb-4">Customer Records</h3>
                         <p className="text-on-surface-variant">Store preferences, allergy alerts, and visit history to provide that personalized service every single time.</p>
@@ -49,8 +49,8 @@ function Features() {
                     {/*  CTA */}
                     <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-10 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
                         <div>
-                            <h3 className="text-2xl font-headline font-bold text-white mb-2">Ready to grow your salon?</h3>
-                            <p className="text-white/80 text-sm">Join thousands of local entrepreneurs scaling their salon today.</p>
+                            <h3 className="text-2xl font-headline font-bold text-white mb-2">Your salon deserves better tools.</h3>
+                            <p className="text-white/80 text-sm">Get listed and start taking bookings in under 10 minutes.</p>
                         </div>
                         <Link href="/onboarding" className="shrink-0">
                             <Button className="bg-white text-primary hover:bg-white/90 font-bold px-8 py-6 rounded-sm text-sm whitespace-nowrap">

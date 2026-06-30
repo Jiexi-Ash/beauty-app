@@ -26,7 +26,7 @@ function Hero() {
                     <Button
                         size="lg"
                         onClick={() => router.push("/onboarding")}
-                        className="h-14 px-10 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer"
+                        className="h-14 px-10 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-in-out cursor-pointer"
                     >
                          Get Your Salon Listed
                     </Button>
@@ -34,7 +34,7 @@ function Hero() {
                         variant="outline"
                         size="lg"
                         onClick={() => router.push("/explore?location=true")}
-                        className="text-primary border-outline-variant border-2 h-14 px-10 hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer"
+                        className="text-primary border-outline-variant border-2 h-14 px-10 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-in-out cursor-pointer"
                     >
                         Find a Salon Near You
                     </Button>
@@ -57,7 +57,7 @@ function Hero() {
                          
                             <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
                                 <BadgeCheck className="size-4 text-primary" />
-                                <span className="text-xs font-bold text-on-surface tracking-wide">VERIFIED</span>
+                                <span className="text-xs font-semibold text-on-surface">Verified</span>
                             </div>
                         </div>
 
@@ -89,7 +89,7 @@ function Hero() {
                                 className="object-cover"
                             />
                             <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
-                                <span className="text-xs font-bold text-on-surface tracking-wide">FAIR TRADE</span>
+                                <span className="text-xs font-semibold text-on-surface">Fair trade</span>
                             </div>
                         </div>
                     </div>
