@@ -34,19 +34,30 @@ export const bookSlot = action({
 
     const [firstName, ...lastParts] = args.fullName.split(" ");
     const lastName = lastParts.join(" ") || firstName;
-    const depositAmount = Math.round(result.servicePrice * 0.5);
+    const depositAmountCents = Math.round(result.servicePrice * 0.5);
+    const platformFee = Math.round(depositAmountCents * (result.commission / 100));
+    const SPLIT_MAX_CENTS = Number(process.env.SPLIT_MAX);
 
-    const paystackCheckoutUrl = await initiatePaystackCheckout({
-      amount: depositAmount,
+    if (isNaN(SPLIT_MAX_CENTS) || SPLIT_MAX_CENTS <= 0) {
+      throw new ConvexError("SPLIT_MAX environment variable is not configured.");
+    }
+
+    const checkoutArgs: Parameters<typeof initiatePaystackCheckout>[0] = {
+      amount: depositAmountCents,
       callback_url: `${process.env.DEV_URL}/profile/bookings/${result.bookingId}/confirmation`,
       email: result.email,
+      subaccount: result.subaccount,
+      transaction_charge: Math.min(platformFee, SPLIT_MAX_CENTS),
       metadata: {
         clientName: firstName,
         clientSurname: lastName,
         service: result.serviceName,
       },
       reference: result.reference,
-    })
+    };
+
+
+    const paystackCheckoutUrl = await initiatePaystackCheckout(checkoutArgs);
 
     return paystackCheckoutUrl
   },
@@ -93,6 +104,7 @@ export const verifyAndSyncPaymentForBooking = action({
     if (result.status === "success") {
       await ctx.runMutation(internal.booking.admin.markCompleted, {
         paymentId: payment._id,
+        fees_split: result.fees_split,
       });
     }
 
@@ -123,6 +135,7 @@ export const sweepStalePendingPayments = internalAction({
       if (result.status === "success") {
         await ctx.runMutation(internal.booking.admin.markCompleted, {
           paymentId: payment._id,
+          fees_split: result.fees_split,
         });
       } else if (result.status === "failed" || result.status === "abandoned") {
         await ctx.runMutation(internal.booking.admin.markFailed, {

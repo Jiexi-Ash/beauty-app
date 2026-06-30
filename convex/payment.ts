@@ -6,13 +6,15 @@ export async function initiatePaystackCheckout(args: {
   email: string,
   reference: string,
   callback_url: string,
+  subaccount: string
+  transaction_charge?: number,
   metadata: {
     clientName: string,
     clientSurname: string,
     service: string
   }
 }) {
-  const { amount, email, reference, callback_url, metadata } = args
+  const { amount, email, reference, callback_url, metadata, subaccount, transaction_charge } = args
 
   const response = await fetch(`${process.env.PAYSTACK_URL}/transaction/initialize`, {
     method: "POST",
@@ -23,6 +25,8 @@ export async function initiatePaystackCheckout(args: {
     body: JSON.stringify({
       email,
       amount: amount,
+      transaction_charge,
+      subaccount,
       reference,
       callback_url,
       metadata,

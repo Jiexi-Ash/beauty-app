@@ -23,6 +23,10 @@ export const createBookingRecord = internalMutation({
     if (business.visibility !== "visible")
       throw new ConvexError("This business is not active at the moment.");
 
+    const businessBanking = await ctx.db.query("businessBanking").withIndex("by_business", q => q.eq("businessId", business._id)).unique()
+
+    if (!businessBanking || !businessBanking?.subAccountCode) throw new ConvexError("Failed Creating a business record please try again later.")
+
     const service = await ctx.db
       .query("service")
       .withIndex("by_business_and_slug", (q) =>
@@ -55,26 +59,26 @@ export const createBookingRecord = internalMutation({
 
     const maxConcurrent = settings?.maxConcurrentBookings ?? 1;
 
-  const overlapping = await ctx.db
-  .query("booking")
-  .withIndex("by_business_and_date", (q) =>
-    q
-      .eq("businessId", business._id)
-      // Go back far enough to catch any long-running booking that might overlap
-      .gte("bookingStartDate", bookingStart.getTime() - 24 * 60 * 60 * 1000) // 24hr lookback
-      .lte("bookingStartDate", bookingEnd.getTime()),
-  )
-  .filter((q) =>
-    q.and(
-      q.neq(q.field("status"), "failed"),
-      q.neq(q.field("status"), "cancelled_by_user"),
-      q.neq(q.field("status"), "cancelled_by_business"),
-      q.neq(q.field("status"), "cancelled_by_payment_failed"),
-      q.lt(q.field("bookingStartDate"), bookingEnd.getTime()),
-      q.gt(q.field("bookingEndDate"), bookingStart.getTime()),
-    ),
-  )
-  .collect()
+    const overlapping = await ctx.db
+      .query("booking")
+      .withIndex("by_business_and_date", (q) =>
+        q
+          .eq("businessId", business._id)
+          // Go back far enough to catch any long-running booking that might overlap
+          .gte("bookingStartDate", bookingStart.getTime() - 24 * 60 * 60 * 1000) // 24hr lookback
+          .lte("bookingStartDate", bookingEnd.getTime()),
+      )
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("status"), "failed"),
+          q.neq(q.field("status"), "cancelled_by_user"),
+          q.neq(q.field("status"), "cancelled_by_business"),
+          q.neq(q.field("status"), "cancelled_by_payment_failed"),
+          q.lt(q.field("bookingStartDate"), bookingEnd.getTime()),
+          q.gt(q.field("bookingEndDate"), bookingStart.getTime()),
+        ),
+      )
+      .collect()
 
     if (overlapping.length >= maxConcurrent)
       throw new ConvexError("This time slot is fully booked.");
@@ -117,6 +121,7 @@ export const createBookingRecord = internalMutation({
       commission: subTier?.commission ?? 10,
       reference,
       email: user.email,
+      subaccount: businessBanking.subAccountCode
     };
   },
 });
