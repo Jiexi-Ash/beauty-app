@@ -41,6 +41,8 @@ export const createBookingRecord = internalMutation({
       throw new ConvexError("Service and business do not match.");
 
     const subTier = await ctx.db.get(business.subscriptionTierId);
+    if (!subTier) throw new ConvexError("Business subscription tier not found.");
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
@@ -104,7 +106,7 @@ export const createBookingRecord = internalMutation({
       paymentDate: Date.now(),
       status: "pending",
       paymentReference: reference,
-      commission: subTier?.commission ?? 10,
+      commission: subTier.commission,
     });
 
     await ctx.db.patch(bookingId, { bookingPaymentId });
@@ -117,7 +119,7 @@ export const createBookingRecord = internalMutation({
       userId: user._id as string,
       serviceName: service.name,
       servicePrice: service.price,
-      commission: subTier?.commission ?? 10,
+      commission: subTier.commission,
       reference,
       email: user.email,
       subaccount: businessBanking.subAccountCode
