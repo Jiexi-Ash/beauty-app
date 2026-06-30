@@ -196,7 +196,6 @@ export const rescheduleBookingRecord = internalMutation({
         q.and(
           q.neq(q.field("_id"), booking._id),
           q.neq(q.field("status"), "failed"),
-          q.neq(q.field("status"), "pending"),
           q.neq(q.field("status"), "cancelled_by_user"),
           q.neq(q.field("status"), "cancelled_by_business"),
           q.neq(q.field("status"), "cancelled_by_payment_failed"),
