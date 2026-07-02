@@ -1,27 +1,16 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import Image from 'next/image'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 
 export function BookingConfirmationSkeleton() {
     return (
-        <div className="w-full min-h-screen relative">
+        <div className="w-full min-h-screen bg-background flex flex-col">
             <Navbar />
 
-            {/* Background */}
-            <div className="absolute inset-0 z-0">
-                <Image
-                    src="/salon-image-placeholder.jpg"
-                    alt=""
-                    fill
-                    className="object-cover object-center"
-                    sizes="100vw"
-                />
-                <div className="absolute inset-0 bg-white/80" />
-            </div>
-
-            <div className="relative z-10 flex flex-col items-center px-4 py-12">
-
+            <div
+                className="flex-1 flex flex-col items-center px-4 py-16"
+                style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
+            >
                 {/* Check icon */}
                 <Skeleton className="w-16 h-16 rounded-full mb-6" />
 
@@ -34,7 +23,7 @@ export function BookingConfirmationSkeleton() {
 
                 {/* Booking details card */}
                 <div className="w-full max-w-3xl mb-4">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/60">
+                    <div className="bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5">
 
                         {/* Status + amount */}
                         <div className="flex items-center justify-between mb-3">
@@ -67,7 +56,7 @@ export function BookingConfirmationSkeleton() {
                             </div>
                         </div>
 
-                        <div className="border-t border-gray-100 mb-5" />
+                        <div className="border-t border-black/5 mb-5" />
 
                         {/* Buttons */}
                         <div className="flex gap-3">
@@ -78,7 +67,7 @@ export function BookingConfirmationSkeleton() {
                 </div>
 
                 {/* Location card */}
-                <div className="w-full max-w-3xl bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 overflow-hidden">
+                <div className="w-full max-w-3xl bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5 overflow-hidden">
                     <Skeleton className="w-full h-48 md:h-56 rounded-none" />
                     <div className="p-6">
                         <Skeleton className="h-6 w-40 mb-3" />
@@ -95,9 +84,7 @@ export function BookingConfirmationSkeleton() {
                 </div>
             </div>
 
-            <div className="relative z-10">
-                <Footer />
-            </div>
+            <Footer />
         </div>
     )
 }

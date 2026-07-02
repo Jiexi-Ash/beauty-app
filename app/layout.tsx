@@ -3,21 +3,32 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ConvexProviderWithClerk from "@/components/providers/convex-clerk"
 import { ClerkProvider } from "@clerk/nextjs";
-import { Plus_Jakarta_Sans, Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-headline",
   subsets: ["latin"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "The Beauty App",
-  description: "Booking app for the beauty industry",
+  title: "The Beauty App — Verified Salons, Transparent Pricing",
+  description: "Book verified salons and beauty professionals near you. No hidden fees, fair community pricing.",
+  openGraph: {
+    title: "The Beauty App",
+    description: "Book verified salons and beauty professionals near you.",
+    type: "website",
+    siteName: "The Beauty App",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Beauty App",
+    description: "Book verified salons and beauty professionals near you.",
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +38,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${plusJakarta.variable} ${manrope.variable} antialiased font-(family-name:--font-manrope)`}>
+      <body className={`${plusJakarta.variable} ${outfit.variable} antialiased font-(family-name:--font-outfit)`}>
+        {/* Skip to content for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-semibold"
+        >
+          Skip to content
+        </a>
         <ClerkProvider>
           <ConvexProviderWithClerk>
             {children}

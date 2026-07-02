@@ -19,7 +19,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Check, ChevronLeft, ChevronRight, CircleCheck, DotIcon, EllipsisVertical, TriangleAlert, XIcon } from 'lucide-react'
+import { Check, CaretLeft, CaretRight, CheckCircle, DotsThreeVertical, Warning, X } from '@phosphor-icons/react'
 import { useSearchParams } from 'next/navigation'
 import { Preloaded, useAction, usePreloadedQuery, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
@@ -138,29 +138,31 @@ function BookingCard({ booking, variant }: BookingCardProps) {
     return (
 
         <>
-            <Card>
+            <Card className="rounded-2xl ring-1 ring-black/5 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <CardContent className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-16 w-16 rounded-full relative shrink-0">
-                            <Image src={booking.business?.coverImageUrl ?? ""} alt={`${booking.business?.name} photo`} fill className="object-cover rounded-full" />
+                        <div className="p-1 rounded-full bg-black/[0.04] ring-1 ring-black/5 shrink-0">
+                            <div className="h-14 w-14 rounded-full relative overflow-hidden">
+                                <Image src={booking.business?.coverImageUrl ?? ""} alt={`${booking.business?.name} photo`} fill className="object-cover" />
+                            </div>
                         </div>
                         <div className="space-y-0.5">
-                            <h2 className="font-bold">{booking.business?.name}</h2>
-                            <div className="flex items-center text-muted-foreground flex-wrap">
+                            <h2 className="font-headline font-bold">{booking.business?.name}</h2>
+                            <div className="flex items-center gap-1.5 text-muted-foreground flex-wrap text-sm">
                                 <p className="capitalize font-medium">{booking.service?.name}</p>
-                                <DotIcon className="text-black size-4" />
+                                <span className="text-muted-foreground/50">&bull;</span>
                                 <span>{formatBookingShortDate(booking.bookingStartDate, booking.business?.timezone)}</span>
                             </div>
                             {showDuration && (
-                                <span className="text-muted-foreground">{durationLabel}</span>
+                                <span className="text-sm text-muted-foreground">{durationLabel}</span>
                             )}
                         </div>
                     </div>
 
                     {showDropdown && (
                         <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" />}>
-                                <EllipsisVertical className="text-gray-500 size-4" />
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+                                <DotsThreeVertical weight="bold" className="text-muted-foreground size-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
@@ -169,7 +171,6 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                                     <DropdownMenuItem onClick={() => setCancelDialogOpen(true)}>
                                         Cancel booking
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>More details</DropdownMenuItem>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -184,8 +185,8 @@ function BookingCard({ booking, variant }: BookingCardProps) {
             <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <TriangleAlert className="size-8 text-amber-400 shrink-0 text-center w-full" />
-                        <AlertDialogTitle className="w-full text-center">Cancel Appointment?</AlertDialogTitle>
+                        <Warning className="size-8 text-amber-500 shrink-0 text-center w-full" />
+                        <AlertDialogTitle className="w-full text-center font-headline">Cancel Appointment?</AlertDialogTitle>
                         <AlertDialogDescription className="w-full text-center space-y-2" render={<div />}>
                             <span className="block text-muted-foreground font-medium">This action cannot be undone.</span>
                             <span className="block text-destructive font-medium text-center">
@@ -194,10 +195,10 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="lg:justify-center">
-                        <AlertDialogCancel className="rounded-sm">Keep Appointment</AlertDialogCancel>
+                        <AlertDialogCancel className="rounded-full">Keep Appointment</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => cancelBooking({ bookingId: booking._id })}
-                            className="bg-destructive text-white hover:bg-destructive/90 rounded-sm"
+                            className="bg-destructive text-white hover:bg-destructive/90 rounded-full"
                         >
                             Cancel Booking
                         </AlertDialogAction>
@@ -353,7 +354,7 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg overflow-hidden">
                 <DialogHeader>
-                    <DialogTitle className="font-medium">Reschedule Appointment</DialogTitle>
+                    <DialogTitle className="font-headline font-bold">Reschedule Appointment</DialogTitle>
                     <DialogDescription>
                         Pick a new date and time for your <span className="font-bold capitalize">{booking.service?.name}</span> appointment at{" "}
                         <span className="font-bold text-primary">{booking.business?.name}</span>.
@@ -373,7 +374,7 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
                                 disabled={weekOffset === 0}
                                 className="size-8 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30"
                             >
-                                <ChevronLeft className="size-4" />
+                                <CaretLeft className="size-4" />
                             </button>
                             <button
                                 type="button"
@@ -383,7 +384,7 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
                                 }}
                                 className="size-8 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-muted transition-colors"
                             >
-                                <ChevronRight className="size-4" />
+                                <CaretRight className="size-4" />
                             </button>
                         </div>
                     </div>
@@ -471,6 +472,7 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
                             onClick={() => onOpenChange(false)}
                             disabled={isPending}
                             size="lg"
+                            className="rounded-full"
                         >
                             Cancel
                         </Button>
@@ -478,6 +480,7 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
                             onClick={handleConfirm}
                             disabled={!selectedSlot || isPending}
                             size="lg"
+                            className="rounded-full active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
                         >
                             {isPending ? "Rescheduling..." : "Confirm"}
                         </Button>
@@ -518,16 +521,16 @@ function UserBookings({ bookings }: UserBookingsProps) {
         <MainLayout>
             <div className="space-y-4 w-full">
                 {isSuccess && !dismissed && (
-                    <Card className="bg-green-400 rounded-none -mx-6">
+                    <Card className="bg-secondary rounded-2xl ring-1 ring-primary/15">
                         <CardContent className="px-6">
                             <div className="flex gap-2 justify-between items-center">
                                 <div className="flex gap-2 items-center">
-                                    <CircleCheck className="text-white size-6" />
-                                    <p className="text-white">{"Booking confirmed. You're all set"}</p>
+                                    <CheckCircle weight="fill" className="text-primary size-6" />
+                                    <p className="text-secondary-foreground font-medium">{"Booking confirmed. You're all set"}</p>
                                 </div>
 
                                 <Button variant="ghost" size="icon-lg" onClick={() => setDismissed(true)}>
-                                    <XIcon className="text-white/80 size-5" />
+                                    <X className="text-secondary-foreground/60 size-5" />
                                 </Button>
                             </div>
                         </CardContent>
@@ -536,14 +539,14 @@ function UserBookings({ bookings }: UserBookingsProps) {
                 <div>
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col gap-1">
-                            <h1 className="font-bold text-2xl">My Bookings</h1>
+                            <h1 className="font-headline font-bold text-2xl">My Bookings</h1>
                             <p className="text-muted-foreground">Manage your upcoming sessions and history.</p>
                         </div>
                         <Tabs defaultValue="upcoming" className="w-full mt-3 md:mt-6">
-                            <TabsList className="w-full rounded-none py-4 md:w-fit">
-                                <TabsTrigger className="data-active:bg-primary data-active:text-white py-4 md:px-8" value="upcoming">Upcoming</TabsTrigger>
-                                <TabsTrigger className="data-active:bg-primary data-active:text-white py-4 md:px-8" value="completed">Completed</TabsTrigger>
-                                <TabsTrigger className="data-active:bg-primary data-active:text-white py-4 md:px-8" value="cancelled">Cancelled</TabsTrigger>
+                            <TabsList className="w-full rounded-full bg-muted p-1 py-6 md:w-fit">
+                                <TabsTrigger className="rounded-full data-active:bg-primary data-active:text-white py-3 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" value="upcoming">Upcoming</TabsTrigger>
+                                <TabsTrigger className="rounded-full data-active:bg-primary data-active:text-white py-3 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" value="completed">Completed</TabsTrigger>
+                                <TabsTrigger className="rounded-full data-active:bg-primary data-active:text-white py-3 md:px-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" value="cancelled">Cancelled</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="upcoming" className="mt-4">

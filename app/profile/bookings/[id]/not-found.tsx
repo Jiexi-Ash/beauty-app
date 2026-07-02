@@ -1,59 +1,55 @@
 "use client";
 
-import Image from "next/image";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { CalendarX } from "lucide-react";
+import { CalendarX, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 
 function BookingNotFound() {
   return (
-    <div className="w-full min-h-screen relative">
+    <div className="w-full min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/salon-image-placeholder.jpg"
-          alt=""
-          fill
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-white/80" />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center px-4 py-12">
-        <h1 className="text-5xl font-bold text-gray-900 text-center mb-3">
+      <div
+        className="flex-1 flex flex-col items-center justify-center px-4 py-20"
+        style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
+      >
+        <h1 className="font-headline text-4xl md:text-5xl font-bold text-foreground text-center mb-3 tracking-tight">
           Booking not found.
         </h1>
-        <p className="text-gray-600 text-center max-w-sm mb-10">
+        <p className="text-muted-foreground text-center max-w-sm mb-10">
          {" This booking doesn't exist or you don't have access to it."}
         </p>
 
-        <Card className="bg-white/80 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/60 w-full max-w-sm text-center">
+        <Card className="bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5 w-full max-w-sm text-center">
           <div className="flex items-center justify-center mb-4">
-            <div className="h-14 w-14 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-              <CalendarX className="size-6 text-primary" />
+            <div className="p-1 rounded-full bg-black/[0.04] ring-1 ring-black/5">
+              <div className="h-14 w-14 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                <CalendarX className="size-6 text-primary" />
+              </div>
             </div>
           </div>
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
             The link may be incorrect or the booking may have been removed.
             Head to your bookings to see your appointments.
           </p>
           <Button
-            className="w-full rounded-sm font-semibold py-3 bg-primary hover:bg-primary/90"
+            className="group w-full rounded-full font-semibold py-3 bg-primary hover:bg-primary/90 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
             size="lg"
           >
-            <Link href="profile/bookings">View My Bookings</Link>
+            <Link href="/profile/bookings" className="flex items-center justify-center gap-1.5 w-full">
+              View My Bookings
+              <span className="flex items-center justify-center size-6 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
+                <ArrowRight className="size-3.5 text-white" />
+              </span>
+            </Link>
           </Button>
         </Card>
       </div>
 
-      <div className="relative z-10">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

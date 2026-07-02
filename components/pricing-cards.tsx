@@ -1,15 +1,17 @@
-import { CheckCircle2 } from "lucide-react";
-import { Button } from "./ui/button";
+"use client"
+import { CheckCircle } from "@phosphor-icons/react"
+import { Button } from "./ui/button"
+import { cn } from "@/lib/utils"
 
 type PricingPlan = {
-  name: string;
-  description: string;
-  price: string;
-  priceSuffix: string;
-  features: { text: string; bold?: boolean }[];
-  cta: string;
-  popular?: boolean;
-};
+  name: string
+  description: string
+  price: string
+  priceSuffix: string
+  features: { text: string; bold?: boolean }[]
+  cta: string
+  popular?: boolean
+}
 
 const plans: PricingPlan[] = [
   {
@@ -24,7 +26,7 @@ const plans: PricingPlan[] = [
       { text: "Manual reminders on client login" },
       { text: "10% commission per booking" },
     ],
-    cta: "Start for Free",
+    cta: "Start for free",
   },
   {
     name: "Pro Growth",
@@ -38,10 +40,9 @@ const plans: PricingPlan[] = [
       { text: "Unlimited services listed" },
       { text: "Verified badge" },
       { text: "Automated WhatsApp reminders" },
-      { text: 'Verified status' },
       { text: "Customer loyalty analytics" },
     ],
-    cta: "Get Pro Access",
+    cta: "Get Pro access",
   },
   {
     name: "Premium",
@@ -55,55 +56,84 @@ const plans: PricingPlan[] = [
       { text: "Full business analytics dashboard" },
       { text: "Priority support" },
     ],
-    cta: "Get Premium Access",
+    cta: "Get Premium access",
   },
-];
+]
 
 export default function PricingCards() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
       {plans.map((plan) => (
         <div
           key={plan.name}
-          className={
+          className={cn(
+            "relative rounded-2xl p-8 flex flex-col transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
             plan.popular
-              ? "bg-surface-container-lowest p-7 rounded-xl border-2 border-primary relative shadow-2xl flex flex-col"
-              : "bg-surface-container-lowest p-7 rounded-xl border border-outline-variant/20 hover:border-primary/40 transition-colors flex flex-col"
-          }
+              ? "bg-primary text-white shadow-[0_24px_60px_rgba(221,39,94,0.22)] hover:-translate-y-1"
+              : "bg-surface-container-lowest border border-outline-variant/15 hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-0.5",
+          )}
         >
+          {/* Inline recommended eyebrow — replaces the floating badge */}
           {plan.popular && (
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-              Most Popular
+            <div className="inline-flex w-fit items-center bg-white/20 text-white rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-semibold mb-5">
+              Recommended
             </div>
           )}
-          <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-          <p className="text-on-surface-variant text-sm mb-5">{plan.description}</p>
-          <p className="text-4xl font-black mb-6">
-            {plan.price}
-            <span className="text-base font-medium text-on-surface-variant">{plan.priceSuffix}</span>
-          </p>
+
+          {/* Name + description block — consistent height via min-h */}
+          <div className="min-h-[72px] mb-6">
+            <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
+            <p className={cn("text-sm", plan.popular ? "text-white/75" : "text-on-surface-variant")}>
+              {plan.description}
+            </p>
+          </div>
+
+          {/* Price */}
+          <div className={cn("pb-6 mb-6 border-b", plan.popular ? "border-white/15" : "border-outline-variant/20")}>
+            <p className="text-5xl font-black">
+              {plan.price}
+              <span className={cn("text-base font-medium ml-1", plan.popular ? "text-white/60" : "text-on-surface-variant")}>
+                {plan.priceSuffix}
+              </span>
+            </p>
+          </div>
+
+          {/* Feature list — flex-1 pins button to bottom */}
           <ul className="space-y-3 mb-8 flex-1">
             {plan.features.map((feature) => (
               <li key={feature.text} className="flex items-start gap-2.5">
-                <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                <span className={`text-sm leading-snug ${feature.bold ? "font-bold" : ""}`}>
+                <CheckCircle
+                  size={16}
+                  weight="fill"
+                  className={cn("shrink-0 mt-0.5", plan.popular ? "text-white/70" : "text-primary")}
+                />
+                <span
+                  className={cn(
+                    "text-sm leading-snug",
+                    feature.bold ? "font-bold" : "",
+                    plan.popular ? "text-white/90" : "",
+                  )}
+                >
                   {feature.text}
                 </span>
               </li>
             ))}
           </ul>
+
+          {/* CTA — pill shape, always at bottom */}
           <Button
-            variant={plan.popular ? "default" : "outline"}
-            className={
+            className={cn(
+              "w-full h-12 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer",
               plan.popular
-                ? "w-full h-12 py-3.5 rounded-lg font-bold bg-primary text-white hover:bg-primary-container shadow-lg shadow-primary/20 transition-all cursor-pointer text-sm"
-                : "w-full h-12 py-3.5 rounded-lg font-bold border-2 text-primary border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer text-sm"
-            }
+                ? "bg-white text-primary hover:bg-white/90"
+                : "border-2 border-primary text-primary hover:bg-primary hover:text-white",
+            )}
+            variant={plan.popular ? "default" : "outline"}
           >
             {plan.cta}
           </Button>
         </div>
       ))}
     </div>
-  );
+  )
 }

@@ -85,7 +85,7 @@ export function BookingPageSkeleton() {
 
 function ConfirmBookingSkeleton() {
   return (
-    <div className="rounded-2xl bg-white shadow-sm border border-foreground/10 overflow-hidden">
+    <div className="rounded-2xl bg-surface-container-lowest shadow-sm ring-1 ring-black/5 overflow-hidden">
       {/* Image */}
       <Skeleton className="w-full h-48 rounded-none" />
 

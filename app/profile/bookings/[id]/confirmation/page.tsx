@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Calendar, Clock, MapPin, Check } from "lucide-react";
+import { CalendarBlank, Clock, MapPin, SealCheck } from "@phosphor-icons/react";
 import Navbar from "@/components/navbar";
 import { notFound, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -47,25 +47,23 @@ function BookingConfirmationPage() {
   const price = ((data.paymentDetails.amountPaid ?? 0) / 100).toFixed(2);
 
   return (
-    <div className="w-full min-h-screen relative">
+    <div className="w-full min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/salon-image-placeholder.jpg"
-          alt=""
-          fill
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-white/80" />
-      </div>
+      <div
+        className="flex-1 flex flex-col items-center px-4 py-16"
+        style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
+      >
+        <div className="p-1 rounded-full bg-black/[0.04] ring-1 ring-black/5 mb-6">
+          <div className="size-16 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
+            <SealCheck weight="fill" className="size-8 text-primary" />
+          </div>
+        </div>
 
-      <div className="relative z-10 flex flex-col items-center px-4 py-12">
-        <h1 className="text-5xl font-bold text-gray-900 text-center mb-3">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold text-foreground text-center mb-3 tracking-tight">
           See you soon!
         </h1>
-        <p className="text-gray-600 text-center max-w-sm mb-10">
+        <p className="text-muted-foreground text-center max-w-sm mb-10">
           Your appointment at
           <span className="text-primary font-medium mx-1">
             {data.business.name}
@@ -74,14 +72,14 @@ function BookingConfirmationPage() {
         </p>
 
         <div className="w-full max-w-3xl flex flex-col md:flex-row gap-4 mb-4">
-          <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/60">
+          <div className="flex-1 bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5">
             {/* Status + amount */}
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold tracking-widest text-green-500 border border-green-300 rounded-full px-3 py-1 uppercase">
+              <span className="text-xs font-semibold tracking-widest text-primary border border-primary/25 rounded-full px-3 py-1 uppercase">
                 {data?.status}
               </span>
               <div className="text-right">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">
                   Amount Paid (<span>{data.paymentDetails.paymentType}</span>)
                 </p>
                 <p className="text-xl font-bold text-primary">R{price}</p>
@@ -89,17 +87,17 @@ function BookingConfirmationPage() {
             </div>
 
             {/* Service name */}
-            <h2 className="text-2xl font-bold text-gray-900 mb-5 leading-tight uppercase">
+            <h2 className="font-headline text-2xl font-bold text-foreground mb-5 leading-tight uppercase">
               {data.service.name}
             </h2>
 
             {/* Date & Time */}
             <div className="flex gap-8 mb-6">
               <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-gray-400" />
+                <CalendarBlank className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="text-xs text-gray-400">Date</p>
-                  <p className="text-sm font-semibold text-gray-800">
+                  <p className="text-xs text-muted-foreground">Date</p>
+                  <p className="text-sm font-semibold text-foreground">
                     {data.startDate}
                   </p>
                 </div>
@@ -107,29 +105,29 @@ function BookingConfirmationPage() {
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="text-xs text-gray-400">Time</p>
-                  <p className="text-sm font-semibold text-gray-800">
+                  <p className="text-xs text-muted-foreground">Time</p>
+                  <p className="text-sm font-semibold text-foreground">
                     {formatBookingTime(data.time, data.business.timezone)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-100 mb-5" />
+            <div className="border-t border-black/5 mb-5" />
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <button className="flex-1 bg-primary text-white font-semibold py-3 rounded-full hover:bg-primary/90 transition-colors">
+              <button className="flex-1 bg-primary text-white font-semibold py-3 rounded-full hover:bg-primary/90 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">
                 Add to Calendar
               </button>
-              <button className="flex-1 border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary/5 transition-colors">
+              <button className="flex-1 border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary/5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">
                 View Directions
               </button>
             </div>
           </div>
         </div>
 
-        <Card className="w-full max-w-3xl bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/60 overflow-hidden p-0">
+        <Card className="w-full max-w-3xl bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5 overflow-hidden p-0">
           <CardContent className="p-0 flex flex-col">
             <div className="relative w-full h-48 md:h-56">
               <Image
@@ -141,12 +139,12 @@ function BookingConfirmationPage() {
             </div>
 
             <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">
+              <h3 className="font-headline text-xl font-bold text-foreground mb-1">
                 {data.business.name}
               </h3>
               <div className="flex items-center gap-1">
-                <MapPin className="text-gray-400 size-4 shrink-0" />
-                <p className="text-gray-500 text-sm">
+                <MapPin className="text-muted-foreground size-4 shrink-0" />
+                <p className="text-muted-foreground text-sm">
                   {data.business.location}
                 </p>
               </div>
@@ -155,7 +153,7 @@ function BookingConfirmationPage() {
                   {data.business.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-xs border border-gray-200 rounded-full px-3 py-1 text-gray-500 capitalize"
+                      className="text-xs border border-black/10 rounded-full px-3 py-1 text-muted-foreground capitalize"
                     >
                       {tag}
                     </span>
@@ -167,9 +165,7 @@ function BookingConfirmationPage() {
         </Card>
       </div>
 
-      <div className="relative z-10">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

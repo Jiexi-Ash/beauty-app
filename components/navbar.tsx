@@ -2,16 +2,15 @@
 import { cn, getInitials } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
 import {
-  CalendarDays,
+  House,
   Compass,
   Heart,
-  Home,
-  MenuIcon,
-  Settings,
-} from "lucide-react";
+  CalendarDots,
+  GearSix,
+  UserCircle,
+} from "@phosphor-icons/react";
 import {
   SignInButton,
   SignOutButton,
@@ -19,236 +18,260 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-
-type NavLink = {
-  href: string;
-  label: string;
-};
-
-const navLinks: NavLink[] = [{ href: "/explore", label: "Find a Salon" }];
+import { useState, useEffect } from "react";
 
 function Navbar() {
   const { user } = useUser();
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinkClass = (href: string) =>
-    cn(
-      "text-sm font-medium transition-colors duration-200 hover:text-primary relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full group after:rounded-sm after:transition-opacity",
-      pathname === href ? "text-primary" : "text-gray-500 ",
-    );
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
+  const mobileNavItems = [
+    { href: "/", label: "Home", icon: House },
+    { href: "/explore", label: "Find a salon", icon: Compass },
+    ...(user
+      ? [
+          { href: "/profile/bookings", label: "My bookings", icon: CalendarDots },
+          { href: "/profile/favorites", label: "Favorites", icon: Heart },
+        ]
+      : []),
+  ];
 
   return (
-    <header className="w-full bg-white sticky top-0 z-50 border-b border-gray-100 ">
-      <nav className="w-full flex justify-between items-center max-w-[1440px] mx-auto px-6 py-4 lg:py-6">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center">
-            <div className="flex items-center gap-0.5 text-2xl font-bold tracking-tight select-none">
-              <span className="text-foreground">The</span>
-              <span className="text-primary">Beauty</span>
-              <span className="text-foreground">App</span>
-            </div>
-          </Link>
+    <>
+      <header className="sticky top-0 z-[70] w-full">
+        {/* Gradient mask: hides content that scrolls through the transparent gap above the pill.
+            Uses the --background token (not --surface) since MainLayout and every page besides
+            the homepage render Navbar over bg-background. */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background via-background/80 to-transparent" />
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex gap-3 md:items-center">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={cn("mt-1", navLinkClass(link.href))}
-              >
-                {link.label}
+        <div className="relative max-w-[1440px] mx-auto px-4 py-3">
+          <nav className="flex justify-between items-center bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.05)] rounded-full px-5 py-2.5">
+            {/* Logo + desktop links */}
+            <div className="flex items-center gap-6">
+              <Link href="/" className="flex items-center">
+                <div className="flex items-center gap-0.5 text-xl font-bold tracking-tight select-none">
+                  <span className="text-foreground">The</span>
+                  <span className="text-primary">Beauty</span>
+                  <span className="text-foreground">App</span>
+                </div>
               </Link>
-            ))}
-          </div>
+
+              <div className="hidden md:flex gap-4 items-center">
+                <Link
+                  href="/explore"
+                  className={cn(
+                    "text-sm font-medium transition-colors duration-200",
+                    pathname === "/explore"
+                      ? "text-primary"
+                      : "text-gray-500 hover:text-foreground",
+                  )}
+                >
+                  Find a salon
+                </Link>
+              </div>
+            </div>
+
+            {/* Desktop auth */}
+            <div className="flex items-center gap-3">
+              {user ? (
+                <div className="hidden md:flex items-center gap-4">
+                  <Link
+                    href="/profile/bookings"
+                    className={cn(
+                      "flex items-center gap-1.5 text-sm font-medium transition-colors duration-200",
+                      pathname === "/profile/bookings"
+                        ? "text-primary"
+                        : "text-gray-500 hover:text-foreground",
+                    )}
+                  >
+                    <CalendarDots className="size-4" /> My bookings
+                  </Link>
+                  <Link
+                    href="/profile/favorites"
+                    className={cn(
+                      "flex items-center gap-1.5 text-sm font-medium transition-colors duration-200",
+                      pathname === "/profile/favorites"
+                        ? "text-primary"
+                        : "text-gray-500 hover:text-foreground",
+                    )}
+                  >
+                    <Heart className="size-4" /> Favorites
+                  </Link>
+                  <UserButton>
+                    <UserButton.MenuItems>
+                      <UserButton.Link
+                        label="View profile"
+                        href="/profile"
+                        labelIcon={<UserCircle className="size-4" />}
+                      />
+                    </UserButton.MenuItems>
+                  </UserButton>
+                </div>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
+                  <SignInButton>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:text-primary hover:bg-primary/8 rounded-full px-4 cursor-pointer"
+                    >
+                      Sign in
+                    </Button>
+                  </SignInButton>
+                  <Link href="/onboarding">
+                    <Button
+                      size="sm"
+                      className="rounded-full px-5 cursor-pointer"
+                    >
+                      List your business
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
+              {/* Animated hamburger → X */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="relative size-8 flex items-center justify-center md:hidden rounded-full hover:bg-black/5 transition-colors duration-200"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+              >
+                <span
+                  className={cn(
+                    "absolute h-0.5 w-5 bg-foreground rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    menuOpen ? "rotate-45 translate-y-0" : "-translate-y-1.5",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute h-0.5 w-5 bg-foreground rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    menuOpen ? "-rotate-45 translate-y-0" : "translate-y-1.5",
+                  )}
+                />
+              </button>
+            </div>
+          </nav>
         </div>
+      </header>
 
-        <div className="flex items-center gap-4">
-          {user ? (
-            <div className="hidden md:flex items-center space-x-3">
+      {/* Fullscreen mobile overlay */}
+      <div
+        className={cn(
+          "fixed inset-0 z-[60] transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden",
+          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <div className="absolute inset-0 backdrop-blur-3xl bg-white/96" />
+
+        <div className="relative z-10 flex flex-col h-full pt-24 px-6 pb-8">
+          {/* Logged-in user header */}
+          {user && (
+            <div
+              className={cn(
+                "flex items-center gap-4 mb-8 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                menuOpen
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-6",
+              )}
+              style={{ transitionDelay: menuOpen ? "40ms" : "0ms" }}
+            >
+              <Avatar className="w-12 h-12 border border-primary/20">
+                <AvatarImage src={user?.imageUrl} alt={user?.fullName ?? ""} />
+                <AvatarFallback>{getInitials(user?.fullName ?? "")}</AvatarFallback>
+              </Avatar>
+              <p className="font-bold text-lg text-foreground">{user?.fullName}</p>
               <Link
-                href="/profile/bookings"
-                className={cn(
-                  "flex items-center gap-0.5",
-                  navLinkClass("/profile/bookings"),
-                )}
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="ml-auto"
               >
-                <CalendarDays className="size-4 text-gray-400 mr-1 group-hover:text-primary" />{" "}
-                My Bookings
-              </Link>
-              <Link
-                href="/profile/Favorites"
-                className={cn(
-                  "flex items-center gap-0.5",
-                  navLinkClass("/profile/favorites"),
-                )}
-              >
-                <Heart className="size-4 text-gray-400 mr-1 group-hover:text-primary" />{" "}
-                Favorites
-              </Link>
-              <UserButton />
-            </div>
-          ) : (
-            <div className="hidden md:flex space-x-3 md:items-center">
-              <SignInButton>
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className="h-10 cursor-pointer text-primary  px-4 transition-all duration-200 hover:border-primary hover:text-primary"
-                >
-                  Sign In
-                </Button>
-              </SignInButton>
-              <Link href="/onboarding">
-                <Button
-                  size="lg"
-                  className="cursor-pointer hover:bg-primary/80 px-4 h-10"
-                >
-                  List Your Business
-                </Button>
+                <GearSix className="size-5 text-muted-foreground hover:text-foreground transition-colors" />
               </Link>
             </div>
           )}
 
-          <Sheet>
-            <SheetTrigger>
-              <div className="size-8 flex items-center justify-center rounded-sm hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 md:hidden">
-                <MenuIcon className="size-5" />
-              </div>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="flex flex-col p-0 w-[85%] max-w-[340px]"
-            >
-              {/* Profile Header - only show when logged in */}
-              {user && (
-                <div className="p-6 pb-6 border-b border-border mt-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-16 h-16 border-2 border-primary">
-                      <AvatarImage
-                        src={user?.imageUrl}
-                        alt={user?.fullName ?? ""}
-                      />
-                      <AvatarFallback>
-                        {getInitials(user?.fullName ?? "")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-lg text-foreground truncate">
-                        {user?.fullName}
-                      </p>
-                    </div>
-                    <Link href="/profile">
-                      <Settings className="size-5 text-muted-foreground hover:text-foreground transition-colors" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {/* Nav Links */}
-              <nav className="flex-1 px-4 py-6 mt-6 space-y-1">
+          {/* Staggered nav links */}
+          <nav className="flex-1">
+            {mobileNavItems.map((item, i) => {
+              const Icon = item.icon;
+              return (
                 <Link
-                  href="/"
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all hover:text-primary duration-200 ease-in-out",
-                    pathname === "/"
-                      ? "bg-primary text-white shadow-md"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    "flex items-center gap-4 py-4 border-b border-black/5 text-2xl font-headline font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    pathname === item.href
+                      ? "text-primary"
+                      : "text-foreground/75 hover:text-foreground",
+                    menuOpen
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-6",
                   )}
+                  style={{
+                    transitionDelay: menuOpen ? `${(i + 1) * 80}ms` : "0ms",
+                  }}
                 >
-                  <Home className="size-5" />
-                  Home
+                  <Icon size={22} />
+                  {item.label}
                 </Link>
+              );
+            })}
+          </nav>
 
-                <div className="h-px bg-border mx-2" />
-
-                <Link
-                  href="/explore"
-                  className={cn(
-                    "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
-                    pathname === "/explore"
-                      ? "bg-primary text-white shadow-md"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  )}
+          {/* Bottom auth actions */}
+          <div
+            className={cn(
+              "pt-6 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+              menuOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-6",
+            )}
+            style={{
+              transitionDelay: menuOpen
+                ? `${(mobileNavItems.length + 1) * 80}ms`
+                : "0ms",
+            }}
+          >
+            {user ? (
+              <SignOutButton>
+                <Button
+                  variant="secondary"
+                  className="w-full font-semibold rounded-full h-12"
                 >
-                  <Compass className="size-5" />
-                  Find a Salon
+                  Log out
+                </Button>
+              </SignOutButton>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="font-bold text-lg text-foreground">Join the community</p>
+                <p className="text-sm text-muted-foreground -mt-1">
+                  Sign in to book appointments, save favorites, and get
+                  personalised recommendations.
+                </p>
+                <SignInButton>
+                  <Button className="w-full font-semibold rounded-full h-12 mt-2">
+                    Sign in / Register
+                  </Button>
+                </SignInButton>
+                <Link href="/onboarding" onClick={() => setMenuOpen(false)}>
+                  <Button
+                    variant="outline"
+                    className="w-full font-semibold rounded-full h-12"
+                  >
+                    List your business
+                  </Button>
                 </Link>
-
-                {user && (
-                  <>
-                    <div className="h-px bg-border mx-2" />
-                    <Link
-                      href="/profile/bookings"
-                      className={cn(
-                        "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
-                        pathname === "/profile/bookings"
-                          ? "bg-primary text-white shadow-md"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
-                    >
-                      <CalendarDays className="size-5" />
-                      My Bookings
-                    </Link>
-
-                    <div className="h-px bg-border mx-2" />
-                    <Link
-                      href="/profile/favorites"
-                      className={cn(
-                        "flex items-center gap-4 px-4 py-3 rounded-sm text-sm font-semibold transition-all",
-                        pathname === "/favorites"
-                          ? "bg-primary text-white shadow-md"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
-                    >
-                      <Heart className="size-5" />
-                      Favorites
-                    </Link>
-                  </>
-                )}
-              </nav>
-
-              {/* Footer */}
-              <div className="p-6 border-t border-border">
-                {user ? (
-                  <SignOutButton>
-                    <Button
-                      variant="secondary"
-                      className="w-full font-semibold rounded-2xl h-12"
-                    >
-                      Log Out
-                    </Button>
-                  </SignOutButton>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <p className="font-bold text-lg text-foreground">
-                      Join the Community
-                    </p>
-                    <p className="text-sm text-muted-foreground -mt-2">
-                      Sign in to book appointments, save favorites, and get
-                      personalized recommendations.
-                    </p>
-                    <SignInButton>
-                      <Button className="w-full font-semibold rounded-sm h-12 mt-2">
-                        Sign In / Register
-                      </Button>
-                    </SignInButton>
-                    <Link href="/onboarding">
-                      <Button
-                        variant="outline"
-                        className="w-full font-semibold rounded-sm h-12"
-                      >
-                        List Your Business
-                      </Button>
-                    </Link>
-                  </div>
-                )}
               </div>
-            </SheetContent>
-          </Sheet>
+            )}
+          </div>
         </div>
-      </nav>
-    </header>
+      </div>
+    </>
   );
 }
 

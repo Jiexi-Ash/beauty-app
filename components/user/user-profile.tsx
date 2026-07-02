@@ -1,8 +1,8 @@
 "use client"
 import { Id } from '@/convex/_generated/dataModel'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { getInitials } from '@/lib/utils'
-import { ArrowRight, Loader2, X } from 'lucide-react'
+import { cn, getInitials } from '@/lib/utils'
+import { ArrowRight, CircleNotch } from '@phosphor-icons/react'
 import z from 'zod'
 import { useForm } from '@tanstack/react-form'
 import { Field, FieldGroup } from '../ui/field'
@@ -79,45 +79,28 @@ function UserProfile({ profileDetails }: UserProfileProps) {
 
     return (
         <div className="w-full h-full flex flex-col justify-center">
-            <div className="my-10 space-y-6 max-w-2xl mx-auto">
-                <div className="w-full flex justify-center">
-                    <Avatar size="xl" className="w-full flex justify-center text-center">
-                        <AvatarImage src={profileDetails?.user?.image} alt="" />
-                        <AvatarFallback>{getInitials(profileDetails?.user?.fullname ?? "")}</AvatarFallback>
-                    </Avatar>
+            <div className="my-10 space-y-8 max-w-2xl mx-auto">
+                <div className="w-full flex flex-col items-center gap-4">
+                    <div className="p-1.5 rounded-full bg-black/[0.04] ring-1 ring-black/5">
+                        <Avatar size="xl" className="size-24 ring-4 ring-surface-container-lowest">
+                            <AvatarImage src={profileDetails?.user?.image} alt="" />
+                            <AvatarFallback className="font-headline text-lg">{getInitials(profileDetails?.user?.fullname ?? "")}</AvatarFallback>
+                        </Avatar>
+                    </div>
+                    <div className="text-center space-y-0.5">
+                        <h1 className="font-headline font-bold text-xl">{profileDetails?.user?.fullname || "Your profile"}</h1>
+                        <p className="text-sm text-muted-foreground">{profileDetails?.user?.email}</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <Card>
-                        <CardContent className="flex flex-col gap-2">
-                            <p className="font-bold text-primary text-xl text-center">{profileDetails?.upcomingBookings ?? 0}</p>
-                            <p className="text-gray-400 font-medium tracking-wider text-xs uppercase text-center">Upcoming Bookings</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="flex flex-col gap-2">
-                            <p className="font-bold text-black text-xl text-center">{profileDetails?.completedBookings ?? 0}</p>
-                            <p className="text-gray-400 font-medium tracking-wider text-xs uppercase text-center">Completed Bookings</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="flex flex-col gap-2">
-                            <p className="font-bold text-black text-xl text-center">{profileDetails?.cancelledBookings ?? 0}</p>
-                            <p className="text-gray-400 font-medium tracking-wider text-xs uppercase text-center">Cancelled Bookings</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent className="flex flex-col gap-2">
-                            <p className="font-bold text-black text-xl text-center">{profileDetails?.totalBookings ?? 0}</p>
-                            <p className="text-gray-400 font-medium tracking-wider text-xs uppercase text-center">Total Bookings</p>
-                        </CardContent>
-                    </Card>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <StatCard value={profileDetails?.upcomingBookings ?? 0} label="Upcoming" accent />
+                    <StatCard value={profileDetails?.completedBookings ?? 0} label="Completed" />
+                    <StatCard value={profileDetails?.cancelledBookings ?? 0} label="Cancelled" />
+                    <StatCard value={profileDetails?.totalBookings ?? 0} label="Total" />
                 </div>
 
-                <Card className="ring-0">
+                <Card className="rounded-2xl ring-1 ring-black/5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
                     <CardContent>
                         <form className="space-y-4"
                             id="update-profile"
@@ -138,7 +121,7 @@ function UserProfile({ profileDetails }: UserProfileProps) {
                                                 </Label>
                                                 <Input
                                                     value={field.state.value}
-                                                    className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
+                                                    className="mt-1.5 bg-transparent border-foreground/15 rounded-xl h-12 text-sm"
                                                     onBlur={field.handleBlur}
                                                     readOnly
                                                     onChange={(e) => field.handleChange(e.target.value)}
@@ -161,7 +144,7 @@ function UserProfile({ profileDetails }: UserProfileProps) {
                                                 </Label>
                                                 <Input
                                                     value={field.state.value}
-                                                    className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
+                                                    className="mt-1.5 bg-transparent border-foreground/15 rounded-xl h-12 text-sm"
                                                     onBlur={field.handleBlur}
                                                     readOnly
                                                     onChange={(e) => field.handleChange(e.target.value)}
@@ -184,7 +167,7 @@ function UserProfile({ profileDetails }: UserProfileProps) {
                                                 </Label>
                                                 <Input
                                                     value={field.state.value}
-                                                    className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
+                                                    className="mt-1.5 bg-transparent border-foreground/15 rounded-xl h-12 text-sm"
                                                     onBlur={field.handleBlur}
                                                     onChange={(e) => field.handleChange(e.target.value)}
                                                 />
@@ -196,19 +179,47 @@ function UserProfile({ profileDetails }: UserProfileProps) {
                                 </form.Field>
                             </FieldGroup>
 
-                            <p className="text-xs font-semibold text-gray-400 text-center">Only the phone number can be updated</p>
+                            <p className="text-xs font-medium text-muted-foreground text-center">Only the phone number can be updated</p>
                             <Button size="lg"
-                                className="w-full rounded-sm text-base py-6 bg-primary hover:bg-primary/90"
+                                className="group w-full rounded-full text-base py-6 bg-primary hover:bg-primary/90 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                                 disabled={isPending}
                                 type="submit">
-                                {isPending ? <Loader2 className="text-white animate-spin size-4" /> : <>Update Details <ArrowRight className="size-4 text-white ml-0.5" /></>}
-
+                                {isPending ? (
+                                    <CircleNotch className="text-white animate-spin size-4" />
+                                ) : (
+                                    <>
+                                        Update Details
+                                        <span className="ml-1.5 flex items-center justify-center size-6 rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
+                                            <ArrowRight className="size-3.5 text-white" />
+                                        </span>
+                                    </>
+                                )}
                             </Button>
                         </form>
                     </CardContent>
                 </Card>
             </div>
 
+        </div>
+    )
+}
+
+function StatCard({ value, label, accent }: { value: number; label: string; accent?: boolean }) {
+    return (
+        <div
+            className={cn(
+                "rounded-2xl p-4 flex flex-col items-center gap-1.5 text-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5",
+                accent
+                    ? "bg-primary shadow-[0_8px_24px_rgba(221,39,94,0.2)]"
+                    : "bg-surface-container-lowest ring-1 ring-black/5 shadow-sm hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]",
+            )}
+        >
+            <p className={cn("font-headline font-bold text-2xl", accent ? "text-white" : "text-foreground")}>
+                {value}
+            </p>
+            <p className={cn("font-medium tracking-wider text-[10px] uppercase", accent ? "text-white/70" : "text-muted-foreground")}>
+                {label}
+            </p>
         </div>
     )
 }

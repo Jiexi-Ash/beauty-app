@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div className="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-white">
       <Navbar />
-      <main>
+      <main id="main-content">
         <Hero />
         <Features />
         <PopularSalons />
