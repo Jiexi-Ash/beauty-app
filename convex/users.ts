@@ -100,7 +100,7 @@ export const updateUserPhoneNumber = mutation({
   },
 });
 
-export const addAppointmentReview = mutation({
+export const addBookingReview = mutation({
   args: {
     bookingId: v.id("booking"),
     rating: v.number(),
@@ -117,12 +117,12 @@ export const addAppointmentReview = mutation({
 
     const booking = await ctx.db.get(bookingId)
 
-    if (!booking) throw new ConvexError("Review could not be created. Appointment not found.")
+    if (!booking) throw new ConvexError("Review could not be created. Booking not found.")
 
-    if (booking.userId !== user._id) throw new ConvexError("You can only review your own appointments.");
+    if (booking.userId !== user._id) throw new ConvexError("You can only review your own bookings.");
 
 
-    if (booking.status !== "completed") throw new ConvexError("You can only add a review to a completed appointment.")
+    if (booking.status !== "completed") throw new ConvexError("You can only add a review to a completed booking.")
 
     const existingReview = await ctx.db.query("reviews").withIndex("by_booking", q => q.eq("bookingId", bookingId)).unique()
 

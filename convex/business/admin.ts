@@ -518,7 +518,7 @@ export const getDashboardAnalytics = query({
 
 })
 
-export const getUpcomingAppointments = query({
+export const getUpcomingBookings = query({
   args: {
     limit: v.optional(v.number())
   },
@@ -533,16 +533,16 @@ export const getUpcomingAppointments = query({
 
     if (!business) return []
 
-    const appointments = await ctx.db.query("booking").withIndex("by_business_and_status_and_date", q => q.eq("businessId", business._id).eq("status", "upcoming").gte("bookingStartDate", now)).order("asc").take(take)
+    const bookings = await ctx.db.query("booking").withIndex("by_business_and_status_and_date", q => q.eq("businessId", business._id).eq("status", "upcoming").gte("bookingStartDate", now)).order("asc").take(take)
 
-    const appointmentsWithDetails = await Promise.all(
-      appointments.map(async (appointment) => {
-        const client = await ctx.db.get(appointment.userId);
-        const service = await ctx.db.get(appointment.serviceId);
-        const payment = appointment.bookingPaymentId ? await ctx.db.get(appointment.bookingPaymentId) : null;
+    const bookingsWithDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        const client = await ctx.db.get(booking.userId);
+        const service = await ctx.db.get(booking.serviceId);
+        const payment = booking.bookingPaymentId ? await ctx.db.get(booking.bookingPaymentId) : null;
 
         return {
-          ...appointment,
+          ...booking,
           client: { name: client?.fullname, avatar: client?.image, email: client?.email },
           service: { _id: service?._id, name: service?.name, duration: service?.duration },
           payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
@@ -551,13 +551,13 @@ export const getUpcomingAppointments = query({
       })
     );
 
-    return appointmentsWithDetails
+    return bookingsWithDetails
   }
 })
 
 
 // types
-export type AppointmentWithDetails = Doc<"booking"> & {
+export type BookingWithDetails = Doc<"booking"> & {
   client: { name?: string; avatar?: string, email?: string };
   service: { _id?: Id<"service">; name?: string, duration?: number };
   payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type: "deposit" | "full-payment" } | null;
@@ -571,7 +571,7 @@ export type UserBusinessResult = {
 } & Doc<"business"> | null
 
 export const getAllBookings = query({
-  handler: async (ctx): Promise<AppointmentWithDetails[]> => {
+  handler: async (ctx): Promise<BookingWithDetails[]> => {
     const user = await getCurrentUser(ctx);
     if (!user) return [];
 

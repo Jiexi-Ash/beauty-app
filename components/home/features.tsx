@@ -41,7 +41,7 @@ function Features() {
                   <CalendarDots size={22} weight="duotone" />
                 </div>
               </div>
-              <h3 className="text-3xl font-headline font-bold mb-4">Bookings that run themselves</h3>
+              <h3 className="text-3xl font-headline font-bold mb-4">Appointments that run themselves</h3>
               <p className="text-on-surface-variant max-w-md text-lg">
                 Automated scheduling, reminders, and cancellations that keep your chairs full — no manual logs, no missed appointments.
               </p>

@@ -135,7 +135,7 @@ function BookingsList({
             Bookings
           </h1>
           <p className="text-sm text-muted-foreground">
-            Every appointment made with your business, past and upcoming.
+            Every booking made with your business, past and upcoming.
           </p>
         </div>
 

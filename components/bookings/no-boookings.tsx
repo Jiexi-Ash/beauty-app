@@ -26,7 +26,7 @@ function NoBookings() {
           Your next <span className="text-primary">style</span> is waiting.
         </h1>
         <p className="text-muted-foreground text-center max-w-sm mb-10">
-          {"You haven't made any bookings yet. Explore salons near you and secure your next appointment."}
+          {"You haven't made any appointments yet. Explore salons near you and book one today."}
         </p>
 
         <Card className="bg-surface-container-lowest/90 backdrop-blur-xl rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] ring-1 ring-black/5 w-full max-w-sm text-center">

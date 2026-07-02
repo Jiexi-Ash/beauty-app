@@ -21,29 +21,29 @@ import { Badge } from "../ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
-import { AppointmentWithDetails } from "@/convex/business/admin";
+import { BookingWithDetails } from "@/convex/business/admin";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "../ui/skeleton";
 
-function UpcomingAppointments() {
+function UpcomingBookings() {
   const { data, isLoading } = useQuery({
-    ...convexQuery(api.business.admin.getUpcomingAppointments),
+    ...convexQuery(api.business.admin.getUpcomingBookings),
   });
   return (
     <div className="mb-6">
-      <AppointmentsMobile appointments={data} isLoading={isLoading} />
-      <AppointmentsDesktop appointments={data} isLoading={isLoading} />
+      <BookingsMobile bookings={data} isLoading={isLoading} />
+      <BookingsDesktop bookings={data} isLoading={isLoading} />
     </div>
   );
 }
 
-export default UpcomingAppointments;
+export default UpcomingBookings;
 
-const AppointmentsDesktop = ({
-  appointments,
+const BookingsDesktop = ({
+  bookings,
   isLoading,
 }: {
-  appointments: AppointmentWithDetails[] | undefined;
+  bookings: BookingWithDetails[] | undefined;
   isLoading: boolean;
 }) => {
   return (
@@ -79,10 +79,10 @@ const AppointmentsDesktop = ({
 
         {isLoading ? (
           <DesktopRowsSkeleton />
-        ) : !appointments || appointments.length === 0 ? (
-          <EmptyAppointments />
+        ) : !bookings || bookings.length === 0 ? (
+          <EmptyBookings />
         ) : (
-          appointments.map((a) => (
+          bookings.map((a) => (
           <div key={a._id} className="w-full grid grid-cols-5 items-center">
             <div className="flex items-center gap-3">
               <Avatar size="lg">
@@ -100,7 +100,7 @@ const AppointmentsDesktop = ({
                       className="size-3 text-muted-foreground shrink-0"
                       aria-label="Has a note"
                     >
-                      <title>This booking has a note</title>
+                      <title>This appointment has a note</title>
                     </NotePencil>
                   )}
                 </div>
@@ -122,7 +122,7 @@ const AppointmentsDesktop = ({
               <PaymentBadge status={a.payment?.status} type={a.payment?.type} />
             </div>
 
-            <AppointmentActions bookingId={a._id} />
+            <BookingActions bookingId={a._id} />
           </div>
           ))
         )}
@@ -131,11 +131,11 @@ const AppointmentsDesktop = ({
   );
 };
 
-const AppointmentsMobile = ({
-  appointments,
+const BookingsMobile = ({
+  bookings,
   isLoading,
 }: {
-  appointments: AppointmentWithDetails[] | undefined;
+  bookings: BookingWithDetails[] | undefined;
   isLoading: boolean;
 }) => {
   return (
@@ -153,10 +153,10 @@ const AppointmentsMobile = ({
       <CardContent className="space-y-4">
         {isLoading ? (
           <MobileRowsSkeleton />
-        ) : !appointments || appointments.length === 0 ? (
-          <EmptyAppointments />
+        ) : !bookings || bookings.length === 0 ? (
+          <EmptyBookings />
         ) : (
-          appointments.map((a) => (
+          bookings.map((a) => (
           <div key={a._id} className="flex items-center gap-3 justify-between">
             <div className="flex items-center gap-3 mt-4">
               <Avatar size="lg">
@@ -178,7 +178,7 @@ const AppointmentsMobile = ({
                       className="size-3 text-muted-foreground shrink-0 ml-1"
                       aria-label="Has a note"
                     >
-                      <title>This booking has a note</title>
+                      <title>This appointment has a note</title>
                     </NotePencil>
                   )}
                 </div>
@@ -191,7 +191,7 @@ const AppointmentsMobile = ({
               </div>
             </div>
 
-            <AppointmentActions bookingId={a._id} />
+            <BookingActions bookingId={a._id} />
           </div>
           ))
         )}
@@ -200,7 +200,7 @@ const AppointmentsMobile = ({
   );
 };
 
-const EmptyAppointments = () => {
+const EmptyBookings = () => {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
       <div className="flex size-12 items-center justify-center rounded-full bg-muted">
@@ -208,7 +208,7 @@ const EmptyAppointments = () => {
       </div>
       <p className="text-sm font-semibold">No upcoming appointments</p>
       <p className="max-w-xs text-xs text-muted-foreground">
-        Your schedule is clear. New bookings will appear here as soon as clients
+        Your schedule is clear. New appointments will appear here as soon as clients
         reserve a spot.
       </p>
     </div>
@@ -300,7 +300,7 @@ const PaymentBadge = ({
   );
 };
 
-const AppointmentActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
+const BookingActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

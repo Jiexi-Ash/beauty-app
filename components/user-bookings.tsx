@@ -175,9 +175,9 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel>Options</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>Reschedule Appointment</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>Reschedule appointment</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setCancelDialogOpen(true)}>
-                                        Cancel booking
+                                        Cancel appointment
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
@@ -237,7 +237,7 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                             onClick={() => cancelBooking({ bookingId: booking._id })}
                             className="bg-destructive text-white hover:bg-destructive/90 rounded-full"
                         >
-                            Cancel Booking
+                            Cancel Appointment
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -549,7 +549,7 @@ function ReviewDialog({ open, onOpenChange, booking }: ReviewDialogProps) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
     const { mutate: submitReview, isPending } = useMutation({
-        mutationFn: useConvexMutation(api.users.addAppointmentReview),
+        mutationFn: useConvexMutation(api.users.addBookingReview),
         onSuccess: () => {
             toast.success("Review submitted. Thanks for the feedback!")
             onOpenChange(false)
@@ -700,7 +700,7 @@ function UserBookings({ bookings }: UserBookingsProps) {
                             <div className="flex gap-2 justify-between items-center">
                                 <div className="flex gap-2 items-center">
                                     <CheckCircle weight="fill" className="text-primary size-6" />
-                                    <p className="text-secondary-foreground font-medium">{"Booking confirmed. You're all set"}</p>
+                                    <p className="text-secondary-foreground font-medium">{"Appointment confirmed. You're all set"}</p>
                                 </div>
 
                                 <Button variant="ghost" size="icon-lg" onClick={() => setDismissed(true)}>

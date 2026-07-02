@@ -44,8 +44,8 @@ function BookingDetails({
 }) {
   const data = usePreloadedQuery(preloadedBooking);
 
-  const startAppointment = useMutation(api.booking.admin.startAppointment);
-  const completeAppointment = useMutation(api.booking.admin.completeAppointment);
+  const startBooking = useMutation(api.booking.admin.startBooking);
+  const completeBooking = useMutation(api.booking.admin.completeBooking);
   const [isUpdating, setIsUpdating] = useState(false);
 
   if (!data) notFound();
@@ -56,7 +56,7 @@ function BookingDetails({
   const handleStart = async () => {
     try {
       setIsUpdating(true);
-      await startAppointment({ bookingId: booking._id });
+      await startBooking({ bookingId: booking._id });
       toast.success("Appointment started");
     } catch (err) {
       toast.error(
@@ -70,7 +70,7 @@ function BookingDetails({
   const handleComplete = async () => {
     try {
       setIsUpdating(true);
-      await completeAppointment({ bookingId: booking._id });
+      await completeBooking({ bookingId: booking._id });
       toast.success("Appointment completed");
     } catch (err) {
       toast.error(

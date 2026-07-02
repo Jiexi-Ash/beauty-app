@@ -33,7 +33,7 @@ function BookingNotFound() {
           </div>
           <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
             The link may be incorrect or the booking may have been removed.
-            Head to your bookings to see your appointments.
+            Head to your bookings to find what you need.
           </p>
           <Button
             className="group w-full rounded-full font-semibold py-3 bg-primary hover:bg-primary/90 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"

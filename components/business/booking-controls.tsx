@@ -177,7 +177,7 @@ export default function BookingControls({
                             )}
                         </div>
                         <p className="max-w-xs text-xs">
-                            Downtime between appointments for breaks and/or cleaning.
+                            Downtime between bookings for breaks and/or cleaning.
                         </p>
                     </div>
 

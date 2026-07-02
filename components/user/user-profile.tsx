@@ -57,7 +57,7 @@ function UserProfile({ profileDetails }: UserProfileProps) {
             } else if (error instanceof Error) {
                 toast.error(error.message);
             } else {
-                toast.error("An unknown error occurred while cancelling appointment.");
+                toast.error("An unknown error occurred while updating user details.");
             }
         },
     });

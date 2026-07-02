@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import AnalyticCards from "./analytics-cards";
 import Revenue from "./revenue";
-import UpcomingAppointments from "./upcoming-appointments";
+import UpcomingBookings from "./upcoming-bookings";
 import ServiceHighlight from "./service-highlight";
 
 function DashboardContent() {
@@ -44,7 +44,7 @@ function DashboardContent() {
           <Revenue />
           <ServiceHighlight />
         </div>
-        <UpcomingAppointments />
+        <UpcomingBookings />
       </div>
       </div>
     </div>
