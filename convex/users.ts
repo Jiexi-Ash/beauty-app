@@ -141,6 +141,53 @@ export const addBookingReview = mutation({
   }
 })
 
+export const getUserFavorites = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
+
+    const favorites = await ctx.db
+      .query("favorites")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .collect();
+
+    const businesses = await Promise.all(
+      favorites.map(async (favorite) => {
+        const business = await ctx.db.get(favorite.businessId);
+        if (!business || business.visibility !== "visible") return null;
+
+        const coverImageUrl = await ctx.storage.getUrl(
+          business.coverImageStorageId,
+        );
+
+        const reviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_business", (q) => q.eq("businessId", business._id))
+          .collect();
+
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : 0;
+
+        return {
+          _id: business._id,
+          name: business.name,
+          city: business.city,
+          slug: business.slug,
+          tags: business.tags,
+          coverImageUrl,
+          averageRating,
+          reviewCount: reviews.length,
+        };
+      }),
+    );
+
+    return businesses.filter((b): b is NonNullable<typeof b> => b !== null);
+  },
+});
+
 export const toggleFavorites = mutation({
   args: {
     businessId: v.id("business"),
