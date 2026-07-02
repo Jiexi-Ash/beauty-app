@@ -67,7 +67,9 @@ export const columns: ColumnDef<Service>[] = [
       const category = row.getValue("category") as string;
 
       return (
-        <Badge className="capitalize bg-muted-foreground">{category}</Badge>
+        <Badge className="capitalize bg-secondary text-secondary-foreground">
+          {category}
+        </Badge>
       );
     },
   },

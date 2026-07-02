@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "../ui/input";
-import { PencilIcon, SaveIcon, SlidersVertical } from "lucide-react";
+import { FloppyDisk, PencilSimple, SlidersHorizontal } from "@phosphor-icons/react";
 
 interface BookingControlsProps {
     businessId: Id<"business">;
@@ -74,13 +74,13 @@ export default function BookingControls({
     };
 
     return (
-        <Card className="col-span-2">
+        <Card className="col-span-1 lg:col-span-2">
             <CardHeader>
                 <CardTitle>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary">
-                                <SlidersVertical className="size-5 text-primary" />
+                                <SlidersHorizontal className="size-5 text-primary" />
                             </div>
                             <p className="font-headline text-lg font-bold">Booking Controls</p>
                         </div>
@@ -96,7 +96,7 @@ export default function BookingControls({
                                         Cancel
                                     </Button>
                                     <Button onClick={handleSave} disabled={isPending}>
-                                        <SaveIcon className="size-4 text-white ml-1" />
+                                        <FloppyDisk className="size-4 text-primary-foreground ml-1" />
                                         {isPending ? "Saving..." : "Save"}
                                     </Button>
                                 </>
@@ -107,7 +107,7 @@ export default function BookingControls({
                                     onClick={startEditing}
                                     disabled={isSaving}
                                 >
-                                    <PencilIcon className="size-4 text-primary" />
+                                    <PencilSimple className="size-4 text-primary" />
                                     Edit
                                 </Button>
                             )}
@@ -116,14 +116,14 @@ export default function BookingControls({
                 </CardTitle>
             </CardHeader>
             <CardContent className="mt-6">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {/* Max concurrent */}
                     <div className="space-y-2">
-                        <span className="text-xs font-black uppercase text-on-surface-variant tracking-tighter mb-2 block">
+                        <span className="text-xs font-black uppercase text-muted-foreground tracking-tighter mb-2 block">
                             concurrent limits
                         </span>
-                        <div className="bg-surface-container-low w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
-                            <span className="text-on-surface font-bold">Max Clients/Slot</span>
+                        <div className="bg-muted w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
+                            <span className="text-foreground font-bold">Max Clients/Slot</span>
                             {isEditing ? (
                                 <Input
                                     type="number"
@@ -133,7 +133,7 @@ export default function BookingControls({
                                     onChange={(e) =>
                                         setMaxConcurrent(Math.max(1, Number(e.target.value) || 1))
                                     }
-                                    className="h-9 w-16 border-0 bg-white text-right text-lg font-extrabold text-primary shadow-none focus-visible:ring-1 focus-visible:ring-primary/40"
+                                    className="h-9 w-16 border-0 bg-background text-right text-lg font-extrabold text-primary shadow-none focus-visible:ring-1 focus-visible:ring-primary/40"
                                 />
                             ) : (
                                 <span className="text-2xl font-headline font-extrabold text-primary">
@@ -148,11 +148,11 @@ export default function BookingControls({
 
                     {/* Buffer minutes */}
                     <div className="space-y-2">
-                        <span className="text-xs font-black uppercase text-on-surface-variant tracking-tighter mb-2 block">
+                        <span className="text-xs font-black uppercase text-muted-foreground tracking-tighter mb-2 block">
                             Grace Period Buffer
                         </span>
-                        <div className="bg-surface-container-low w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
-                            <span className="text-on-surface font-bold">Post Service</span>
+                        <div className="bg-muted w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
+                            <span className="text-foreground font-bold">Post Service</span>
                             {isEditing ? (
                                 <div className="flex items-center gap-1">
                                     <Input
@@ -163,7 +163,7 @@ export default function BookingControls({
                                         onChange={(e) =>
                                             setBufferMinutes(Math.max(0, Number(e.target.value) || 0))
                                         }
-                                        className="h-9 w-16 border-0 bg-white text-right text-lg font-extrabold text-primary shadow-none focus-visible:ring-1 focus-visible:ring-primary/40"
+                                        className="h-9 w-16 border-0 bg-background text-right text-lg font-extrabold text-primary shadow-none focus-visible:ring-1 focus-visible:ring-primary/40"
                                     />
                                     <span className="text-muted-foreground text-sm">min</span>
                                 </div>
@@ -183,11 +183,11 @@ export default function BookingControls({
 
                     {/* Allow beyond close */}
                     <div className="space-y-2">
-                        <span className="text-xs font-black uppercase text-on-surface-variant tracking-tighter mb-2 block">
+                        <span className="text-xs font-black uppercase text-muted-foreground tracking-tighter mb-2 block">
                             Booking Beyond Closing Time
                         </span>
-                        <div className="bg-surface-container-low w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
-                            <span className="text-on-surface font-bold">
+                        <div className="bg-muted w-full rounded-xl px-4 py-4 flex justify-between items-center border border-transparent focus-within:border-primary/40 transition-all">
+                            <span className="text-foreground font-bold">
                                 {(isEditing ? allowBeyondClose : allowBeyondCloseValue)
                                     ? "Allowed"
                                     : "Not Allowed"}

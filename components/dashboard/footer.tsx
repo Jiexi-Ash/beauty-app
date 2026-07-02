@@ -1,25 +1,34 @@
 "use client";
 import { cn } from "@/lib/utils";
 import {
-  CalendarDays,
-  LayoutGrid,
-  type LucideIcon,
+  CalendarDots,
+  GearSix,
+  type Icon,
   Scissors,
-  Users,
-} from "lucide-react";
+  SquaresFour,
+  UsersThree,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navlinks = [
-  { href: "/dashboard", label: "OVERVIEW", icon: LayoutGrid },
-  { href: "/dashboard/bookings", label: "BOOKING", icon: CalendarDays },
-  { href: "/dashboard/services", label: "SERVICES", icon: Scissors },
-  { href: "/dashboard/clients", label: "CLIENTS", icon: Users },
+  { href: "/dashboard", label: "Overview", icon: SquaresFour },
+  { href: "/dashboard/bookings", label: "Booking", icon: CalendarDots },
+  { href: "/dashboard/services", label: "Services", icon: Scissors },
+  { href: "/dashboard/clients", label: "Clients", icon: UsersThree },
+  { href: "/dashboard/settings", label: "Settings", icon: GearSix },
 ];
+// Focused create/edit task screens (e.g. /dashboard/services/create-service,
+// /dashboard/services/[id]) render their own sticky bottom action bar, which
+// would overlap this sticky nav if both were shown at once.
+const HAS_OWN_ACTION_BAR = /^\/dashboard\/services\/[^/]+$/;
+
 function DashboardFooter() {
   const pathname = usePathname();
+  if (HAS_OWN_ACTION_BAR.test(pathname)) return null;
+
   return (
-    <footer className="sticky bottom-0 md:hidden bg-white z-50  border-t  border-border grid grid-cols-4 gap-4 px-6">
+    <footer className="fixed inset-x-0 bottom-0 lg:hidden bg-background z-50 border-t border-border grid grid-cols-5 gap-1 px-2">
       {navlinks.map((link) => {
         const isActive =
           link.href === "/dashboard"
@@ -44,25 +53,25 @@ export default DashboardFooter;
 
 const Navlink = ({
   label,
-  Icon,
+  Icon: LinkIcon,
   href,
   isActive,
 }: {
   label: string;
   href: string;
-  Icon: LucideIcon;
+  Icon: Icon;
   isActive: boolean;
 }) => {
   return (
     <Link
       href={href}
       className={cn(
-        "flex flex-col gap-1 py-4 px-4  items-center",
-        isActive ? "text-primary " : "text-gray-500",
+        "flex flex-col gap-1 py-3 px-1 items-center transition-colors duration-200",
+        isActive ? "text-primary" : "text-muted-foreground",
       )}
     >
-      <Icon className="size-6" strokeWidth={1.5} />
-      <span className="text-[10px] md:text-sm font-semibold">{label}</span>
+      <LinkIcon className="size-5" weight={isActive ? "fill" : "regular"} />
+      <span className="text-[10px] font-medium">{label}</span>
     </Link>
   );
 };

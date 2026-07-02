@@ -3,53 +3,56 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, getInitials } from "@/lib/utils";
 import {
-  CalendarDays,
-  LayoutGrid,
-  LucideIcon,
-  Plus,
+  CalendarDots,
+  GearSix,
+  type Icon,
   Scissors,
-  User2,
-  Users,
-} from "lucide-react";
+  SignOut,
+  SquaresFour,
+  UsersThree,
+} from "@phosphor-icons/react";
+import { SignOutButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navlinks = [
-  { href: "/dashboard", label: "overview", icon: LayoutGrid },
-  { href: "/dashboard/bookings", label: "booking", icon: CalendarDays },
+  { href: "/dashboard", label: "overview", icon: SquaresFour },
+  { href: "/dashboard/bookings", label: "booking", icon: CalendarDots },
   { href: "/dashboard/services", label: "services", icon: Scissors },
-  { href: "/dashboard/clients", label: "clients", icon: Users },
+  { href: "/dashboard/clients", label: "clients", icon: UsersThree },
+  { href: "/dashboard/settings", label: "settings", icon: GearSix },
 ];
+
 function DashboardSidebar() {
   const pathname = usePathname();
+  const { user } = useUser();
+
   return (
-    <Sidebar>
+    <Sidebar className="border-border/60">
       <SidebarHeader>
-        <SidebarMenu className="pl-3 py-3">
+        <SidebarMenu className="pl-2 py-3">
           <SidebarMenuItem>
             <Link
               href="/dashboard"
-              className="font-extrabold text-2xl select-none"
+              className="flex items-center gap-0.5 text-xl font-bold tracking-tight select-none px-2"
             >
-              The <span className="text-primary">Beauty</span> App
+              <span className="text-foreground">The</span>
+              <span className="text-primary">Beauty</span>
+              <span className="text-foreground">App</span>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarMenu className="px-4 gap-1">
+        <SidebarMenu className="px-3 gap-1">
           {navlinks.map((link) => {
             const isActive =
               link.href === "/dashboard"
@@ -69,12 +72,31 @@ function DashboardSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton>
-              <User2 /> Username
-            </SidebarMenuButton>
+          <SidebarMenuItem className="flex items-center gap-2.5 rounded-xl p-2">
+            <Link
+              href="/dashboard/settings"
+              className="flex min-w-0 flex-1 items-center gap-2.5"
+            >
+              <Avatar size="sm">
+                <AvatarImage src={user?.imageUrl} alt={user?.fullName ?? ""} />
+                <AvatarFallback>
+                  {getInitials(user?.fullName ?? "")}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate text-sm font-medium text-foreground">
+                {user?.fullName ?? "Your account"}
+              </span>
+            </Link>
+            <SignOutButton>
+              <button
+                aria-label="Sign out"
+                className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+              >
+                <SignOut className="size-4" />
+              </button>
+            </SignOutButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -86,13 +108,13 @@ export default DashboardSidebar;
 
 const MenuItem = ({
   label,
-  Icon,
+  Icon: LinkIcon,
   href,
   isActive,
 }: {
   label: string;
   href: string;
-  Icon: LucideIcon;
+  Icon: Icon;
   isActive: boolean;
 }) => {
   return (
@@ -100,11 +122,13 @@ const MenuItem = ({
       <Link
         href={href}
         className={cn(
-          "flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 hover:text-primary duration-200 ease-in-out text-sm",
-          isActive ? "text-primary font-semibold" : "text-foreground  ",
+          "flex items-center gap-3 px-3 py-2.5 rounded-full transition-colors duration-200 text-sm",
+          isActive
+            ? "bg-primary/8 text-primary font-semibold"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
         )}
       >
-        <Icon className="size-5" />
+        <LinkIcon className="size-5" weight={isActive ? "fill" : "regular"} />
         <span className="capitalize">{label}</span>
       </Link>
     </SidebarMenuItem>

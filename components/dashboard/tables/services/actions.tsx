@@ -6,7 +6,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useConvexMutation } from "@convex-dev/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { ConvexError } from "convex/values";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { CircleNotch, PencilSimple, Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -45,7 +45,7 @@ function Actions({ id }: ActionProps) {
         disabled={isPending}
       >
         <Link href={`/dashboard/services/${id}`}>
-          <Pencil className="size-4 text-primary" />
+          <PencilSimple className="size-4 text-primary" />
         </Link>
       </Button>
 
@@ -59,9 +59,9 @@ function Actions({ id }: ActionProps) {
         }}
       >
         {isPending ? (
-          <Loader2 className="animate-spin size-4" />
+          <CircleNotch className="animate-spin size-4" />
         ) : (
-          <Trash2 className="size-4" />
+          <Trash className="size-4 text-destructive" />
         )}
       </Button>
     </div>

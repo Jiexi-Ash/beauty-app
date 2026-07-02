@@ -1,6 +1,5 @@
 import { getAuthToken } from "@/auth";
 import DashboardContent from "@/components/dashboard/dashboardContent";
-import DashboardFooter from "@/components/dashboard/footer";
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
@@ -14,13 +13,7 @@ async function DashboardPage() {
   );
 
   if (!business) redirect("/onboarding");
-  return (
-    <div className="">
-      <DashboardContent />
-
-      <DashboardFooter />
-    </div>
-  );
+  return <DashboardContent />;
 }
 
 export default DashboardPage;

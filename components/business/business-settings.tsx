@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import Image from 'next/image'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '../ui/button'
-import { PencilIcon } from 'lucide-react'
+import { PencilSimple } from '@phosphor-icons/react'
 import BookingControls from './booking-controls'
 import BusinessHours from './business-hours'
 import { api } from '@/convex/_generated/api'
@@ -34,9 +34,9 @@ function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold md:text-3xl">Business Settings</h1>
-                    <p className="text-sm text-gray-400 max-w-md">
-                        Fine-tune your salon's operational flow, booking rules and visual brand identity to provide the best expirience.
+                    <h1 className="text-2xl font-headline font-bold md:text-3xl">Business Settings</h1>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                        Fine-tune your salon&apos;s operational flow, booking rules and visual brand identity to provide the best experience.
                     </p>
                 </div>
 
@@ -44,41 +44,41 @@ function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
             </div>
 
             <Card className="w-full pt-0 px-0 mt-6 lg:mt-10">
-                <CardHeader className="relative h-64 w-full">
+                <CardHeader className="relative h-40 w-full sm:h-64">
                     <Image src={business.coverImageUrl ?? "/salon-image-placeholder.jpg"} alt="header" fill className="object-cover rounded-t-lg" />
                     <div className="absolute inset-0 bg-linear-to-t from-black z-10 via-transparent to-transparent"></div>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-surface-container/60 p-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-start mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Status</p>
                                 <Switch size="default" id="business-visibility" disabled={isSaving} />
                             </div>
                             <p className="font-headline text-lg font-bold">Public Profile Active</p>
-                            <p className="text-xs text-on-surface-variant">Visible to all clients on explore.</p>
+                            <p className="text-xs text-muted-foreground">Visible to all clients on explore.</p>
                         </div>
 
-                        <div className="bg-surface-container/60 p-6">
+                        <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-center mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Business Description</p>
                                 <Button variant="ghost" size="icon" disabled={isSaving}>
-                                    <PencilIcon className="size-4 text-primary" />
+                                    <PencilSimple className="size-4 text-primary" />
                                 </Button>
                             </div>
-                            <p className="text-xs text-on-surface-variant">{business.description}</p>
+                            <p className="text-xs text-muted-foreground">{business.description}</p>
                         </div>
 
-                        <div className="bg-surface-container/60 p-6">
+                        <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-center mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Verification</p>
                             </div>
                             <div className="mt-3">
                                 <div className="flex justify-between items-center mb-2">
-                                    <p className="text-xs text-on-surface-variant">Progress</p>
-                                    <p className="text-xs font-semibold text-on-surface">{bookingsCount}/{verificationThreshold} bookings</p>
+                                    <p className="text-xs text-muted-foreground">Progress</p>
+                                    <p className="text-xs font-semibold text-foreground">{bookingsCount}/{verificationThreshold} bookings</p>
                                 </div>
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container-high">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-background">
                                     <div
                                         className="h-full rounded-full bg-primary transition-all"
                                         style={{ width: `${verificationPct}%` }}
@@ -89,7 +89,7 @@ function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
                     </div>
                 </CardContent>
             </Card>
-            <div className=' gap-4 w-full mt-6 grid grid-cols-3'>
+            <div className='gap-4 w-full mt-6 grid grid-cols-1 lg:grid-cols-3'>
                 <BusinessHours
                     businessId={business._id}
                     location={business.location}

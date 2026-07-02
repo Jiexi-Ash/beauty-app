@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "../ui/button";
-import { DotIcon, EllipsisVertical, Eye, StickyNote } from "lucide-react";
+import { CalendarX, DotsThreeVertical, Eye, NotePencil } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
@@ -23,7 +23,6 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
 import { AppointmentWithDetails } from "@/convex/business/admin";
 import { Id } from "@/convex/_generated/dataModel";
-import { CalendarX2 } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 
 function UpcomingAppointments() {
@@ -60,20 +59,20 @@ const AppointmentsDesktop = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="w-full grid grid-cols-5 bg-gray-50 py-3 px-2 rounded">
-          <div className="uppercase text-gray-400  text-xs font-semibold">
+        <div className="w-full grid grid-cols-5 bg-muted py-3 px-2 rounded">
+          <div className="uppercase text-muted-foreground  text-xs font-semibold">
             Client
           </div>
-          <div className="uppercase text-gray-400  text-xs font-semibold">
+          <div className="uppercase text-muted-foreground  text-xs font-semibold">
             Service
           </div>
-          <div className="uppercase text-gray-400  text-xs font-semibold">
+          <div className="uppercase text-muted-foreground  text-xs font-semibold">
             Date & Time
           </div>
-          <div className="uppercase text-gray-400  text-xs font-semibold">
+          <div className="uppercase text-muted-foreground  text-xs font-semibold">
             Payment
           </div>
-          <div className="uppercase text-gray-400  text-xs font-semibold">
+          <div className="uppercase text-muted-foreground  text-xs font-semibold">
             Actions
           </div>
         </div>
@@ -97,12 +96,12 @@ const AppointmentsDesktop = ({
                 <div className="flex items-center gap-1">
                   <span className="font-bold text-xs">{a.client.name}</span>
                   {a.notes && (
-                    <StickyNote
-                      className="size-3 text-gray-400 shrink-0"
+                    <NotePencil
+                      className="size-3 text-muted-foreground shrink-0"
                       aria-label="Has a note"
                     >
                       <title>This booking has a note</title>
-                    </StickyNote>
+                    </NotePencil>
                   )}
                 </div>
                 <span className="text-muted-foreground text-xs">
@@ -120,7 +119,7 @@ const AppointmentsDesktop = ({
             </div>
 
             <div className="flex items-center">
-              <PaymentBadge type={a.payment?.type} />
+              <PaymentBadge status={a.payment?.status} type={a.payment?.type} />
             </div>
 
             <AppointmentActions bookingId={a._id} />
@@ -170,24 +169,24 @@ const AppointmentsMobile = ({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center">
                   <span className="font-bold text-xs">{a.client.name}</span>
-                  <DotIcon className="size-4 text-gray-400" />
+                  <span className="mx-1.5 text-muted-foreground" aria-hidden>·</span>
                   <div className="text-muted-foreground text-xs capitalize">
                     <span>{a.service.name}</span>
                   </div>
                   {a.notes && (
-                    <StickyNote
-                      className="size-3 text-gray-400 shrink-0 ml-1"
+                    <NotePencil
+                      className="size-3 text-muted-foreground shrink-0 ml-1"
                       aria-label="Has a note"
                     >
                       <title>This booking has a note</title>
-                    </StickyNote>
+                    </NotePencil>
                   )}
                 </div>
 
-                <span className="text-xs text-gray-400">{formatBookingTime(a.bookingStartDate, a.business.timezone)}</span>
+                <span className="text-xs text-muted-foreground">{formatBookingTime(a.bookingStartDate, a.business.timezone)}</span>
 
                 <div className="flex items-center text-xs">
-                  <PaymentBadge type={a.payment?.type} />
+                  <PaymentBadge status={a.payment?.status} type={a.payment?.type} />
                 </div>
               </div>
             </div>
@@ -204,8 +203,8 @@ const AppointmentsMobile = ({
 const EmptyAppointments = () => {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-gray-50">
-        <CalendarX2 className="size-6 text-gray-400" />
+      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+        <CalendarX className="size-6 text-muted-foreground" />
       </div>
       <p className="text-sm font-semibold">No upcoming appointments</p>
       <p className="max-w-xs text-xs text-muted-foreground">
@@ -271,7 +270,21 @@ const MobileRowsSkeleton = () => {
   );
 };
 
-const PaymentBadge = ({ type }: { type?: "deposit" | "full-payment" }) => {
+const PaymentBadge = ({
+  status,
+  type,
+}: {
+  status?: "pending" | "completed" | "failed" | "refunded" | "cancelled";
+  type?: "deposit" | "full-payment";
+}) => {
+  if (status !== "completed") {
+    return (
+      <Badge className="font-medium text-xs bg-muted text-muted-foreground">
+        Awaiting payment
+      </Badge>
+    );
+  }
+
   const isDeposit = type === "deposit";
   return (
     <Badge
@@ -293,7 +306,7 @@ const AppointmentActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
       <DropdownMenuTrigger
         render={<Button variant="ghost" size="icon" aria-label="Actions" />}
       >
-        <EllipsisVertical className="size-6 text-gray-400" />
+        <DotsThreeVertical className="size-6 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem

@@ -4,13 +4,13 @@ import { Preloaded, usePreloadedQuery } from "convex/react";
 import {
   CalendarCheck,
   Clock,
-  EllipsisVertical,
-  PlusIcon,
+  DotsThreeVertical,
+  Plus,
   Scissors,
   Tag,
-  Trash2,
-  TrendingUp,
-} from "lucide-react";
+  Trash,
+  TrendUp,
+} from "@phosphor-icons/react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -63,7 +63,7 @@ function Services({ preloadedServices }: ServicesProps) {
 
   if (services.length === 0) {
     return (
-      <div className="min-h-screen w-full flex flex-col">
+      <div className="min-h-[60vh] w-full flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center ">
           <Image
             src="/no_data.svg"
@@ -81,14 +81,14 @@ function Services({ preloadedServices }: ServicesProps) {
             </div>
 
             <Button
-              className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6 "
+              className="text-sm cursor-pointer h-10 px-6"
               size="lg"
             >
               <Link
                 href="/dashboard/services/create-service"
                 className="flex items-center gap-2"
               >
-                <PlusIcon className="size-4 text-white" />
+                <Plus className="size-4" />
                 New Service
               </Link>
             </Button>
@@ -99,26 +99,26 @@ function Services({ preloadedServices }: ServicesProps) {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="w-full">
       <div className="px-6 flex flex-col space-y-4 mt-6">
         <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
           <div className="flex flex-col">
             <h2 className="font-bold text-xl md:text-2xl">Services</h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Create and manage your service list, pricing, duration, and
               visibility.
             </p>
           </div>
 
           <Button
-            className="text-sm cursor-pointer hover:bg-primary/70 h-10 px-6"
+            className="text-sm cursor-pointer h-10 px-6"
             size="lg"
           >
             <Link
               href="/dashboard/services/create-service"
               className="flex items-center gap-2"
             >
-              <PlusIcon className="size-4 text-white" />
+              <Plus className="size-4" />
               New Service
             </Link>
           </Button>
@@ -147,7 +147,7 @@ function Services({ preloadedServices }: ServicesProps) {
           <Card className=" border border-border shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                <TrendingUp className="text-green-600 size-4" />
+                <TrendUp className="text-green-600 size-4" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase">
@@ -306,14 +306,14 @@ const ServiceCard = ({
             <VisibilityToggle id={_id} visibility={visibility} />
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <EllipsisVertical className="size-4 text-gray-400" />
+                <DotsThreeVertical className="size-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive border p-2"
                   onClick={() => handleDelete()}
                 >
-                  <Trash2 className="size-4 mr-2" />
+                  <Trash className="size-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -330,7 +330,7 @@ interface ServicesDesktopProps {
 }
 const ServicesDesktop = ({ services }: ServicesDesktopProps) => {
   return (
-    <Card className="hidden lg:block border border-border bg-white shadow-lg ring-1 ring-black/5">
+    <Card className="hidden lg:block shadow-lg">
       <CardContent className="p-0">
         <DataTable columns={columns} data={services} />
       </CardContent>

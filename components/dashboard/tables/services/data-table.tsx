@@ -53,12 +53,12 @@ export function DataTable<TData, TValue>({
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)
           }
-          className="max-w-xs bg-[#F3F3F4] border-none py-5"
+          className="max-w-xs bg-muted border-none py-5"
         />
       </div>
       <div className="overflow-hidden">
         <Table className="w-full border-collapse">
-          <TableHeader className="bg-gray-50 [&_tr]:border-0">
+          <TableHeader className="bg-muted [&_tr]:border-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="bg-gray-50 rounded-none px-6 py-4 h-auto"
+                      className="bg-muted rounded-none px-6 py-4 h-auto"
                     >
                       {header.isPlaceholder
                         ? null

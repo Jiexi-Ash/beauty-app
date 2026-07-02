@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Banknote, CalendarCheck, Star, UserPlus } from "lucide-react";
+import { CalendarCheck, Money, Star, UserPlus } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
@@ -32,7 +32,7 @@ function AnalyticCards() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <StatCard
-        icon={<Banknote className="text-primary" />}
+        icon={<Money className="text-primary" />}
         label="Total Revenue"
         value={`R${revenue.toLocaleString("en-ZA", {
           minimumFractionDigits: 2,
@@ -53,7 +53,7 @@ function AnalyticCards() {
         caption="This month"
       />
       <StatCard
-        icon={<Star className="text-yellow-400" fill="#FFC107" />}
+        icon={<Star className="text-amber-500" weight="fill" />}
         label="Average Rating"
         value={averageRating.toFixed(1)}
         caption={`${reviewCount} ${reviewCount === 1 ? "review" : "reviews"}`}
@@ -73,14 +73,14 @@ interface StatCardProps {
 
 const StatCard = ({ icon, label, value, caption }: StatCardProps) => {
   return (
-    <Card className="w-full flex flex-col bg-white px-4 rounded-lg">
+    <Card className="w-full flex flex-col px-4 rounded-lg">
       <CardTitle>
         <div className="flex justify-between items-center">{icon}</div>
       </CardTitle>
       <CardContent className="p-0">
-        <h2 className="text-xs text-gray-400 font-bold">{label}</h2>
+        <h2 className="text-xs text-muted-foreground font-bold">{label}</h2>
         <h3 className="text-lg font-bold">{value}</h3>
-        <span className="text-[8px] text-gray-400 uppercase">{caption}</span>
+        <span className="text-[8px] text-muted-foreground uppercase">{caption}</span>
       </CardContent>
     </Card>
   );
@@ -88,7 +88,7 @@ const StatCard = ({ icon, label, value, caption }: StatCardProps) => {
 
 const StatCardSkeleton = () => {
   return (
-    <Card className="w-full flex flex-col bg-white px-4 rounded-lg">
+    <Card className="w-full flex flex-col px-4 rounded-lg">
       <CardTitle>
         <div className="flex justify-between items-center">
           <Skeleton className="size-6 rounded-md" />

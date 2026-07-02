@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { ConvexError } from "convex/values";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { MapPin, PencilIcon, X } from "lucide-react";
+import { MapPin, PencilSimple, X } from "@phosphor-icons/react";
 
 interface BusinessAddressProps {
     businessId: Id<"business">;
@@ -84,7 +84,7 @@ export default function BusinessAddress({
 
     if (isEditing) {
         return (
-            <div className="bg-surface-container/60 p-6 rounded-xl space-y-3">
+            <div className="bg-muted p-6 rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-primary">Business Address</p>
                     <Button
@@ -105,17 +105,17 @@ export default function BusinessAddress({
                         setQuery(e.target.value);
                         handleSearch(e.target.value);
                     }}
-                    className="bg-white"
+                    className="bg-background"
                 />
                 {suggestions.length > 0 && (
-                    <ul className="rounded-lg border border-border bg-white">
+                    <ul className="rounded-lg border border-border bg-card">
                         {suggestions.map((s) => (
                             <li key={s.placeId}>
                                 <button
                                     type="button"
                                     disabled={isPending}
                                     onClick={() => handleSelect(s)}
-                                    className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 disabled:opacity-50"
+                                    className="w-full px-3 py-2 text-left text-xs hover:bg-muted disabled:opacity-50"
                                 >
                                     {s.description}
                                 </button>
@@ -131,7 +131,7 @@ export default function BusinessAddress({
     }
 
     return (
-        <div className="bg-surface-container/60 flex items-start justify-between p-6 rounded-xl">
+        <div className="bg-muted flex items-start justify-between p-6 rounded-xl">
             <div className="flex gap-3 items-start">
                 <MapPin className="size-5 text-primary" />
                 <div className="space-y-1">
@@ -146,7 +146,7 @@ export default function BusinessAddress({
                 onClick={() => setIsEditing(true)}
                 disabled={isSaving}
             >
-                <PencilIcon className="size-4 text-primary" />
+                <PencilSimple className="size-4 text-primary" />
             </Button>
         </div>
     );

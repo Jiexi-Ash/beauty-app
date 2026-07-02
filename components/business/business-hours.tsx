@@ -14,7 +14,7 @@ import { Button } from "../ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
-import { ClockIcon, PencilIcon, SaveIcon } from "lucide-react";
+import { Clock, FloppyDisk, PencilSimple } from "@phosphor-icons/react";
 import BusinessAddress from "./business-address";
 
 type DayState = {
@@ -105,10 +105,10 @@ export default function BusinessHours({
         <Card className="col-span-1">
             <CardHeader>
                 <CardTitle>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary">
-                                <ClockIcon className="size-5 text-primary" />
+                                <Clock className="size-5 text-primary" />
                             </div>
                             <p className="font-headline text-lg font-bold">Business Hours</p>
                         </div>
@@ -124,7 +124,7 @@ export default function BusinessHours({
                                         Cancel
                                     </Button>
                                     <Button onClick={handleSave} disabled={isPending}>
-                                        <SaveIcon className="size-4 text-white ml-1" />
+                                        <FloppyDisk className="size-4 text-primary-foreground ml-1" />
                                         {isPending ? "Saving..." : "Save"}
                                     </Button>
                                 </>
@@ -135,7 +135,7 @@ export default function BusinessHours({
                                     onClick={startEditing}
                                     disabled={isSaving}
                                 >
-                                    <PencilIcon className="size-4 text-primary" />
+                                    <PencilSimple className="size-4 text-primary" />
                                     Edit
                                 </Button>
                             )}
@@ -149,7 +149,7 @@ export default function BusinessHours({
                         {days.map((day, index) => (
                             <div
                                 key={day.fullName}
-                                className="flex items-center justify-between gap-2"
+                                className="flex flex-wrap items-center justify-between gap-2"
                             >
                                 <div className="flex items-center gap-2">
                                     <Switch
@@ -173,7 +173,7 @@ export default function BusinessHours({
                                             onChange={(e) =>
                                                 updateDay(index, { openTime: e.target.value })
                                             }
-                                            className="h-8 w-28 bg-white"
+                                            className="h-8 w-24 sm:w-28 bg-background"
                                         />
                                         <span className="text-muted-foreground">-</span>
                                         <Input
@@ -183,7 +183,7 @@ export default function BusinessHours({
                                             onChange={(e) =>
                                                 updateDay(index, { closeTime: e.target.value })
                                             }
-                                            className="h-8 w-28 bg-white"
+                                            className="h-8 w-24 sm:w-28 bg-background"
                                         />
                                     </div>
                                 )}
@@ -199,7 +199,7 @@ export default function BusinessHours({
                             >
                                 <span className="font-medium">{day.fullName}</span>
                                 {day.isClosed ? (
-                                    <Badge className="bg-primary/40">Closed</Badge>
+                                    <Badge className="bg-muted text-muted-foreground">Closed</Badge>
                                 ) : (
                                     <span className="text-muted-foreground">
                                         {day.openTime} - {day.closeTime}

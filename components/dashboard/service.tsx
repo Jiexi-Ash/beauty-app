@@ -2,7 +2,7 @@
 
 import { api } from "@/convex/_generated/api";
 import { Preloaded, usePreloadedQuery } from "convex/react";
-import { ArrowLeft, Bell, CameraIcon, Loader2, X } from "lucide-react";
+import { ArrowLeft, Camera, CircleNotch, X } from "@phosphor-icons/react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
@@ -107,7 +107,7 @@ function GalleryImageSlot({
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="relative aspect-square bg-[#F3F3F4] rounded-lg flex items-center justify-center overflow-hidden group">
+    <div className="relative aspect-square bg-muted rounded-lg flex items-center justify-center overflow-hidden group">
       <input
         ref={inputRef}
         type="file"
@@ -146,7 +146,7 @@ function GalleryImageSlot({
           onClick={() => inputRef.current?.click()}
           className="flex flex-col items-center justify-center w-full h-full"
         >
-          <CameraIcon className="size-5 text-muted-foreground" />
+          <Camera className="size-5 text-muted-foreground" />
         </button>
       )}
     </div>
@@ -414,25 +414,6 @@ function DashboardServiceForm({
 
   return (
     <div className="min-h-screen w-full">
-      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-        <div className="flex gap-3 items-center h-20">
-          <div className="relative w-12 h-12 rounded-full">
-            <Image
-              src={"/salon-image-placeholder.jpg"}
-              alt="Business cover image"
-              fill
-              className="rounded-full object-cover"
-            />
-          </div>
-          <h1 className="text-base text-primary font-bold">
-            {"Katlego's nail Bar"}
-          </h1>
-        </div>
-        <div className="flex gap-4 items-center">
-          <Bell className="size-6 text-gray-100" fill="#9CA3AF" />
-        </div>
-      </header>
-
       <div className="space-y-6 px-6 pt-4 pb-6">
         <div>
           <h1 className="text-2xl font-bold">Edit Service</h1>
@@ -476,7 +457,7 @@ function DashboardServiceForm({
                         ref={fileInputRef}
                         onChange={(e) => handleSelectPrimaryImage(e, field)}
                       />
-                      <div className="relative w-2/3 aspect-4/3 bg-white rounded-lg shadow-lg overflow-hidden">
+                      <div className="relative w-2/3 aspect-4/3 bg-card rounded-lg shadow-lg overflow-hidden">
                         <Image
                           src={
                             serviceImage ??
@@ -491,18 +472,15 @@ function DashboardServiceForm({
                           className={cn(
                             "group absolute flex flex-col gap-2 items-center justify-center inset-0 z-10 rounded cursor-pointer duration-200 ease-in-out",
                             (serviceImage ?? service?.image)
-                              ? "bg-transparent hover:bg-white/60"
-                              : "bg-white/60",
+                              ? "bg-transparent hover:bg-background/60"
+                              : "bg-background/60",
                           )}
                           onClick={() => fileInputRef.current?.click()}
                         >
                           <div className="bg-secondary w-14 h-14 rounded-full flex justify-center items-center">
-                            <CameraIcon
-                              fill="#EB3368"
-                              className="size-8 text-white"
-                            />
+                            <Camera weight="fill" className="size-8 text-primary" />
                           </div>
-                          <span className="text-black font-bold">
+                          <span className="text-foreground font-bold">
                             {(serviceImage ?? service?.image)
                               ? "Change Service image"
                               : "Upload Service Image"}
@@ -563,7 +541,7 @@ function DashboardServiceForm({
                       aria-invalid={isInvalid}
                       placeholder="Box braids"
                       autoComplete="off"
-                      className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm border-none"
+                      className="h-9 bg-muted placeholder:text-sm rounded-sm border-none"
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
@@ -588,7 +566,7 @@ function DashboardServiceForm({
                         <SelectTrigger
                           id={field.name}
                           onBlur={field.handleBlur}
-                          className="h-9 bg-[#F3F3F4] rounded-sm border-none"
+                          className="h-9 bg-muted rounded-sm border-none"
                         >
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -619,7 +597,7 @@ function DashboardServiceForm({
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Price (R)</FieldLabel>
-                      <div className="flex gap-0.5 items-center bg-[#F3F3F4] rounded-sm pl-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                      <div className="flex gap-0.5 items-center bg-muted rounded-sm pl-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                         <div className="font-semibold text-primary">R</div>
                         <Input
                           id={field.name}
@@ -638,7 +616,7 @@ function DashboardServiceForm({
                           aria-invalid={isInvalid}
                           placeholder="0.00"
                           type="number"
-                          className="h-9 placeholder:text-sm border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500"
+                          className="h-9 placeholder:text-sm border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
                         />
                       </div>
                       {isInvalid && (
@@ -668,7 +646,7 @@ function DashboardServiceForm({
                       <SelectTrigger
                         id={field.name}
                         onBlur={field.handleBlur}
-                        className="h-9 bg-[#F3F3F4] rounded-sm border-none"
+                        className="h-9 bg-muted rounded-sm border-none"
                       >
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
@@ -704,7 +682,7 @@ function DashboardServiceForm({
                         onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="This can be a brief information about the service"
                         rows={6}
-                        className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm border-none min-h-24"
+                        className="h-9 bg-muted placeholder:text-sm rounded-sm border-none min-h-24"
                         aria-invalid={isInvalid}
                       />
                     </InputGroup>
@@ -724,7 +702,7 @@ function DashboardServiceForm({
         </form>
       </div>
 
-      <footer className="sticky bottom-0 bg-white z-50 border-t border-border p-6">
+      <footer className="sticky bottom-0 bg-background z-50 border-t border-border p-6">
         <div className="flex gap-3 md:justify-end">
           <Button
             variant="secondary"
@@ -744,7 +722,7 @@ function DashboardServiceForm({
             disabled={isSubmiting}
           >
             {isSubmiting ? (
-              <Loader2 className="text-white animate-spin size-4" />
+              <CircleNotch className="text-primary-foreground animate-spin size-4" />
             ) : (
               "Save Service"
             )}

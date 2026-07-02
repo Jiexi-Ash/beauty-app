@@ -30,7 +30,7 @@ import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ConvexError } from "convex/values";
-import { ArrowLeft, Bell, CameraIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, CircleNotch } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -97,15 +97,6 @@ export default DashboardCreateServicePage;
 export function CreateServiceSkeleton() {
   return (
     <div className="min-h-screen w-full">
-      {/* Header */}
-      <header className="flex w-full justify-between items-center top-0 sticky lg:border-b border-border shadow-sm px-6 z-50 bg-white">
-        <div className="flex gap-3 items-center h-20">
-          <Skeleton className="w-12 h-12 rounded-full" />
-          <Skeleton className="h-4 w-36" />
-        </div>
-        <Skeleton className="h-6 w-6 rounded-full" />
-      </header>
-
       <div className="space-y-6 px-6 pt-4 pb-6">
         {/* Title */}
         <div className="space-y-2">
@@ -154,7 +145,7 @@ export function CreateServiceSkeleton() {
       </div>
 
       {/* Footer */}
-      <footer className="sticky bottom-0 bg-white z-50 border-t border-border p-6">
+      <footer className="sticky bottom-0 bg-background z-50 border-t border-border p-6">
         <div className="flex gap-3 md:justify-end">
           <Skeleton className="flex-1 md:flex-none h-12 w-32 rounded-full" />
           <Skeleton className="flex-1 md:flex-none h-12 w-36 rounded-full" />
@@ -350,7 +341,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                       onChange={(e) => handleSelectImage(e, field)}
                     />
 
-                    <div className="relative w-2/3 aspect-4/3 bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="relative w-2/3 aspect-4/3 bg-card rounded-lg shadow-lg overflow-hidden">
                       <Image
                         src={serviceImage ?? "/salon-image-placeholder.jpg"}
                         fill
@@ -361,18 +352,15 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                         className={cn(
                           "group absolute flex flex-col gap-2 items-center justify-center inset-0 z-10  rounded cursor-pointer duration-200 ease-in-out",
                           serviceImage
-                            ? "bg-transparent hover:bg-white/60"
-                            : "bg-white/60",
+                            ? "bg-transparent hover:bg-background/60"
+                            : "bg-background/60",
                         )}
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <div className="bg-secondary w-14 h-14 rounded-full flex justify-center items-center">
-                          <CameraIcon
-                            fill="#EB3368"
-                            className="size-8 text-white"
-                          />
+                          <Camera weight="fill" className="size-8 text-primary" />
                         </div>
-                        <span className="text-black font-bold">
+                        <span className="text-foreground font-bold">
                           {serviceImage
                             ? "Change Service image"
                             : "Upload Service Image"}
@@ -402,7 +390,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                       placeholder="Box braids"
                       autoComplete="off"
                       className={cn(
-                        "h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm border-none",
+                        "h-9 bg-muted placeholder:text-sm rounded-sm border-none",
                       )}
                     />
                     {isInvalid && (
@@ -428,7 +416,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                         <SelectTrigger
                           id={field.name}
                           onBlur={field.handleBlur}
-                          className="h-9 bg-[#F3F3F4] rounded-sm border-none"
+                          className="h-9 bg-muted rounded-sm border-none"
                         >
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -459,7 +447,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Price (R)</FieldLabel>
-                      <div className="flex gap-0.5 items-center bg-[#F3F3F4] rounded-sm pl-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                      <div className="flex gap-0.5 items-center bg-muted rounded-sm pl-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                         <div className="font-semibold text-primary">R</div>
                         <Input
                           id={field.name}
@@ -479,7 +467,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                           placeholder="0.00"
                           type="number"
                           className={cn(
-                            "h-9 placeholder:text-sm  border-none bg-transparent  focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500",
+                            "h-9 placeholder:text-sm  border-none bg-transparent  focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground",
                           )}
                         />
                       </div>
@@ -509,7 +497,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                       <SelectTrigger
                         id={field.name}
                         onBlur={field.handleBlur}
-                        className="h-9 bg-[#F3F3F4] rounded-sm border-none"
+                        className="h-9 bg-muted rounded-sm border-none"
                       >
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
@@ -546,7 +534,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
                         placeholder="This can be a brief information about the service"
                         rows={6}
                         className={cn(
-                          "h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm border-none min-h-24",
+                          "h-9 bg-muted placeholder:text-sm rounded-sm border-none min-h-24",
                         )}
                         aria-invalid={isInvalid}
                       />
@@ -566,7 +554,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
           </FieldGroup>
         </form>
       </div>
-      <footer className="sticky bottom-0 bg-white z-50 border-t border-border p-6">
+      <footer className="sticky bottom-0 bg-background z-50 border-t border-border p-6">
         <div className="flex gap-3 md:justify-end">
           <Button
             variant="secondary"
@@ -586,7 +574,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
             disabled={isSubmiting}
           >
             {isSubmiting ? (
-              <Loader2 className="text-white animate-spin size-4" />
+              <CircleNotch className="text-primary-foreground animate-spin size-4" />
             ) : (
               "Save Service"
             )}
