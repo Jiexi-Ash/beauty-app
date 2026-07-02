@@ -100,6 +100,47 @@ export const updateUserPhoneNumber = mutation({
   },
 });
 
+export const addAppointmentReview = mutation({
+  args: {
+    bookingId: v.id("booking"),
+    rating: v.number(),
+    comment: v.optional(v.string())
+  },
+  handler: async (ctx, { bookingId, rating, comment }) => {
+    const user = await getCurrentUserOrThrow(ctx)
+
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new ConvexError("Rating must be a whole number between 1 and 5.");
+
+    if (comment && comment.length > 300) throw new ConvexError("Only a maximum of 300 characters allow on a review")
+
+
+    const booking = await ctx.db.get(bookingId)
+
+    if (!booking) throw new ConvexError("Review could not be created. Appointment not found.")
+
+    if (booking.userId !== user._id) throw new ConvexError("You can only review your own appointments.");
+
+
+    if (booking.status !== "completed") throw new ConvexError("You can only add a review to a completed appointment.")
+
+    const existingReview = await ctx.db.query("reviews").withIndex("by_booking", q => q.eq("bookingId", bookingId)).unique()
+
+    if (existingReview) throw new ConvexError("Only one review per booking can be created.")
+
+
+    await ctx.db.insert("reviews", {
+      businessId: booking.businessId,
+      serviceId: booking.serviceId,
+      userId: user._id,
+      bookingId,
+      rating,
+      comment
+
+    })
+  }
+})
+
 export const toggleFavorites = mutation({
   args: {
     businessId: v.id("business"),

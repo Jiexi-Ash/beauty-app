@@ -494,9 +494,21 @@ export const getDashboardAnalytics = query({
 
     const revenueRands = revenueCents / 100
 
+    // lifetime review stats, not scoped to this month
+    const businessReviews = await ctx.db
+      .query("reviews")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .collect();
+
+    const averageReviews =
+      businessReviews.length > 0
+        ? businessReviews.reduce((sum, r) => sum + r.rating, 0) /
+          businessReviews.length
+        : 0;
+
     return {
       revenue: revenueRands,
-      reviews: { averageReviews: 0, count: 0 },
+      reviews: { averageReviews, count: businessReviews.length },
       totalBookings: totalBookings.length,
       uniqueClients: uniqueClientCount,
 

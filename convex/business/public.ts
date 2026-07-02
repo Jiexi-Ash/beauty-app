@@ -79,7 +79,41 @@ export const getBusinessBySlug = query({
 
     const isFavorite = user ? await ctx.db.query("favorites").withIndex("by_user_and_business", q => q.eq("userId", user._id).eq("businessId", business._id)).unique() : null
 
-    return { ...business, businessCoverImage, services, isFavorite: !!isFavorite };
+    const businessReviews = await ctx.db
+      .query("reviews")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .order("desc")
+      .take(50);
+
+    const reviews = await Promise.all(
+      businessReviews.map(async (review) => {
+        const reviewer = await ctx.db.get(review.userId);
+        return {
+          _id: review._id,
+          _creationTime: review._creationTime,
+          rating: review.rating,
+          comment: review.comment,
+          reviewerName: reviewer?.fullname ?? "Anonymous",
+          reviewerImage: reviewer?.image ?? null,
+        };
+      }),
+    );
+
+    const averageRating =
+      businessReviews.length > 0
+        ? businessReviews.reduce((sum, r) => sum + r.rating, 0) /
+          businessReviews.length
+        : 0;
+
+    return {
+      ...business,
+      businessCoverImage,
+      services,
+      isFavorite: !!isFavorite,
+      reviews,
+      averageRating,
+      reviewCount: businessReviews.length,
+    };
   },
 });
 

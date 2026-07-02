@@ -16,15 +16,17 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Check, CaretLeft, CaretRight, CheckCircle, DotsThreeVertical, Warning, X } from '@phosphor-icons/react'
+import { Check, CaretLeft, CaretRight, CheckCircle, DotsThreeVertical, Star, Warning, X } from '@phosphor-icons/react'
 import { useSearchParams } from 'next/navigation'
 import { Preloaded, useAction, usePreloadedQuery, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
+import { Textarea } from './ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { format, isSameDay } from 'date-fns'
 import Image from 'next/image'
@@ -92,6 +94,10 @@ type Booking = {
         timezone: string
         coverImageUrl: string | null
     } | null
+    review?: {
+        rating: number
+        comment?: string
+    } | null
 }
 
 type BookingCardVariant = "upcoming" | "completed" | "cancelled"
@@ -104,6 +110,7 @@ interface BookingCardProps {
 function BookingCard({ booking, variant }: BookingCardProps) {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
+    const [reviewOpen, setReviewOpen] = useState(false);
 
     const { mutate: cancelBooking } = useMutation({
         mutationFn: useConvexMutation(api.booking.user.cancelBooking),
@@ -128,6 +135,7 @@ function BookingCard({ booking, variant }: BookingCardProps) {
     const showDuration = variant === "upcoming"
     const showDropdown = variant === "upcoming"
     const showRebook = variant === "completed"
+    const showReview = variant === "completed"
 
     const durationLabel = (() => {
         if (!showDuration) return null
@@ -176,8 +184,37 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                         </DropdownMenu>
                     )}
 
-                    {showRebook && (
-                        <Button className="text-primary shrink-0" variant="ghost">Rebook</Button>
+                    {(showRebook || showReview) && (
+                        <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                            {showReview && (
+                                booking.review ? (
+                                    <div className="flex items-center gap-0.5" title={`You rated this ${booking.review.rating} out of 5`}>
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                weight="fill"
+                                                className={cn(
+                                                    "size-3.5",
+                                                    i < booking.review!.rating ? "text-amber-500" : "text-muted-foreground/25",
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Button
+                                        className="text-primary"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setReviewOpen(true)}
+                                    >
+                                        Leave a review
+                                    </Button>
+                                )
+                            )}
+                            {showRebook && (
+                                <Button className="text-primary" variant="ghost" size="sm">Rebook</Button>
+                            )}
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -211,6 +248,14 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                 onOpenChange={setRescheduleOpen}
                 booking={booking}
             />
+
+            {showReview && (
+                <ReviewDialog
+                    open={reviewOpen}
+                    onOpenChange={setReviewOpen}
+                    booking={booking}
+                />
+            )}
 
         </>
     )
@@ -488,6 +533,135 @@ function RescheduleBookingModal({ open, onOpenChange, booking }: RescheduleBooki
                 </div>
             </DialogContent>
         </Dialog>
+    )
+}
+
+interface ReviewDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    booking: Booking
+}
+
+function ReviewDialog({ open, onOpenChange, booking }: ReviewDialogProps) {
+    const [rating, setRating] = useState(0)
+    const [hoverRating, setHoverRating] = useState(0)
+    const [comment, setComment] = useState("")
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+    const { mutate: submitReview, isPending } = useMutation({
+        mutationFn: useConvexMutation(api.users.addAppointmentReview),
+        onSuccess: () => {
+            toast.success("Review submitted. Thanks for the feedback!")
+            onOpenChange(false)
+            setRating(0)
+            setComment("")
+        },
+        onError: (error) => {
+            if (error instanceof ConvexError) {
+                setErrorMessage((error.data as string) || "Your review could not be submitted.")
+            } else if (error instanceof Error) {
+                setErrorMessage(error.message)
+            } else {
+                setErrorMessage("Your review could not be submitted.")
+            }
+        },
+    })
+
+    const handleSubmit = () => {
+        if (rating < 1) return
+        submitReview({ bookingId: booking._id, rating, comment: comment.trim() || undefined })
+    }
+
+    return (
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline font-bold">Leave a review</DialogTitle>
+                        <DialogDescription>
+                            How was your <span className="font-bold capitalize">{booking.service?.name}</span> appointment at{" "}
+                            <span className="font-bold text-primary">{booking.business?.name}</span>?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-1.5" role="radiogroup" aria-label="Rating">
+                            {Array.from({ length: 5 }).map((_, i) => {
+                                const value = i + 1
+                                const filled = value <= (hoverRating || rating)
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-label={`${value} star${value > 1 ? "s" : ""}`}
+                                        aria-pressed={rating === value}
+                                        onClick={() => setRating(value)}
+                                        onMouseEnter={() => setHoverRating(value)}
+                                        onMouseLeave={() => setHoverRating(0)}
+                                        disabled={isPending}
+                                        className="p-1 transition-transform hover:scale-110 disabled:pointer-events-none"
+                                    >
+                                        <Star
+                                            weight={filled ? "fill" : "regular"}
+                                            className={cn("size-8", filled ? "text-amber-500" : "text-muted-foreground/40")}
+                                        />
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Textarea
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value.slice(0, 300))}
+                                placeholder="Share a few words about your experience (optional)"
+                                disabled={isPending}
+                                maxLength={300}
+                                className="min-h-24"
+                            />
+                            <p className="text-right text-xs text-muted-foreground">{comment.length}/300</p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            disabled={isPending}
+                            size="lg"
+                            className="rounded-full"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={rating < 1 || isPending}
+                            size="lg"
+                            className="rounded-full active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                        >
+                            {isPending ? "Submitting..." : "Submit review"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog open={!!errorMessage} onOpenChange={(next) => !next && setErrorMessage(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <Warning className="size-8 text-destructive shrink-0 text-center w-full" />
+                        <AlertDialogTitle className="w-full text-center font-headline">Could not submit review</AlertDialogTitle>
+                        <AlertDialogDescription className="w-full text-center">
+                            {errorMessage}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="lg:justify-center">
+                        <AlertDialogAction onClick={() => setErrorMessage(null)} className="rounded-full">
+                            OK
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
 

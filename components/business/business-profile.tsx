@@ -14,47 +14,14 @@ import { useMutation } from "@tanstack/react-query"
 import { useConvexMutation } from "@convex-dev/react-query"
 import { ConvexError } from "convex/values"
 import { toast } from "sonner"
+import { formatDistanceToNow } from "date-fns"
+import { getInitials } from "@/lib/utils"
 
 
 type Service = Doc<"service"> & {
   primaryImage: string | null
   imageGallery: { _id: Id<"serviceImages">; url: string | null }[]
 }
-
-const DUMMY_REVIEWS = [
-  {
-    id: "r1",
-    name: "Thando M.",
-    avatar: "T",
-    rating: 5,
-    date: "2 weeks ago",
-    comment: "Absolutely loved my box braids. The stylist was professional and the salon was clean and welcoming. Will definitely be coming back.",
-  },
-  {
-    id: "r2",
-    name: "Kefilwe D.",
-    avatar: "K",
-    rating: 4,
-    date: "1 month ago",
-    comment: "Great service overall. My knotless braids came out beautiful. Only took a little longer than expected but worth every minute.",
-  },
-  {
-    id: "r3",
-    name: "Naledi P.",
-    avatar: "N",
-    rating: 5,
-    date: "1 month ago",
-    comment: "Best salon experience I've had in Joburg. The gel manicure lasted over 3 weeks with no chipping. Highly recommend.",
-  },
-  {
-    id: "r4",
-    name: "Ayanda S.",
-    avatar: "A",
-    rating: 5,
-    date: "2 months ago",
-    comment: "Always leave here feeling like a queen. The atmosphere is amazing and the team really knows their craft.",
-  },
-]
 
 interface BusinessProfileProps {
   preloadedBusiness: Preloaded<typeof api.business.public.getBusinessBySlug>
@@ -101,12 +68,22 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
           <div className="flex items-end justify-between">
             <div className="space-y-0.5">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{business.name}</h1>
-              {business.city && (
-                <div className="flex items-center gap-1 text-gray-500">
-                  <MapPin className="size-3.5 md:size-4 text-primary" weight="fill" />
-                  <span className="text-xs md:text-sm">{business.city}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {business.reviewCount > 0 && (
+                  <div className="flex items-center gap-1 text-gray-700">
+                    <Star className="size-3.5 md:size-4 text-amber-400" weight="fill" />
+                    <span className="text-xs md:text-sm font-semibold">{business.averageRating.toFixed(1)}</span>
+                    <span className="text-xs md:text-sm text-gray-500">({business.reviewCount})</span>
+                  </div>
+                )}
+                {business.city && (
+                  <div className="flex items-center gap-1 text-gray-500">
+                    {business.reviewCount > 0 && <span className="text-gray-400">&bull;</span>}
+                    <MapPin className="size-3.5 md:size-4 text-primary" weight="fill" />
+                    <span className="text-xs md:text-sm">{business.city}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -164,13 +141,23 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
             <div className="space-y-4 pb-10">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg md:text-xl font-bold">Reviews</h3>
-                <span className="text-sm text-muted-foreground">({DUMMY_REVIEWS.length})</span>
+                <span className="text-sm text-muted-foreground">({business.reviewCount})</span>
+                {business.reviewCount > 0 && (
+                  <div className="flex items-center gap-1 ml-1">
+                    <Star className="size-3.5 text-amber-400" weight="fill" />
+                    <span className="text-sm font-semibold">{business.averageRating.toFixed(1)}</span>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {DUMMY_REVIEWS.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
-              </div>
+              {business.reviews.length === 0 ? (
+                <p className="text-sm text-gray-400">No reviews yet. Be the first to book and share your experience.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {business.reviews.map((review) => (
+                    <ReviewCard key={review._id} review={review} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -418,7 +405,14 @@ function ServiceDetailDialog({
 }
 
 
-type Review = (typeof DUMMY_REVIEWS)[number]
+type Review = {
+  _id: string
+  _creationTime: number
+  rating: number
+  comment?: string
+  reviewerName: string
+  reviewerImage: string | null
+}
 
 function ReviewCard({ review }: { review: Review }) {
   return (
@@ -427,14 +421,20 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex items-center gap-2.5">
           {/* Squircle avatar */}
           <div
-            className="w-9 h-9 bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0"
+            className="relative w-9 h-9 bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
             style={{ borderRadius: "30%" }}
           >
-            {review.avatar}
+            {review.reviewerImage ? (
+              <Image src={review.reviewerImage} alt={review.reviewerName} fill className="object-cover" />
+            ) : (
+              getInitials(review.reviewerName)
+            )}
           </div>
           <div>
-            <p className="text-sm font-semibold">{review.name}</p>
-            <p className="text-[10px] text-muted-foreground">{review.date}</p>
+            <p className="text-sm font-semibold">{review.reviewerName}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {formatDistanceToNow(review._creationTime, { addSuffix: true })}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-0.5">
@@ -443,7 +443,9 @@ function ReviewCard({ review }: { review: Review }) {
           ))}
         </div>
       </div>
-      <p className="text-xs text-gray-500 leading-relaxed">{review.comment}</p>
+      {review.comment && (
+        <p className="text-xs text-gray-500 leading-relaxed">{review.comment}</p>
+      )}
     </div>
   )
 }

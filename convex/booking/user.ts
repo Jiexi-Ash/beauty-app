@@ -16,11 +16,22 @@ export const getUserBookings = query({
 
     const bookingWithServiceInfo = await Promise.all(
       bookings.map(async (booking) => {
+        const review =
+          booking.status === "completed"
+            ? await ctx.db
+                .query("reviews")
+                .withIndex("by_booking", (q) => q.eq("bookingId", booking._id))
+                .unique()
+            : null;
+        const reviewInfo = review
+          ? { rating: review.rating, comment: review.comment }
+          : null;
+
         const service = await ctx.db.get(booking.serviceId);
         const business = await ctx.db.get(booking.businessId);
 
         if (!service || !business)
-          return { ...booking, service: null, business: null };
+          return { ...booking, service: null, business: null, review: reviewInfo };
 
         const serviceImage = await ctx.storage.getUrl(
           service.primaryImageStorageId,
@@ -39,6 +50,7 @@ export const getUserBookings = query({
             timezone: business.timezone,
             coverImageUrl: businessImage,
           },
+          review: reviewInfo,
         };
       }),
     );

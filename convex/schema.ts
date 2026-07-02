@@ -192,6 +192,18 @@ export default defineSchema({
     subAccountCode: v.optional(v.string()),
     paystackId: v.optional(v.number()),
   }).index("by_business", ["businessId"]),
+
+  reviews: defineTable({
+    bookingId: v.id("booking"),
+    businessId: v.id("business"),
+    serviceId: v.id("service"),
+    userId: v.id("users"),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+  })
+    .index("by_business", ["businessId"])
+    .index("by_service", ["serviceId"])
+    .index("by_booking", ["bookingId"]),
 });
 
 export const businessDayValidator = v.object({
