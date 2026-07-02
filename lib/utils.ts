@@ -78,3 +78,33 @@ export const formatZar = (cents: number) => {
     maximumFractionDigits: 2,
   })}`;
 };
+
+export const getBookingStatusBadge = (
+  status: string,
+): { label: string; className: string } => {
+  switch (status) {
+    case "upcoming":
+      return { label: "Upcoming", className: "bg-blue-400/20 text-blue-600" };
+    case "in_progress":
+      return {
+        label: "In progress",
+        className: "bg-amber-400/20 text-amber-600",
+      };
+    case "completed":
+      return { label: "Completed", className: "bg-green-400/25 text-green-600" };
+    case "pending":
+      return { label: "Pending", className: "bg-muted text-muted-foreground" };
+    case "cancelled_by_user":
+    case "cancelled_by_business":
+    case "cancelled_by_payment_failed":
+      return {
+        label: "Cancelled",
+        className: "bg-destructive/10 text-destructive",
+      };
+    default:
+      return {
+        label: status.replace(/_/g, " "),
+        className: "bg-muted text-muted-foreground",
+      };
+  }
+};

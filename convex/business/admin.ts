@@ -558,12 +558,44 @@ export type UserBusinessResult = {
   coverImageUrl: string | null;
 } & Doc<"business"> | null
 
+export const getAllBookings = query({
+  handler: async (ctx): Promise<AppointmentWithDetails[]> => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
 
-/**
- * Top-performing services for the business this month, ranked by number of
- * bookings (statuses that count as real demand). Returns up to `limit`
- * services with their booking counts, plus the total bookings considered.
- */
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) return [];
+
+    const bookings = await ctx.db
+      .query("booking")
+      .withIndex("by_business_and_date", (q) =>
+        q.eq("businessId", business._id),
+      )
+      .order("desc")
+      .collect();
+
+    const bookingsWithDetails = await Promise.all(
+      bookings.map(async (booking) => {
+        const client = await ctx.db.get(booking.userId);
+        const service = await ctx.db.get(booking.serviceId);
+        const payment = booking.bookingPaymentId
+          ? await ctx.db.get(booking.bookingPaymentId)
+          : null;
+
+        return {
+          ...booking,
+          client: { name: client?.fullname, avatar: client?.image, email: client?.email },
+          service: { _id: service?._id, name: service?.name, duration: service?.duration },
+          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
+          business: { timezone: business.timezone },
+        };
+      }),
+    );
+
+    return bookingsWithDetails;
+  },
+});
+
 export const getServiceHighlights = query({
   args: {
     limit: v.optional(v.number()),
@@ -621,13 +653,6 @@ export const getServiceHighlights = query({
   },
 });
 
-
-/**
- * Client roster for the business: every user who has a real booking (upcoming,
- * in_progress or completed), with their total bookings, total net revenue
- * (denormalized merchantAmount of completed payments) and last visit (most
- * recent completed booking). Sorted by most recent activity.
- */
 export const getClients = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
@@ -760,11 +785,6 @@ export const updateBusinessHours = mutation({
   },
 });
 
-
-/**
- * Updates a business's address. Re-geocodes the selected place to refresh
- * coordinates and city, then persists via an internal mutation.
- */
 export const updateBusinessAddress = action({
   args: {
     businessId: v.id("business"),
