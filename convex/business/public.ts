@@ -1,33 +1,72 @@
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { query, QueryCtx } from "../_generated/server";
+import { Id } from "../_generated/dataModel";
 import { startOfDay, endOfDay, format, isSameDay } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { filter } from "convex-helpers/server/filter";
 import { getCurrentUser } from "../users";
 
+async function getBusinessRatingSummary(
+  ctx: QueryCtx,
+  businessId: Id<"business">,
+) {
+  const reviews = await ctx.db
+    .query("reviews")
+    .withIndex("by_business", (q) => q.eq("businessId", businessId))
+    .collect();
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+  return { averageRating, reviewCount: reviews.length };
+}
+
 export const getBusinesses = query({
   args: {
     limit: v.optional(v.number()),
+    sortByRating: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 6;
+    // When ranking by rating, pull a wider pool first so the top N by rating
+    // isn't just the first N businesses in arbitrary storage order.
+    const fetchLimit = args.sortByRating ? 50 : limit;
     const businesses = await ctx.db
       .query("business")
       .withIndex("by_visibility", (q) => q.eq("visibility", "visible"))
-      .take(limit);
+      .take(fetchLimit);
 
-    return Promise.all(
-      businesses.map(async (business) => ({
-        _id: business._id,
-        name: business.name,
-        location: business.location,
-        city: business.city,
-        tags: business.tags,
-        slug: business.slug,
-        coverImageUrl:
-          (await ctx.storage.getUrl(business.coverImageStorageId)) ?? null,
-      })),
+    const withRatings = await Promise.all(
+      businesses.map(async (business) => {
+        const { averageRating, reviewCount } = await getBusinessRatingSummary(
+          ctx,
+          business._id,
+        );
+        return {
+          _id: business._id,
+          name: business.name,
+          location: business.location,
+          city: business.city,
+          tags: business.tags,
+          slug: business.slug,
+          coverImageUrl:
+            (await ctx.storage.getUrl(business.coverImageStorageId)) ?? null,
+          averageRating,
+          reviewCount,
+        };
+      }),
     );
+
+    if (!args.sortByRating) return withRatings;
+
+    return withRatings
+      .sort(
+        (a, b) =>
+          b.averageRating - a.averageRating || b.reviewCount - a.reviewCount,
+      )
+      .slice(0, limit);
   },
 });
 
@@ -134,12 +173,20 @@ export const searchBusinessByQuery = query({
         .take(20);
 
       return Promise.all(
-        businesses.map(async (business) => ({
-          ...business,
-          coverImageUrl: business.coverImageStorageId
-            ? await ctx.storage.getUrl(business.coverImageStorageId)
-            : null,
-        })),
+        businesses.map(async (business) => {
+          const { averageRating, reviewCount } = await getBusinessRatingSummary(
+            ctx,
+            business._id,
+          );
+          return {
+            ...business,
+            coverImageUrl: business.coverImageStorageId
+              ? await ctx.storage.getUrl(business.coverImageStorageId)
+              : null,
+            averageRating,
+            reviewCount,
+          };
+        }),
       );
     }
 

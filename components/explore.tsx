@@ -240,10 +240,12 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                     {filteredBusinesses?.map((business) => (
                         <div key={business._id} className="group flex flex-col gap-3 cursor-pointer">
                             <div className="relative aspect-4/3 overflow-hidden">
-                                <Badge className="absolute top-2 right-2 z-20 bg-white hover:bg-white shadow-sm gap-1">
-                                    <StarIcon fill="#dd275e" className="size-3.5 text-primary" />
-                                    <span className="text-[11px] font-medium text-black">4.3</span>
-                                </Badge>
+                                {business.reviewCount > 0 && (
+                                    <Badge className="absolute top-2 right-2 z-20 bg-white hover:bg-white shadow-sm gap-1">
+                                        <StarIcon fill="#dd275e" className="size-3.5 text-primary" />
+                                        <span className="text-[11px] font-medium text-black">{business.averageRating.toFixed(1)}</span>
+                                    </Badge>
+                                )}
                                 <Image
                                     src={business.coverImageUrl ?? ""}
                                     fill
