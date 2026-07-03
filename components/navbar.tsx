@@ -50,7 +50,7 @@ function Navbar() {
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-background via-background/80 to-transparent" />
 
         <div className="relative max-w-[1440px] mx-auto px-4 py-3">
-          <nav className="flex justify-between items-center bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.05)] rounded-full px-5 py-2.5">
+          <nav className="flex justify-between items-center bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.05)] rounded-full px-5 py-3">
             {/* Logo + desktop links */}
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center">
