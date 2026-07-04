@@ -1,5 +1,21 @@
 import { internalMutation } from "./_generated/server";
 
+export const backfillBusinessPlatformStatus = internalMutation({
+  handler: async (ctx) => {
+    const businesses = await ctx.db.query("business").collect();
+
+    let patched = 0;
+    for (const business of businesses) {
+      if (business.platformStatus !== undefined) continue;
+
+      await ctx.db.patch(business._id, { platformStatus: "active" });
+      patched++;
+    }
+
+    console.log(`Backfilled platformStatus on ${patched} business(es).`);
+  },
+});
+
 export const seedCategories = internalMutation({
   handler: async (ctx) => {
     const categories = [

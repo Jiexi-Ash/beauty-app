@@ -302,7 +302,8 @@ export const saveBusiness = internalMutation({
       slug: businessSlug,
       subscriptionTierId,
       timezone: "Africa/Johannesburg",
-      visibility: "hidden",
+      visibility: "offline",
+      platformStatus: "active",
       tags: formattedTags,
       searchText: `${name} ${city}`,
     });

@@ -26,10 +26,10 @@ export default defineSchema({
     timezone: v.literal("Africa/Johannesburg"),
     merchantId: v.optional(v.number()),
     visibility: v.union(
-      v.literal("hidden"),
       v.literal("visible"),
       v.literal("offline"),
     ),
+    platformStatus: v.union(v.literal("active"), v.literal("suspended")),
     LastVerified: v.optional(v.number()),
     tags: v.array(v.string()),
     searchText: v.string(),
@@ -37,6 +37,7 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_visibility", ["visibility"])
     .index("by_slug_visibility", ["slug", "visibility"])
+    .index("by_visibility_and_platformStatus", ["visibility", "platformStatus"])
     .index("by_slug", ["slug"])
     .searchIndex("search_all", {
       searchField: "searchText",
