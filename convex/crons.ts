@@ -18,4 +18,13 @@ crons.interval(
   internal.booking.admin.updateCompletedBookings
 );
 
+// Promotes businesses to verified once they cross the completed-and-paid
+// bookings threshold. Deliberately decoupled from the completion paths above
+// — see convex/business/admin.ts for why.
+crons.interval(
+  "verify eligible businesses",
+  { hours: 24 },
+  internal.business.admin.verifyEligibleBusinesses,
+);
+
 export default crons

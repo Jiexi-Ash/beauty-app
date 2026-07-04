@@ -12,7 +12,7 @@ import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { Doc, Id } from "../_generated/dataModel";
 import { ConvexError, v } from "convex/values";
 import { businessDayValidator } from "../schema";
-import { BUSINESS_DAYS } from "../../constants";
+import { BUSINESS_DAYS, VERIFICATION_THRESHOLD } from "../../constants";
 import { slugify } from "../../lib/utils";
 
 const ALLOWED_TAGS = [
@@ -86,6 +86,50 @@ export const updateBusinessSettings = mutation({
     await ctx.db.patch(businessSettings._id, updates)
   }
 })
+
+export const updateBusinessDescription = mutation({
+  args: {
+    description: v.string(),
+  },
+  handler: async (ctx, { description }) => {
+    const user = await getCurrentUserOrThrow(ctx)
+
+    const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
+
+    if (!business) throw new ConvexError("You need to have a business to perform this action.")
+
+    const trimmed = description.trim()
+
+    if (trimmed.length < 10)
+      throw new ConvexError("Business description must have at least 10 characters.")
+    if (trimmed.length > 250)
+      throw new ConvexError("Business description cannot exceed 250 characters.")
+
+    await ctx.db.patch(business._id, {
+      description: trimmed,
+    })
+  }
+})
+
+export const toggleBusinessVisibilty = mutation({
+  args: {
+    visibility: v.union(v.literal("visible"), v.literal("offline")),
+  },
+  handler: async (ctx, { visibility }) => {
+    const user = await getCurrentUserOrThrow(ctx)
+
+    const business = await ctx.db.query("business").withIndex("by_owner", q => q.eq("ownerId", user._id)).unique()
+
+    if (!business) throw new ConvexError("You need to have a business to perform this action.")
+
+    await ctx.db.patch(business._id, {
+      visibility,
+    })
+
+
+  }
+})
+
 
 export const searchAddressPublic = action({
   args: { input: v.string() },
@@ -370,6 +414,55 @@ export const saveBusinessBanking = internalMutation({
   },
 });
 
+// Completed bookings only count toward verification if a real payment
+// cleared for them — a "completed" booking with no completed payment isn't
+// a trust signal. Shared by the settings-page progress bar and the
+// verifyEligibleBusinesses cron so they can never disagree on the count.
+export async function countVerifiableCompletedBookings(
+  ctx: QueryCtx,
+  businessId: Id<"business">,
+) {
+  const completedBookings = await ctx.db
+    .query("booking")
+    .withIndex("by_business_and_status", (q) =>
+      q.eq("businessId", businessId).eq("status", "completed"),
+    )
+    .collect();
+
+  let verifiableCount = 0;
+  for (const booking of completedBookings) {
+    if (!booking.bookingPaymentId) continue;
+    const payment = await ctx.db.get(booking.bookingPaymentId);
+    if (payment?.status === "completed") verifiableCount++;
+  }
+  return verifiableCount;
+}
+
+// Runs daily (see crons.ts). Verification is intentionally decoupled from
+// the booking-completion paths (the sweep cron and the manual completeBooking
+// mutation) so neither has to know verification exists, and any future
+// completion path is covered automatically without needing to be wired in.
+export const verifyEligibleBusinesses = internalMutation({
+  handler: async (ctx) => {
+    const verifiedRecords = await ctx.db.query("businessVerified").collect();
+    const verifiedIds = new Set(verifiedRecords.map((v) => v.businessId));
+
+    const allBusinesses = await ctx.db.query("business").collect();
+
+    for (const business of allBusinesses) {
+      if (verifiedIds.has(business._id)) continue;
+
+      const verifiableCount = await countVerifiableCompletedBookings(ctx, business._id);
+      if (verifiableCount >= VERIFICATION_THRESHOLD) {
+        await ctx.db.insert("businessVerified", {
+          businessId: business._id,
+          verifiedDate: Date.now(),
+        });
+      }
+    }
+  },
+});
+
 export const getUserBusiness = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
@@ -383,10 +476,11 @@ export const getUserBusiness = query({
       business.coverImageStorageId,
     );
 
-    const [settings, hours] = await Promise.all([
+    const [settings, hours, completedBookingsCount, verification] = await Promise.all([
       ctx.db.query("businessSettings").withIndex("by_business", q => q.eq("businessId", business._id)).unique(),
-      ctx.db.query("businessHours").withIndex("by_businessId", q => q.eq("businessId", business._id)).collect()
-
+      ctx.db.query("businessHours").withIndex("by_businessId", q => q.eq("businessId", business._id)).collect(),
+      countVerifiableCompletedBookings(ctx, business._id),
+      ctx.db.query("businessVerified").withIndex("by_business", q => q.eq("businessId", business._id)).unique(),
     ])
 
     return {
@@ -394,6 +488,9 @@ export const getUserBusiness = query({
       settings,
       businessHours: hours,
       coverImageUrl,
+      completedBookingsCount,
+      verifiedDate: verification?.verifiedDate ?? null,
+      verificationThreshold: VERIFICATION_THRESHOLD,
     };
   },
 });
@@ -504,7 +601,7 @@ export const getDashboardAnalytics = query({
     const averageReviews =
       businessReviews.length > 0
         ? businessReviews.reduce((sum, r) => sum + r.rating, 0) /
-          businessReviews.length
+        businessReviews.length
         : 0;
 
     return {

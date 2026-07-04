@@ -278,6 +278,12 @@ export const completeBooking = mutation({
       throw new ConvexError("Only in-progress bookings can be completed.");
     }
 
+    // Data-integrity guard on the status transition itself, independent of
+    // verification: a booking shouldn't be completable before it's started.
+    if (booking.bookingStartDate > Date.now()) {
+      throw new ConvexError("Cannot mark a booking complete before its start time.");
+    }
+
     await ctx.db.patch(booking._id, { status: "completed" });
     return { ok: true };
   },

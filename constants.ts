@@ -6,6 +6,9 @@ export const CATEGORIES = [
     "Make-up"
 ]
 
+// Completed bookings a business needs before it's marked verified.
+export const VERIFICATION_THRESHOLD = 50
+
 type BusinessDay = {
     shortName: string
     fullName: string

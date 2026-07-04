@@ -7,10 +7,26 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import Image from 'next/image'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '../ui/button'
-import { PencilSimple } from '@phosphor-icons/react'
+import { Textarea } from '../ui/textarea'
+import { Check, Clock, Info, PencilSimple, SealCheck, X } from '@phosphor-icons/react'
+import { format } from 'date-fns'
 import BookingControls from './booking-controls'
 import BusinessHours from './business-hours'
 import { api } from '@/convex/_generated/api'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useMutation } from '@tanstack/react-query'
+import { useConvexMutation } from '@convex-dev/react-query'
+import { toast } from 'sonner'
+import { ConvexError } from 'convex/values'
 
 interface BusinessSettingsProps {
     preloadedBusiness: Preloaded<typeof api.business.admin.getUserBusiness>
@@ -18,16 +34,91 @@ interface BusinessSettingsProps {
 function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
     const business = usePreloadedQuery(preloadedBusiness);
     const [isSaving, setIsSaving] = useState(false);
+    const [offlineDialogOpen, setOfflineDialogOpen] = useState(false);
+    const [pendingVisibility, setPendingVisibility] = useState<"visible" | "offline" | null>(null);
 
-    // TODO: replace with real booking count once booking data is fetched.
-    const bookingsCount = 15;
-    const verificationThreshold = 50;
-    const verificationPct = Math.min(
-        (bookingsCount / verificationThreshold) * 100,
-        100,
-    );
+    const { mutate: toggleVisibility, isPending: isTogglingVisibility } = useMutation({
+        mutationFn: useConvexMutation(api.business.admin.toggleBusinessVisibilty),
+        onMutate: () => setIsSaving(true),
+        onSuccess: () => {
+            toast.success(
+                pendingVisibility === "visible"
+                    ? "Your profile is live again"
+                    : "Your profile is now offline",
+            );
+            setOfflineDialogOpen(false);
+        },
+        onError: (error) => {
+            if (error instanceof ConvexError) {
+                toast.error(
+                    typeof error.data === "string"
+                        ? error.data
+                        : "Could not update your profile status.",
+                );
+            } else {
+                toast.error("Could not update your profile status.");
+            }
+        },
+        onSettled: () => setIsSaving(false),
+    });
+
+    const handleVisibilityChange = (checked: boolean) => {
+        if (checked) {
+            setPendingVisibility("visible");
+            toggleVisibility({ visibility: "visible" });
+        } else {
+            setOfflineDialogOpen(true);
+        }
+    };
+
+    const confirmGoOffline = () => {
+        setPendingVisibility("offline");
+        toggleVisibility({ visibility: "offline" });
+    };
+
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [description, setDescription] = useState(business?.description ?? "");
+
+    const { mutate: saveDescription, isPending: isSavingDescription } = useMutation({
+        mutationFn: useConvexMutation(api.business.admin.updateBusinessDescription),
+        onMutate: () => setIsSaving(true),
+        onSuccess: () => {
+            toast.success("Business description updated");
+            setIsEditingDescription(false);
+        },
+        onError: (error) => {
+            if (error instanceof ConvexError) {
+                toast.error(
+                    typeof error.data === "string"
+                        ? error.data
+                        : "Could not update your business description.",
+                );
+            } else {
+                toast.error("Could not update your business description.");
+            }
+        },
+        onSettled: () => setIsSaving(false),
+    });
+
+    const startEditingDescription = () => {
+        setDescription(business?.description ?? "");
+        setIsEditingDescription(true);
+    };
+
+    const cancelEditingDescription = () => {
+        setDescription(business?.description ?? "");
+        setIsEditingDescription(false);
+    };
 
     if (!business) return null;
+
+    const verificationPct = Math.min(
+        (business.completedBookingsCount / business.verificationThreshold) * 100,
+        100,
+    );
+    const isPendingVerification =
+        !business.verifiedDate &&
+        business.completedBookingsCount >= business.verificationThreshold;
 
     return (
         <div className="w-full px-6 py-6 2xl:mx-auto 2xl:max-w-[1600px]">
@@ -53,38 +144,122 @@ function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
                         <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-start mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Status</p>
-                                <Switch size="default" id="business-visibility" disabled={isSaving} />
+                                <Switch
+                                    size="default"
+                                    id="business-visibility"
+                                    checked={business.visibility === "visible"}
+                                    disabled={isSaving || isTogglingVisibility}
+                                    onCheckedChange={handleVisibilityChange}
+                                />
                             </div>
-                            <p className="font-headline text-lg font-bold">Public Profile Active</p>
-                            <p className="text-xs text-muted-foreground">Visible to all clients on explore.</p>
+                            <p className="font-headline text-lg font-bold">
+                                {business.visibility === "visible" ? "Public Profile Active" : "Profile Offline"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {business.visibility === "visible"
+                                    ? "Visible to all clients on explore."
+                                    : "Hidden from explore. Not accepting new bookings."}
+                            </p>
                         </div>
 
                         <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-center mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Business Description</p>
-                                <Button variant="ghost" size="icon" disabled={isSaving}>
-                                    <PencilSimple className="size-4 text-primary" />
-                                </Button>
+                                {isEditingDescription ? (
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={cancelEditingDescription}
+                                            disabled={isSavingDescription}
+                                        >
+                                            <X className="size-4 text-primary" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => saveDescription({ description })}
+                                            disabled={isSavingDescription || description.trim().length < 10}
+                                        >
+                                            <Check className="size-4 text-primary" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={startEditingDescription}
+                                        disabled={isSaving}
+                                    >
+                                        <PencilSimple className="size-4 text-primary" />
+                                    </Button>
+                                )}
                             </div>
-                            <p className="text-xs text-muted-foreground">{business.description}</p>
+                            {isEditingDescription ? (
+                                <div className="space-y-1">
+                                    <Textarea
+                                        autoFocus
+                                        value={description}
+                                        disabled={isSavingDescription}
+                                        maxLength={250}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="bg-background text-xs min-h-20 resize-none"
+                                    />
+                                    <p className="text-right text-[10px] tabular-nums text-muted-foreground">
+                                        {description.length}/250 characters
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-muted-foreground">{business.description}</p>
+                            )}
                         </div>
 
                         <div className="bg-muted rounded-lg p-6">
                             <div className="flex justify-between items-center mb-1">
                                 <p className="text-xs font-bold text-primary uppercase tracking-tighter">Verification</p>
+                                {business.verifiedDate && (
+                                    <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                        <SealCheck weight="fill" className="size-3" />
+                                        Verified
+                                    </span>
+                                )}
+                                {isPendingVerification && (
+                                    <span className="flex items-center gap-1 rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                        <Clock className="size-3" />
+                                        Pending review
+                                    </span>
+                                )}
                             </div>
-                            <div className="mt-3">
-                                <div className="flex justify-between items-center mb-2">
-                                    <p className="text-xs text-muted-foreground">Progress</p>
-                                    <p className="text-xs font-semibold text-foreground">{bookingsCount}/{verificationThreshold} bookings</p>
+                            {business.verifiedDate ? (
+                                <>
+                                    <p className="font-headline text-lg font-bold">Verified Business</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Earned {format(business.verifiedDate, "MMMM yyyy")} · {business.completedBookingsCount} completed bookings
+                                    </p>
+                                </>
+                            ) : isPendingVerification ? (
+                                <>
+                                    <p className="font-headline text-lg font-bold">Under Review</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        You&apos;ve reached {business.verificationThreshold} completed bookings. Verification runs daily, check back soon.
+                                    </p>
+                                </>
+                            ) : (
+                                <div className="mt-3">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-xs text-muted-foreground">Progress</p>
+                                        <p className="text-xs font-semibold text-foreground">
+                                            {business.completedBookingsCount}/{business.verificationThreshold} bookings
+                                        </p>
+                                    </div>
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-background">
+                                        <div
+                                            className="h-full rounded-full bg-primary transition-all"
+                                            style={{ width: `${verificationPct}%` }}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-background">
-                                    <div
-                                        className="h-full rounded-full bg-primary transition-all"
-                                        style={{ width: `${verificationPct}%` }}
-                                    />
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -104,6 +279,31 @@ function BusinessSettings({ preloadedBusiness }: BusinessSettingsProps) {
                     setIsSaving={setIsSaving}
                 />
             </div>
+
+            <AlertDialog open={offlineDialogOpen} onOpenChange={setOfflineDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <Info className="size-8 text-primary shrink-0 text-center w-full" />
+                        <AlertDialogTitle className="w-full text-center font-headline">
+                            Take your profile offline?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="w-full text-center">
+                            Your profile stops appearing on explore and clients cannot
+                            make new bookings. Any bookings you already have, upcoming or
+                            in progress, are not affected and will not be cancelled.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="lg:justify-center">
+                        <AlertDialogCancel className="rounded-full">Stay Visible</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmGoOffline}
+                            className="rounded-full"
+                        >
+                            Go Offline
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div >
     )
 }
