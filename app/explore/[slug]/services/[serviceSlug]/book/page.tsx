@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { MapPin, ShieldCheck, Check, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, ShieldCheck, Check, CaretLeft, CaretRight } from "@phosphor-icons/react"
 import Link from "next/link"
 import { SignInButton, useUser } from "@clerk/nextjs"
 import * as z from "zod"
@@ -221,7 +221,7 @@ function BookServicePage() {
           href={`/explore/${params.slug}`}
           className="inline-flex items-center gap-1.5 text-sm text-primary font-medium mb-6 hover:underline"
         >
-          <ChevronLeft className="size-4" />
+          <CaretLeft className="size-4" />
           Back to Salon Profile
         </Link>
 
@@ -257,7 +257,7 @@ function BookServicePage() {
                     disabled={weekOffset === 0}
                     className="size-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-white transition-colors disabled:opacity-30"
                   >
-                    <ChevronLeft className="size-4" />
+                    <CaretLeft className="size-4" />
                   </button>
                   <button
                     onClick={() => {
@@ -266,7 +266,7 @@ function BookServicePage() {
                     }}
                     className="size-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-white transition-colors"
                   >
-                    <ChevronRight className="size-4" />
+                    <CaretRight className="size-4" />
                   </button>
                 </div>
               </div>

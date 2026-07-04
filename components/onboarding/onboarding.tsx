@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { useBusinessStore } from '@/stores/use-business'
 
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, CircleNotch } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -186,7 +186,7 @@ function Onboarding() {
                             className="h-14 px-8"
                             onClick={step === "Launch" ? handleLaunch : undefined}
                         >
-                            {isSubmitting ? <Loader2 className="text-white size-5 animate-spin" /> : step === "Launch" ? "Launch My Salon" : "Next Step"}
+                            {isSubmitting ? <CircleNotch className="text-white size-5 animate-spin" /> : step === "Launch" ? "Launch My Salon" : "Next Step"}
                         </Button>
                         {step === "Launch" && (
                             <p className="text-[11px] text-muted-foreground">By launching, you agree to our Merchant Services Terms</p>

@@ -8,8 +8,8 @@ import {
   Scissors,
   ShieldCheck,
   ThumbsUp,
-  TrendingUp,
-} from "lucide-react";
+  TrendUp,
+} from "@phosphor-icons/react/dist/ssr";
 
 function BusinessNotFound() {
   return (
@@ -102,7 +102,7 @@ function BusinessNotFound() {
               <CardHeader>
                 <div className="flex flex-col gap-6">
                   <div className="h-14 w-14 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center">
-                    <TrendingUp className="size-5 text-primary" />
+                    <TrendUp className="size-5 text-primary" />
                   </div>
                   <CardTitle className="font-bold">Grow</CardTitle>
                 </div>

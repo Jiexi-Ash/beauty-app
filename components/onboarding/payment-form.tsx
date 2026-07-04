@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { paymentSchema, useBusinessStore } from "@/stores/use-business";
 import { useForm } from "@tanstack/react-form";
-import { CircleAlertIcon, CheckCircle2, ShieldCheck } from "lucide-react";
+import { WarningCircle, CheckCircle, ShieldCheck } from "@phosphor-icons/react";
 import { Card, CardContent } from "../ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { useAction } from "convex/react";
@@ -196,7 +196,7 @@ const PaymentForm = () => {
                             </form.Field>
 
                             <div className="bg-secondary rounded-sm p-3 flex gap-2.5 mt-2">
-                                <CircleAlertIcon className="size-5 text-primary shrink-0 mt-0.5" />
+                                <WarningCircle className="size-5 text-primary shrink-0 mt-0.5" />
                                 <p className="text-sm text-foreground/80">
                                     Provide your business banking details for automated settlements. We use Paystack to ensure secure and timely transfers to your account.
                                 </p>
@@ -222,7 +222,7 @@ const PaymentForm = () => {
                         <div className="space-y-3">
                             {PAYSTACK_BENEFITS.map((benefit) => (
                                 <div key={benefit} className="flex items-start gap-2.5">
-                                    <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
+                                    <CheckCircle className="size-4 text-primary shrink-0 mt-0.5" />
                                     <p className="text-sm text-foreground/80 leading-snug">{benefit}</p>
                                 </div>
                             ))}

@@ -4,7 +4,7 @@ import { Preloaded, usePreloadedQuery } from 'convex/react';
 import { useState } from 'react'
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { ArrowRight, MapPin, SearchIcon, SearchX, StarIcon } from 'lucide-react';
+import { ArrowRight, MapPin, MagnifyingGlass, Star } from '@phosphor-icons/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -66,7 +66,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                     focusedField ? "bg-white ring-2 ring-primary border-primary" : "border-gray-300 bg-gray-50"
                 )}>
                     <div className="flex items-center gap-2 flex-1 px-4 py-1.5">
-                        <SearchIcon className="size-4 text-gray-400 shrink-0" />
+                        <MagnifyingGlass className="size-4 text-gray-400 shrink-0" />
                         <Input
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
@@ -146,7 +146,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                 focusedField ? "bg-white ring-2 ring-primary border-primary" : "border-gray-300 bg-gray-50"
             )}>
                 <div className="flex items-center gap-2 flex-1 px-4 py-1.5">
-                    <SearchIcon className="size-4 text-gray-400 shrink-0" />
+                    <MagnifyingGlass className="size-4 text-gray-400 shrink-0" />
                     <Input
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
@@ -199,7 +199,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
             {!businessData || businessData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
                     <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full">
-                        <SearchX className="size-8 text-primary" />
+                        <MagnifyingGlass className="size-8 text-primary" />
                     </div>
                     <div className="space-y-1">
                         <h2 className="text-xl font-bold">No results found</h2>
@@ -223,7 +223,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
             ) : filteredBusinesses?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
                     <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full">
-                        <SearchX className="size-8 text-primary" />
+                        <MagnifyingGlass className="size-8 text-primary" />
                     </div>
                     <div className="space-y-1">
                         <h2 className="text-xl font-bold">No salons in this category</h2>
@@ -242,7 +242,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                             <div className="relative aspect-4/3 overflow-hidden">
                                 {business.reviewCount > 0 && (
                                     <Badge className="absolute top-2 right-2 z-20 bg-white hover:bg-white shadow-sm gap-1">
-                                        <StarIcon fill="#dd275e" className="size-3.5 text-primary" />
+                                        <Star weight="fill" className="size-3.5 text-primary" />
                                         <span className="text-[11px] font-medium text-black">{business.averageRating.toFixed(1)}</span>
                                     </Badge>
                                 )}

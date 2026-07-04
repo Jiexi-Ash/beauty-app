@@ -2,7 +2,7 @@
 import { Business, useBusinessStore } from '@/stores/use-business'
 import { Card, CardContent } from '../ui/card'
 import Image from 'next/image'
-import { CalendarCheck, CalendarIcon, ChevronRightIcon, ClockIcon, CreditCard, Eye, EyeOff, MapPinIcon, PencilIcon, StoreIcon } from 'lucide-react'
+import { CalendarCheck, Calendar, CaretRight, Clock, CreditCard, Eye, EyeSlash, MapPin, PencilSimple, Storefront } from '@phosphor-icons/react'
 import { Separator } from '../ui/separator'
 import { useState, useEffect } from 'react'
 
@@ -57,7 +57,7 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                 <Card>
                     <CardContent>
                         <div className="flex flex-col gap-3">
-                            <StoreIcon className="size-5 text-primary" />
+                            <Storefront className="size-5 text-primary" />
                             <div>
                                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Primary Identity</p>
                                 <h3 className="font-bold text-base">{business?.name}</h3>
@@ -70,20 +70,20 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                             className="flex gap-2 items-center uppercase font-bold text-primary text-xs tracking-wide"
                         >
                             Edit
-                            <PencilIcon className="size-3" />
+                            <PencilSimple className="size-3" />
                         </button>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardContent className="space-y-3">
-                        <ClockIcon className="size-5 text-primary" />
+                        <Clock className="size-5 text-primary" />
                         <div className="flex items-start gap-2">
-                            <MapPinIcon className="size-4 text-gray-300 shrink-0 mt-0.5" />
+                            <MapPin className="size-4 text-gray-300 shrink-0 mt-0.5" />
                             <p className="text-xs truncate">{business?.address.address}</p>
                         </div>
                         <div className="flex items-start gap-2">
-                            <CalendarIcon className="size-4 text-gray-300 shrink-0 mt-0.5" />
+                            <Calendar className="size-4 text-gray-300 shrink-0 mt-0.5" />
                             <div className="flex flex-col gap-0.5">
                                 {groupBusinessDays(business?.businessDays ?? []).map((group, i) => (
                                     <p key={i} className="text-xs">
@@ -125,7 +125,7 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                                     className="text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     {showAccountNumber
-                                        ? <EyeOff className="size-3.5" />
+                                        ? <EyeSlash className="size-3.5" />
                                         : <Eye className="size-3.5" />
                                     }
                                 </button>
@@ -155,7 +155,7 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                         <div>
                             <h2 className="text-base font-bold">{business?.name}</h2>
                             <div className="flex gap-1.5 items-center">
-                                <MapPinIcon className="size-3.5 text-gray-400" />
+                                <MapPin className="size-3.5 text-gray-400" />
                                 <p className="text-sm text-muted-foreground truncate">{business?.address.address}</p>
                             </div>
                         </div>
@@ -174,7 +174,7 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                                     <span className="font-semibold text-sm">Today, 15:00</span>
                                 </div>
                             </div>
-                            <ChevronRightIcon className="size-4 text-black" />
+                            <CaretRight className="size-4 text-black" />
                         </div>
                     </div>
                 </CardContent>

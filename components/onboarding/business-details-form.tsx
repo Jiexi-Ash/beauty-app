@@ -25,7 +25,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import ImageCropDialog, { CroppedFile } from "../image-cropper";
-import { CameraIcon } from "lucide-react";
+import { Camera } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -208,7 +208,7 @@ const BusinessDetailForm = ({
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <div className="bg-secondary w-14 h-14 rounded-full flex justify-center items-center">
-                          <CameraIcon fill="#EB3368" className="size-8 text-white" />
+                          <Camera weight="fill" className="size-8 text-primary" />
                         </div>
                         <span className="text-black font-bold">
                           {coverImage ? "Change Cover Photo" : "Upload Cover Photo"}

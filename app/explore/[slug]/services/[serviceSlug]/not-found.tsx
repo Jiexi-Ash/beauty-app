@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import { ChevronLeft, Compass } from "lucide-react";
+import { CaretLeft, Compass } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -50,7 +50,7 @@ function ServiceNotFound() {
                 size="lg"
               >
                 <Link href={`/explore/${slug}`} className="flex items-center gap-2">
-                  <ChevronLeft className="size-4" />
+                  <CaretLeft className="size-4" />
                   Back to Salon
                 </Link>
               </Button>
