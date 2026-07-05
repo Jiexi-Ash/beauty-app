@@ -7,6 +7,7 @@ import {
 } from "./_generated/server";
 import { UserJSON } from "@clerk/backend";
 import { ConvexError, v, Validator } from "convex/values";
+import { createNotification } from "./notifications/admin";
 
 export const upsertFromClerk = internalMutation({
   args: {
@@ -215,6 +216,58 @@ export const toggleFavorites = mutation({
       userId: user._id,
       businessId: business._id,
     });
+  },
+});
+
+// Anonymizes the signed-in user's personal data and removes their Clerk
+// login (done separately by the caller, since deleting a Clerk user
+// requires the secret key which only exists in the Next.js server
+// environment). Booking/payment/review rows are kept intact so businesses
+// retain their accounting and revenue history — only the identity is wiped.
+export const anonymizeCurrentUser = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const activeBookings = await ctx.db
+      .query("booking")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "pending"),
+          q.eq(q.field("status"), "upcoming"),
+        ),
+      )
+      .collect();
+
+    for (const booking of activeBookings) {
+      await ctx.db.patch(booking._id, { status: "cancelled_by_user" });
+
+      const service = await ctx.db.get(booking.serviceId);
+      await createNotification(ctx, {
+        businessId: booking.businessId,
+        type: "booking_cancelled",
+        message: `${service?.name ?? "A booking"} was cancelled because the customer deleted their account.`,
+        bookingId: booking._id,
+      });
+    }
+
+    const favorites = await ctx.db
+      .query("favorites")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+    await Promise.all(favorites.map((favorite) => ctx.db.delete(favorite._id)));
+
+    await ctx.db.patch(user._id, {
+      fullname: "Deleted user",
+      email: `deleted-${user._id}@removed.local`,
+      phone: undefined,
+      image: "",
+      clerkId: `deleted-${user._id}`,
+    });
+
+    return null;
   },
 });
 

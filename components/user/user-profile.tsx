@@ -15,6 +15,7 @@ import { useConvexMutation } from '@convex-dev/react-query'
 import { api } from '@/convex/_generated/api'
 import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
+import DeleteAccountSection from './delete-account-section'
 
 type UserProfile = {
     _id: Id<"users">
@@ -198,6 +199,8 @@ function UserProfile({ profileDetails }: UserProfileProps) {
                         </form>
                     </CardContent>
                 </Card>
+
+                <DeleteAccountSection />
             </div>
 
         </div>
