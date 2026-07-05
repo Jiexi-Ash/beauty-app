@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { paystackChargeEventValidator } from "./types";
 import { createNotification } from "../notifications/admin";
+import { internal } from "../_generated/api";
 
 
 export const handlePaystackEvent = internalMutation({
@@ -78,6 +79,12 @@ export const handlePaystackEvent = internalMutation({
                     message: `New booking: ${service?.name ?? "a service"} with ${customer?.fullname ?? "a customer"}.`,
                     bookingId: booking._id,
                 });
+
+                await ctx.scheduler.runAfter(
+                    0,
+                    internal.notifications.messages.SendWhatsAppBookingConfirmedMessage,
+                    { bookingId: booking._id },
+                );
                 break;
             }
 

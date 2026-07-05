@@ -8,6 +8,7 @@ import {
 import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { createNotification } from "../notifications/admin";
+import { internal } from "../_generated/api";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -102,6 +103,12 @@ export const markCompleted = internalMutation({
       message: `New booking: ${service?.name ?? "a service"} with ${customer?.fullname ?? "a customer"}.`,
       bookingId: booking._id,
     });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.messages.SendWhatsAppBookingConfirmedMessage,
+      { bookingId: booking._id },
+    );
 
     return null;
   },
