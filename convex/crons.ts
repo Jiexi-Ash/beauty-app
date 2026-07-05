@@ -27,4 +27,12 @@ crons.interval(
   internal.business.admin.verifyEligibleBusinesses,
 );
 
+// Sends a WhatsApp reminder ~24h before an upcoming booking's start time.
+// reminderSent guards against re-sending on every 30-minute tick.
+crons.interval(
+  "send booking reminders",
+  { minutes: 30 },
+  internal.notifications.messages.sweepBookingReminders,
+);
+
 export default crons
