@@ -11,6 +11,7 @@ type PricingPlan = {
   features: { text: string; bold?: boolean }[]
   cta: string
   popular?: boolean
+  comingSoon?: boolean
 }
 
 const plans: PricingPlan[] = [
@@ -23,13 +24,13 @@ const plans: PricingPlan[] = [
       { text: "Unlimited bookings" },
       { text: "Up to 10 services listed" },
       { text: "Basic profile listing" },
-      { text: "Manual reminders on client login" },
+      { text: "Automated WhatsApp reminders" },
       { text: "10% commission per booking" },
     ],
     cta: "Start for free",
   },
   {
-    name: "Pro Growth",
+    name: "Pro",
     description: "Full suite for solo operators growing fast.",
     price: "R69",
     priceSuffix: "/mo",
@@ -39,10 +40,10 @@ const plans: PricingPlan[] = [
       { text: "Unlimited bookings" },
       { text: "Unlimited services listed" },
       { text: "Verified badge" },
-      { text: "Automated WhatsApp reminders" },
       { text: "Customer loyalty analytics" },
     ],
-    cta: "Get Pro access",
+    cta: "Coming soon",
+    comingSoon: true,
   },
   {
     name: "Premium",
@@ -56,7 +57,8 @@ const plans: PricingPlan[] = [
       { text: "Full business analytics dashboard" },
       { text: "Priority support" },
     ],
-    cta: "Get Premium access",
+    cta: "Coming soon",
+    comingSoon: true,
   },
 ]
 
@@ -122,8 +124,12 @@ export default function PricingCards() {
 
           {/* CTA — pill shape, always at bottom */}
           <Button
+            disabled={plan.comingSoon}
             className={cn(
-              "w-full h-12 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer",
+              "w-full h-12 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
+              plan.comingSoon
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer",
               plan.popular
                 ? "bg-white text-primary hover:bg-white/90"
                 : "border-2 border-primary text-primary hover:bg-primary hover:text-white",
