@@ -193,47 +193,6 @@ export const searchBusinessByQuery = query({
     return [];
   },
 });
-export const getBusinessServiceById = query({
-  args: {
-    businessSlug: v.string(),
-    serviceId: v.id("service"),
-  },
-  handler: async (ctx, { serviceId, businessSlug }) => {
-    const business = await ctx.db
-      .query("business")
-      .withIndex("by_slug", (q) => q.eq("slug", businessSlug))
-      .first();
-
-    if (!business) return null;
-    const service = await ctx.db.get(serviceId);
-
-    if (!service) return null;
-    if (service.businessId !== business._id) return null;
-
-    const [primaryImage, serviceGalleryImages] = await Promise.all([
-      ctx.storage.getUrl(service.primaryImageStorageId),
-      ctx.db
-        .query("serviceImages")
-        .withIndex("by_service", (q) => q.eq("serviceId", service._id))
-        .collect(),
-    ]);
-
-    const imageGallery = await Promise.all(
-      serviceGalleryImages.map(async (image) => ({
-        _id: image._id,
-        url: await ctx.storage.getUrl(image.imageStorageId),
-      })),
-    );
-
-    return {
-      ...service,
-      business: { name: business.name },
-      primaryImage,
-      imageGallery,
-    };
-  },
-});
-
 export const getBusinessServiceBySlug = query({
   args: {
     businessSlug: v.string(),
