@@ -22,6 +22,7 @@ import MainLayout from "@/components/main-layout"
 import { BookingPageSkeleton } from "@/components/skeletons/booking-page"
 import { toast } from "sonner"
 import { ConvexError } from "convex/values"
+import { DEPOSIT_PERCENT } from "@/constants"
 
 const toNoonUTC = (d: Date) =>
   new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0))
@@ -36,7 +37,7 @@ type Slot = {
 const bookingSchema = z.object({
   serviceSlug: z.string(),
   fullName: z.string().min(1, "Required"),
-  phoneNumber: z.string().min(10),
+  phoneNumber: z.string().min(10).regex(/^\+?[0-9\s-]+$/, "Phone number must contain only digits"),
   notes: z.string(),
 });
 
@@ -203,12 +204,11 @@ function BookServicePage() {
       ? `${durationHours}${durationMinutes > 0 ? `.${durationMinutes}` : ""} hrs`
       : `${durationMinutes} min`
 
-  // TODO: move to business settings or subscription tier config
-  const depositPercent = 0.5
+  const depositPercent = DEPOSIT_PERCENT
 
   // price stored in cents
   const priceRands = service.price / 100
-  const depositDue = priceRands * 0.50
+  const depositDue = priceRands * DEPOSIT_PERCENT
 
 
   const businessDisplayName = service.business.name ?? params.slug.replace(/-/g, " ")
@@ -379,6 +379,8 @@ function BookServicePage() {
                           </Label>
                           <Input
                             value={field.state.value}
+                            type="tel"
+                            inputMode="numeric"
                             className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}

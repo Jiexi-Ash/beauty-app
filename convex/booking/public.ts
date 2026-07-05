@@ -1,5 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
+import { DEPOSIT_PERCENT, RESCHEDULE_MIN_NOTICE_HOURS } from "../../constants";
+import { createNotification } from "../notifications/admin";
 
 export const createBookingRecord = internalMutation({
   args: {
@@ -14,6 +16,10 @@ export const createBookingRecord = internalMutation({
   },
 
   handler: async (ctx, args) => {
+    if (args.phoneNumber && !/^\+?[0-9\s-]{10,15}$/.test(args.phoneNumber)) {
+      throw new ConvexError("Enter a valid phone number.");
+    }
+
     const business = await ctx.db
       .query("business")
       .withIndex("by_slug", (q) => q.eq("slug", args.businessSlug))
@@ -97,10 +103,11 @@ export const createBookingRecord = internalMutation({
       bookingStartDate: bookingStart.getTime(),
       bookingEndDate: bookingEnd.getTime(),
       notes: args.notes,
+      phoneNumber: args.phoneNumber,
       status: "pending",
     });
 
-    const depositPrice = Math.round(service.price * 0.5);
+    const depositPrice = Math.round(service.price * DEPOSIT_PERCENT);
     const reference = `${bookingId}_${Date.now()}`
 
     const bookingPaymentId = await ctx.db.insert("bookingPayment", {
@@ -155,6 +162,12 @@ export const rescheduleBookingRecord = internalMutation({
 
     if (booking.status !== "upcoming")
       throw new ConvexError("This booking cannot be rescheduled.");
+
+    const minNoticeMs = RESCHEDULE_MIN_NOTICE_HOURS * 60 * 60 * 1000;
+    if (booking.bookingStartDate - Date.now() < minNoticeMs)
+      throw new ConvexError(
+        `Bookings can only be rescheduled at least ${RESCHEDULE_MIN_NOTICE_HOURS} hours before the appointment.`,
+      );
 
     const business = await ctx.db.get(booking.businessId);
     if (!business) throw new ConvexError("Business not found.");
@@ -218,6 +231,13 @@ export const rescheduleBookingRecord = internalMutation({
     await ctx.db.patch(booking._id, {
       bookingStartDate: newStartMs,
       bookingEndDate: newEndMs,
+    });
+
+    await createNotification(ctx, {
+      businessId: business._id,
+      type: "booking_rescheduled",
+      message: `${user.fullname} rescheduled their ${service.name} booking.`,
+      bookingId: booking._id,
     });
   },
 });

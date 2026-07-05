@@ -38,6 +38,7 @@ import { toast } from 'sonner'
 import { ConvexError } from 'convex/values'
 import { cn, formatBookingShortDate } from '@/lib/utils'
 import NoBookings from './bookings/no-boookings'
+import { RESCHEDULE_MIN_NOTICE_HOURS } from '@/constants'
 
 interface PreloadedUserBookingsProps {
     preloadedBookings: Preloaded<typeof api.booking.user.getUserBookings>;
@@ -132,10 +133,13 @@ function BookingCard({ booking, variant }: BookingCardProps) {
         },
     });
 
+    const [now] = useState(() => Date.now());
+
     const showDuration = variant === "upcoming"
     const showDropdown = variant === "upcoming"
     const showRebook = variant === "completed"
     const showReview = variant === "completed"
+    const canReschedule = booking.bookingStartDate - now >= RESCHEDULE_MIN_NOTICE_HOURS * 60 * 60 * 1000
 
     const durationLabel = (() => {
         if (!showDuration) return null
@@ -175,7 +179,14 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel>Options</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>Reschedule appointment</DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        disabled={!canReschedule}
+                                        onClick={() => setRescheduleOpen(true)}
+                                    >
+                                        {canReschedule
+                                            ? "Reschedule appointment"
+                                            : `Reschedule (unavailable within ${RESCHEDULE_MIN_NOTICE_HOURS}h)`}
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setCancelDialogOpen(true)}>
                                         Cancel appointment
                                     </DropdownMenuItem>

@@ -3,6 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { action, internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { initiatePaystackCheckout } from "../payment";
+import { DEPOSIT_PERCENT } from "../../constants";
 
 export const bookSlot = action({
   args: {
@@ -40,12 +41,12 @@ export const bookSlot = action({
 
     const [firstName, ...lastParts] = args.fullName.split(" ");
     const lastName = lastParts.join(" ") || firstName;
-    const depositAmountCents = Math.round(result.servicePrice * 0.5);
+    const depositAmountCents = Math.round(result.servicePrice * DEPOSIT_PERCENT);
     const platformFee = Math.round(depositAmountCents * (result.commission / 100));
 
     const checkoutArgs: Parameters<typeof initiatePaystackCheckout>[0] = {
       amount: depositAmountCents,
-      callback_url: `${process.env.DEV_URL}/profile/bookings/${result.bookingId}/confirmation`,
+      callback_url: `${process.env.APP_URL}/profile/bookings/${result.bookingId}/confirmation`,
       email: result.email,
       subaccount: result.subaccount,
       transaction_charge: Math.min(platformFee, SPLIT_MAX_CENTS),
