@@ -7,6 +7,7 @@ import {
 } from "../_generated/server";
 import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
+import { createNotification } from "../notifications/admin";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -90,6 +91,18 @@ export const markCompleted = internalMutation({
       commission: payment.commission,
     });
 
+    const [service, customer] = await Promise.all([
+      ctx.db.get(booking.serviceId),
+      ctx.db.get(booking.userId),
+    ]);
+
+    await createNotification(ctx, {
+      businessId: booking.businessId,
+      type: "booking_created",
+      message: `New booking: ${service?.name ?? "a service"} with ${customer?.fullname ?? "a customer"}.`,
+      bookingId: booking._id,
+    });
+
     return null;
   },
 });
@@ -138,10 +151,47 @@ export const updateCompletedBookings = internalMutation({
       .collect();
 
     await Promise.all(
-      [...endedUpcoming, ...staleInProgress].map((b) =>
-        ctx.db.patch(b._id, { status: "completed" }),
-      ),
+      [...endedUpcoming, ...staleInProgress].map(async (b) => {
+        await ctx.db.patch(b._id, { status: "completed" });
+
+        const service = await ctx.db.get(b.serviceId);
+        await createNotification(ctx, {
+          businessId: b.businessId,
+          type: "booking_auto_completed",
+          message: `${service?.name ?? "A booking"} was automatically marked complete.`,
+          bookingId: b._id,
+        });
+      }),
     );
+  },
+});
+
+export const getBookingsDueForReminder = internalQuery({
+  handler: async (ctx) => {
+    const now = Date.now();
+    const cutoff = now + 24 * 60 * 60 * 1000;
+
+    const upcoming = await ctx.db
+      .query("booking")
+      .withIndex("by_status", (q) => q.eq("status", "upcoming"))
+      .filter((q) =>
+        q.and(
+          q.gt(q.field("bookingStartDate"), now),
+          q.lte(q.field("bookingStartDate"), cutoff),
+        ),
+      )
+      .collect();
+
+    return upcoming.filter((b) => !b.reminderSent);
+  },
+});
+
+export const markReminderSent = internalMutation({
+  args: { bookingId: v.id("booking") },
+  returns: v.null(),
+  handler: async (ctx, { bookingId }) => {
+    await ctx.db.patch(bookingId, { reminderSent: true });
+    return null;
   },
 });
 

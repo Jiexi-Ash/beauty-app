@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { getCurrentUser, getCurrentUserOrThrow } from "../users";
+import { createNotification } from "../notifications/admin";
 
 export const getUserBookings = query({
   handler: async (ctx) => {
@@ -80,6 +81,14 @@ export const cancelBooking = mutation({
 
     await ctx.db.patch(booking._id, {
       status: "cancelled_by_user",
+    });
+
+    const service = await ctx.db.get(booking.serviceId);
+    await createNotification(ctx, {
+      businessId: booking.businessId,
+      type: "booking_cancelled",
+      message: `${user.fullname} cancelled their ${service?.name ?? "booking"}.`,
+      bookingId: booking._id,
     });
   },
 });

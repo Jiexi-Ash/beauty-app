@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { paystackChargeEventValidator } from "./types";
+import { createNotification } from "../notifications/admin";
 
 
 export const handlePaystackEvent = internalMutation({
@@ -64,6 +65,18 @@ export const handlePaystackEvent = internalMutation({
                     platformAmount,
                     merchantAmount,
                     commission: payment.commission,
+                });
+
+                const [service, customer] = await Promise.all([
+                    ctx.db.get(booking.serviceId),
+                    ctx.db.get(booking.userId),
+                ]);
+
+                await createNotification(ctx, {
+                    businessId: booking.businessId,
+                    type: "booking_created",
+                    message: `New booking: ${service?.name ?? "a service"} with ${customer?.fullname ?? "a customer"}.`,
+                    bookingId: booking._id,
                 });
                 break;
             }

@@ -107,6 +107,8 @@ export default defineSchema({
     bookingStartDate: v.number(), // time and date
     bookingEndDate: v.number(), // time and date
     notes: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    reminderSent: v.optional(v.boolean()),
     bookingPaymentId: v.optional(v.id("bookingPayment")),
     status: v.union(
       v.literal("pending"),
@@ -132,6 +134,21 @@ export default defineSchema({
     .index("by_business_and_status_and_date", ["businessId", "status", "bookingStartDate",])
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "bookingStartDate"]),
+
+  notifications: defineTable({
+    businessId: v.id("business"),
+    type: v.union(
+      v.literal("booking_created"),
+      v.literal("booking_auto_completed"),
+      v.literal("booking_rescheduled"),
+      v.literal("booking_cancelled"),
+    ),
+    message: v.string(),
+    bookingId: v.optional(v.id("booking")),
+    read: v.boolean(),
+  })
+    .index("by_business", ["businessId"])
+    .index("by_business_and_read", ["businessId", "read"]),
 
 
 

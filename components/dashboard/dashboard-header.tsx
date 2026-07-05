@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, SignOut } from "@phosphor-icons/react";
+import { SignOut } from "@phosphor-icons/react";
 import Image from "next/image";
+import NotificationBell from "./notification-bell";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
@@ -53,13 +54,7 @@ function DashboardHeader() {
         </div>
 
         <div className="flex gap-2 items-center">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground cursor-pointer"
-          >
-            <Bell className="size-5" />
-          </button>
+          <NotificationBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger
