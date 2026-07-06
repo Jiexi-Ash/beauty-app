@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as account from "../account.js";
 import type * as booking_actions from "../booking/actions.js";
 import type * as booking_admin from "../booking/admin.js";
 import type * as booking_public from "../booking/public.js";
@@ -37,6 +38,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  account: typeof account;
   "booking/actions": typeof booking_actions;
   "booking/admin": typeof booking_admin;
   "booking/public": typeof booking_public;

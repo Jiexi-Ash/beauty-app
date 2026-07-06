@@ -1,10 +1,14 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useClerk } from "@clerk/nextjs"
+import { useAction } from "convex/react"
+import { useMutation } from "@tanstack/react-query"
 import { CircleNotch, Trash, Warning } from "@phosphor-icons/react"
 import { toast } from "sonner"
+import { ConvexError } from "convex/values"
+import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -20,32 +24,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog"
-import { deleteAccount } from "@/app/profile/actions"
 
 const CONFIRM_WORD = "DELETE"
 
 function DeleteAccountSection() {
   const [confirmText, setConfirmText] = useState("")
-  const [isPending, startTransition] = useTransition()
   const { signOut } = useClerk()
   const router = useRouter()
 
-  const isConfirmed = confirmText === CONFIRM_WORD
+  const deleteAccountAction = useAction(api.account.deleteAccount)
 
-  const handleDelete = () => {
-    startTransition(async () => {
-      const result = await deleteAccount()
-
-      if (!result.success) {
-        toast.error(result.error || "Something went wrong. Please try again.")
-        return
-      }
-
+  const { mutate: handleDelete, isPending } = useMutation({
+    mutationFn: () => deleteAccountAction({}),
+    onSuccess: async () => {
       await signOut()
       router.push("/")
       toast.success("Your account has been deleted.")
-    })
-  }
+    },
+    onError: (error) => {
+      if (error instanceof ConvexError) {
+        toast.error((error.data as string) || "Something went wrong. Please try again.")
+      } else if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("Something went wrong. Please try again.")
+      }
+    },
+  })
+
+  const isConfirmed = confirmText === CONFIRM_WORD
 
   return (
     <Card className="rounded-2xl ring-1 ring-destructive/15 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
@@ -112,7 +119,7 @@ function DeleteAccountSection() {
                 <AlertDialogAction
                   variant="destructive"
                   disabled={!isConfirmed || isPending}
-                  onClick={handleDelete}
+                  onClick={() => handleDelete()}
                 >
                   {isPending ? (
                     <CircleNotch className="size-4 animate-spin" />

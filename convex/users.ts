@@ -219,16 +219,17 @@ export const toggleFavorites = mutation({
   },
 });
 
-// Anonymizes the signed-in user's personal data and removes their Clerk
-// login (done separately by the caller, since deleting a Clerk user
-// requires the secret key which only exists in the Next.js server
-// environment). Booking/payment/review rows are kept intact so businesses
-// retain their accounting and revenue history — only the identity is wiped.
-export const anonymizeCurrentUser = mutation({
-  args: {},
+// Anonymizes a user's personal data, called from account.deleteAccount after
+// it has verified the caller's identity. Booking/payment/review rows are
+// kept intact so businesses retain their accounting and revenue history —
+// only the identity is wiped. Clerk login removal happens separately, in
+// the "use node" action that calls this, since it needs CLERK_SECRET_KEY.
+export const anonymizeUserByClerkId = internalMutation({
+  args: { clerkId: v.string() },
   returns: v.null(),
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
+  handler: async (ctx, { clerkId }) => {
+    const user = await getUserByClerkId(ctx, clerkId);
+    if (!user) throw new ConvexError("User not found");
 
     const activeBookings = await ctx.db
       .query("booking")
