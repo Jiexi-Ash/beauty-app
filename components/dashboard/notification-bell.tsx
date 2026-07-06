@@ -10,6 +10,7 @@ import {
   CalendarX,
   ClockCounterClockwise,
   CheckCircle,
+  UserMinus,
   type IconProps,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -34,6 +35,7 @@ const NOTIFICATION_ICON: Record<
   booking_auto_completed: CheckCircle,
   booking_rescheduled: ClockCounterClockwise,
   booking_cancelled: CalendarX,
+  booking_no_show: UserMinus,
 };
 
 function NotificationBell() {

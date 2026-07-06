@@ -14,7 +14,8 @@ export async function createNotification(
       | "booking_created"
       | "booking_auto_completed"
       | "booking_rescheduled"
-      | "booking_cancelled";
+      | "booking_cancelled"
+      | "booking_no_show";
     message: string;
     bookingId?: Id<"booking">;
   },

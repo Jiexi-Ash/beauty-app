@@ -118,6 +118,7 @@ export default defineSchema({
       v.literal("cancelled_by_user"),
       v.literal("cancelled_by_business"),
       v.literal("cancelled_by_payment_failed"),
+      v.literal("no_show"),
     ),
   })
     .index("by_business", ["businessId"])
@@ -142,6 +143,7 @@ export default defineSchema({
       v.literal("booking_auto_completed"),
       v.literal("booking_rescheduled"),
       v.literal("booking_cancelled"),
+      v.literal("booking_no_show"),
     ),
     message: v.string(),
     bookingId: v.optional(v.id("booking")),
