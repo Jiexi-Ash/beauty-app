@@ -565,7 +565,7 @@ export const getDashboardAnalytics = query({
           .eq("businessId", business._id)
           .gte("bookingStartDate", monthStart)
           .lte("bookingStartDate", endMonth)
-      ).filter((q) => q.or(q.eq(q.field("status"), "in_progress"), q.eq(q.field("status"), "upcoming"), q.eq(q.field("status"), "completed")))
+      ).filter((q) => q.or(q.eq(q.field("status"), "in_progress"), q.eq(q.field("status"), "upcoming"), q.eq(q.field("status"), "completed"), q.eq(q.field("status"), "no_show")))
       .collect();
 
 
@@ -736,6 +736,7 @@ export const getServiceHighlights = query({
           q.eq(q.field("status"), "in_progress"),
           q.eq(q.field("status"), "upcoming"),
           q.eq(q.field("status"), "completed"),
+          q.eq(q.field("status"), "no_show"),
         ),
       )
       .collect();
@@ -788,7 +789,8 @@ export const getClients = query({
       const isReal =
         b.status === "upcoming" ||
         b.status === "in_progress" ||
-        b.status === "completed";
+        b.status === "completed" ||
+        b.status === "no_show";
       if (!isReal) continue;
 
       bookingToUser.set(b._id, b.userId);

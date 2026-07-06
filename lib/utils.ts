@@ -101,6 +101,11 @@ export const getBookingStatusBadge = (
         label: "Cancelled",
         className: "bg-destructive/10 text-destructive",
       };
+    case "no_show":
+      return {
+        label: "No show",
+        className: "bg-orange-400/20 text-orange-600",
+      };
     default:
       return {
         label: status.replace(/_/g, " "),

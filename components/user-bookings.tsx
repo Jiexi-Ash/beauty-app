@@ -69,6 +69,7 @@ type Booking = {
     | "cancelled_by_user"
     | "cancelled_by_business"
     | "cancelled_by_payment_failed"
+    | "no_show"
     | "completed"
     | string
     userId: Id<"users">
@@ -695,7 +696,7 @@ function UserBookings({ bookings }: UserBookingsProps) {
         , [bookings])
 
     const cancelledBookings = useMemo(() =>
-        bookings?.filter(b => b.status === "cancelled_by_user" || b.status === "cancelled_by_business" || b.status === "cancelled_by_payment_failed") ?? []
+        bookings?.filter(b => b.status === "cancelled_by_user" || b.status === "cancelled_by_business" || b.status === "cancelled_by_payment_failed" || b.status === "no_show") ?? []
         , [bookings])
 
     const hasVisibleBookings = upcomingBookings.length > 0 || completedBookings.length > 0 || cancelledBookings.length > 0
