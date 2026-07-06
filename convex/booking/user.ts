@@ -79,6 +79,12 @@ export const cancelBooking = mutation({
       throw new ConvexError("This booking cannot be cancelled.");
     }
 
+    if (booking.bookingStartDate <= Date.now()) {
+      throw new ConvexError(
+        "This appointment has already started and can no longer be cancelled.",
+      );
+    }
+
     await ctx.db.patch(booking._id, {
       status: "cancelled_by_user",
     });

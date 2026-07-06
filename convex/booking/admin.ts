@@ -9,6 +9,7 @@ import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { createNotification } from "../notifications/admin";
 import { internal } from "../_generated/api";
+import { NO_SHOW_CORRECTION_WINDOW_HOURS } from "../../constants";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -143,22 +144,35 @@ export const updateCompletedBookings = internalMutation({
     // hasn't marked complete — gives them time to close it out manually.
     const inProgressCutoff = now - 15 * 60 * 1000;
 
-    // Upcoming bookings the owner never started: complete at end time.
+    // Upcoming bookings the owner never started by end time: the client
+    // never showed, so this resolves to no_show rather than completed.
     const endedUpcoming = await ctx.db
       .query("booking")
       .withIndex("by_status", (q) => q.eq("status", "upcoming"))
       .filter((q) => q.lt(q.field("bookingEndDate"), now))
       .collect();
 
-    // In-progress bookings left open past the grace window.
+    // In-progress bookings left open past the grace window: they started,
+    // so the service happened even if the owner forgot to close it out.
     const staleInProgress = await ctx.db
       .query("booking")
       .withIndex("by_status", (q) => q.eq("status", "in_progress"))
       .filter((q) => q.lt(q.field("bookingEndDate"), inProgressCutoff))
       .collect();
 
-    await Promise.all(
-      [...endedUpcoming, ...staleInProgress].map(async (b) => {
+    await Promise.all([
+      ...endedUpcoming.map(async (b) => {
+        await ctx.db.patch(b._id, { status: "no_show" });
+
+        const service = await ctx.db.get(b.serviceId);
+        await createNotification(ctx, {
+          businessId: b.businessId,
+          type: "booking_no_show",
+          message: `${service?.name ?? "A booking"} was marked as a no-show — the client never checked in.`,
+          bookingId: b._id,
+        });
+      }),
+      ...staleInProgress.map(async (b) => {
         await ctx.db.patch(b._id, { status: "completed" });
 
         const service = await ctx.db.get(b.serviceId);
@@ -169,7 +183,7 @@ export const updateCompletedBookings = internalMutation({
           bookingId: b._id,
         });
       }),
-    );
+    ]);
   },
 });
 
@@ -339,6 +353,84 @@ export const completeBooking = mutation({
     // verification: a booking shouldn't be completable before it's started.
     if (booking.bookingStartDate > Date.now()) {
       throw new ConvexError("Cannot mark a booking complete before its start time.");
+    }
+
+    await ctx.db.patch(booking._id, { status: "completed" });
+    return { ok: true };
+  },
+});
+
+/**
+ * Cancels an upcoming booking on the business's side: transitions it to
+ * "cancelled_by_business" and notifies the client via WhatsApp. Deposits
+ * are non-refundable per policy, so this does not touch payment records.
+ */
+export const cancelBookingByBusiness = mutation({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "upcoming") {
+      throw new ConvexError("Only upcoming bookings can be cancelled.");
+    }
+
+    if (booking.bookingStartDate <= Date.now()) {
+      throw new ConvexError(
+        "This appointment has already started and can no longer be cancelled.",
+      );
+    }
+
+    await ctx.db.patch(booking._id, { status: "cancelled_by_business" });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.messages.SendWhatsAppBookingCancelledMessage,
+      { bookingId: booking._id },
+    );
+
+    return { ok: true };
+  },
+});
+
+/**
+ * Corrects an auto-marked no_show back to completed, for when the business
+ * forgot to click Start but the client actually attended. Only allowed
+ * within NO_SHOW_CORRECTION_WINDOW_HOURS of the booking's end time, so old
+ * no-shows can't be flipped to completed long after the fact. Silent by
+ * design — the business already knows what they did.
+ */
+export const markNoShowAsCompleted = mutation({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "no_show") {
+      throw new ConvexError("Only bookings marked as a no-show can be corrected.");
+    }
+
+    const correctionWindowMs = NO_SHOW_CORRECTION_WINDOW_HOURS * 60 * 60 * 1000;
+    if (Date.now() > booking.bookingEndDate + correctionWindowMs) {
+      throw new ConvexError(
+        `No-shows can only be corrected within ${NO_SHOW_CORRECTION_WINDOW_HOURS} hours of the appointment.`,
+      );
     }
 
     await ctx.db.patch(booking._id, { status: "completed" });

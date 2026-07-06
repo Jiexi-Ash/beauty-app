@@ -15,12 +15,28 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import {
   CalendarCheck,
   CalendarDots,
   CaretRight,
+  CheckCircle,
   Clock,
+  ClockCounterClockwise,
   EnvelopeSimple,
+  PlayCircle,
   Phone,
+  Prohibit,
   Scissors,
   NotePencil,
   Wallet,
@@ -36,6 +52,7 @@ import {
   getBookingStatusBadge,
   getInitials,
 } from "@/lib/utils";
+import { NO_SHOW_CORRECTION_WINDOW_HOURS } from "@/constants";
 
 function BookingDetails({
   preloadedBooking,
@@ -46,7 +63,16 @@ function BookingDetails({
 
   const startBooking = useMutation(api.booking.admin.startBooking);
   const completeBooking = useMutation(api.booking.admin.completeBooking);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const cancelBookingByBusiness = useMutation(
+    api.booking.admin.cancelBookingByBusiness,
+  );
+  const markNoShowAsCompleted = useMutation(
+    api.booking.admin.markNoShowAsCompleted,
+  );
+  const [pendingAction, setPendingAction] = useState<
+    "start" | "complete" | "cancel" | "update-no-show" | null
+  >(null);
+  const [now] = useState(() => Date.now());
 
   if (!data) notFound();
 
@@ -55,7 +81,7 @@ function BookingDetails({
 
   const handleStart = async () => {
     try {
-      setIsUpdating(true);
+      setPendingAction("start");
       await startBooking({ bookingId: booking._id });
       toast.success("Appointment started");
     } catch (err) {
@@ -63,13 +89,13 @@ function BookingDetails({
         err instanceof Error ? err.message : "Could not start the appointment.",
       );
     } finally {
-      setIsUpdating(false);
+      setPendingAction(null);
     }
   };
 
   const handleComplete = async () => {
     try {
-      setIsUpdating(true);
+      setPendingAction("complete");
       await completeBooking({ bookingId: booking._id });
       toast.success("Appointment completed");
     } catch (err) {
@@ -79,12 +105,49 @@ function BookingDetails({
           : "Could not complete the appointment.",
       );
     } finally {
-      setIsUpdating(false);
+      setPendingAction(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      setPendingAction("cancel");
+      await cancelBookingByBusiness({ bookingId: booking._id });
+      toast.success("Appointment cancelled");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Could not cancel the appointment.",
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleUpdateNoShow = async () => {
+    try {
+      setPendingAction("update-no-show");
+      await markNoShowAsCompleted({ bookingId: booking._id });
+      toast.success("Appointment marked as completed");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Could not update this booking.",
+      );
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const isUpcoming = booking.status === "upcoming";
   const isInProgress = booking.status === "in_progress";
+  const isNoShow = booking.status === "no_show";
+  const canCancel = isUpcoming && booking.bookingStartDate > now;
+  const canUpdateNoShow =
+    isNoShow &&
+    now <= booking.bookingEndDate + NO_SHOW_CORRECTION_WINDOW_HOURS * 60 * 60 * 1000;
   const paidRatio =
     financials.totalFee > 0
       ? Math.min(financials.paid / financials.totalFee, 1)
@@ -118,30 +181,180 @@ function BookingDetails({
         </div>
 
         {isUpcoming && (
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="lg" className="h-10">
-              Reschedule
-            </Button>
-            <Button
-              size="lg"
-              className="h-10"
-              onClick={handleStart}
-              disabled={isUpdating}
-            >
-              {isUpdating ? "Starting..." : "Start Appointment"}
-            </Button>
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-3",
+              !canCancel && "w-full lg:w-auto",
+            )}
+          >
+            {canCancel && (
+              <>
+                <Button variant="secondary" size="lg" className="h-10">
+                  Reschedule
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="destructive"
+                        size="lg"
+                        className="h-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                      />
+                    }
+                  >
+                    Cancel Appointment
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogMedia className="bg-destructive/10">
+                        <Prohibit className="text-destructive" weight="fill" />
+                      </AlertDialogMedia>
+                      <AlertDialogTitle>Cancel this appointment?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {client.name} will be notified by WhatsApp that {service.name} on{" "}
+                        {formatBookingDate(booking.bookingStartDate, business.timezone)} has
+                        been cancelled. The deposit is non-refundable and this can&apos;t be
+                        undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={pendingAction === "cancel"}>
+                        Keep appointment
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        disabled={pendingAction === "cancel"}
+                        onClick={handleCancel}
+                      >
+                        {pendingAction === "cancel" ? "Cancelling..." : "Cancel appointment"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    size="lg"
+                    className={cn(
+                      "h-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
+                      !canCancel && "w-full",
+                    )}
+                  />
+                }
+              >
+                Start Appointment
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogMedia className="bg-primary/10">
+                    <PlayCircle className="text-primary" weight="fill" />
+                  </AlertDialogMedia>
+                  <AlertDialogTitle>Start this appointment?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This marks {client.name}&apos;s {service.name} as in progress. Only
+                    start it once the client has arrived.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={pendingAction === "start"}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={pendingAction === "start"}
+                    onClick={handleStart}
+                  >
+                    {pendingAction === "start" ? "Starting..." : "Start appointment"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
 
         {isInProgress && (
-          <Button
-            size="lg"
-            className="h-10"
-            onClick={handleComplete}
-            disabled={isUpdating}
-          >
-            {isUpdating ? "Completing..." : "Mark as Completed"}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  size="lg"
+                  className="h-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                />
+              }
+            >
+              Mark as Completed
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogMedia className="bg-primary/10">
+                  <CheckCircle className="text-primary" weight="fill" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Mark as completed?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This finalizes {client.name}&apos;s {service.name} appointment as
+                  completed. Only do this once the service has actually finished.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={pendingAction === "complete"}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={pendingAction === "complete"}
+                  onClick={handleComplete}
+                >
+                  {pendingAction === "complete" ? "Completing..." : "Mark as completed"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {canUpdateNoShow && (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="h-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                />
+              }
+            >
+              <ClockCounterClockwise className="size-4" />
+              Update to Completed
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogMedia className="bg-primary/10">
+                  <CheckCircle className="text-primary" weight="fill" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Update to completed?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This was automatically marked as a no-show because it was never
+                  started. If {client.name} actually attended and you forgot to start
+                  the appointment, you can update it to completed.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={pendingAction === "update-no-show"}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={pendingAction === "update-no-show"}
+                  onClick={handleUpdateNoShow}
+                >
+                  {pendingAction === "update-no-show"
+                    ? "Updating..."
+                    : "Mark as completed"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 

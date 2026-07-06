@@ -16,6 +16,12 @@ export const DEPOSIT_PERCENT = 0.5
 // last-minute reschedules to hold a slot indefinitely without forfeiting the deposit.
 export const RESCHEDULE_MIN_NOTICE_HOURS = 48
 
+// Window after a booking's end time during which a business can correct an
+// auto-marked no_show back to completed (e.g. they forgot to click Start).
+// Bounded so old no-shows can't be flipped to completed long after the fact
+// just to pad the verification count.
+export const NO_SHOW_CORRECTION_WINDOW_HOURS = 48
+
 type BusinessDay = {
     shortName: string
     fullName: string
