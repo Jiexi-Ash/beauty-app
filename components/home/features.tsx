@@ -56,7 +56,7 @@ function Features() {
             </div>
           </div>
 
-          {/* Low-Cost Subscription */}
+          {/* Only pay when you get paid */}
           <div
             className={cn(
               "bg-gradient-to-br from-primary to-primary-container p-10 rounded-2xl text-white flex flex-col justify-center transition-all duration-700 delay-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5",
@@ -64,13 +64,13 @@ function Features() {
             )}
           >
             <div className="mb-8">
-              <h3 className="text-2xl font-headline font-bold mb-4">Low-cost subscription</h3>
+              <h3 className="text-2xl font-headline font-bold mb-4">Only pay when you get paid</h3>
               <p className="opacity-90 leading-relaxed">
-                Forget high commission fees. We believe in keeping the profit in the community with a flat-rate plan that scales with you.
+                No subscription, no upfront cost. We take a small cut of the deposit — capped, so a big booking never costs you more.
               </p>
             </div>
-            <p className="text-4xl font-black mb-2">From R69/mo</p>
-            <p className="text-xs uppercase tracking-widest opacity-70">No hidden fees. Cancel anytime.</p>
+            <p className="text-4xl font-black mb-2">R30 max fee</p>
+            <p className="text-xs uppercase tracking-widest opacity-70">10% of deposit, capped. You keep 100% collected in person.</p>
           </div>
 
           {/* Customer Records */}

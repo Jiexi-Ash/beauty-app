@@ -1,145 +1,75 @@
 "use client"
 import { CheckCircle } from "@phosphor-icons/react"
 import { Button } from "./ui/button"
-import { cn } from "@/lib/utils"
 
-type PricingPlan = {
-  name: string
-  description: string
-  price: string
-  priceSuffix: string
-  features: { text: string; bold?: boolean }[]
-  cta: string
-  popular?: boolean
-  comingSoon?: boolean
+const freeTier = {
+  name: "Community Free",
+  description: "For solo artists just getting started.",
+  price: "FREE",
+  priceSuffix: "/forever",
+  features: [
+    "Unlimited bookings",
+    "Up to 10 services listed",
+    "Basic profile listing",
+    "Automated WhatsApp reminders",
+    "Verified badge after 50 completed bookings",
+  ],
+  cta: "Start for free",
 }
 
-const plans: PricingPlan[] = [
-  {
-    name: "Community Free",
-    description: "For solo artists just getting started.",
-    price: "FREE",
-    priceSuffix: "/forever",
-    features: [
-      { text: "Unlimited bookings" },
-      { text: "Up to 10 services listed" },
-      { text: "Basic profile listing" },
-      { text: "Automated WhatsApp reminders" },
-      { text: "10% commission per booking" },
-    ],
-    cta: "Start for free",
-  },
-  {
-    name: "Pro",
-    description: "Full suite for solo operators growing fast.",
-    price: "R69",
-    priceSuffix: "/mo",
-    popular: true,
-    features: [
-      { text: "Zero commission — keep every rand", bold: true },
-      { text: "Unlimited bookings" },
-      { text: "Unlimited services listed" },
-      { text: "Verified badge" },
-      { text: "Customer loyalty analytics" },
-    ],
-    cta: "Coming soon",
-    comingSoon: true,
-  },
-  {
-    name: "Premium",
-    description: "For salons, barbershops and clinics with a team.",
-    price: "R149",
-    priceSuffix: "/mo",
-    features: [
-      { text: "Everything in Pro", bold: true },
-      { text: "Multiple staff / specialist seats" },
-      { text: "Per-specialist bookings & schedules" },
-      { text: "Full business analytics dashboard" },
-      { text: "Priority support" },
-    ],
-    cta: "Coming soon",
-    comingSoon: true,
-  },
-]
+// A literal em dash character anywhere in this file breaks Tailwind's scanner for
+// every md: responsive class below it (grid silently collapses to one column).
+const dash = "\u2014"
 
 export default function PricingCards() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-      {plans.map((plan) => (
-        <div
-          key={plan.name}
-          className={cn(
-            "relative rounded-2xl p-8 flex flex-col transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-            plan.popular
-              ? "bg-primary text-white shadow-[0_24px_60px_rgba(221,39,94,0.22)] hover:-translate-y-1"
-              : "bg-surface-container-lowest border border-outline-variant/15 hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-0.5",
-          )}
-        >
-          {/* Inline recommended eyebrow — replaces the floating badge */}
-          {plan.popular && (
-            <div className="inline-flex w-fit items-center bg-white/20 text-white rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-semibold mb-5">
-              Recommended
-            </div>
-          )}
-
-          {/* Name + description block — consistent height via min-h */}
-          <div className="min-h-[72px] mb-6">
-            <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
-            <p className={cn("text-sm", plan.popular ? "text-white/75" : "text-on-surface-variant")}>
-              {plan.description}
-            </p>
+    <div className="p-1.5 rounded-[1.5rem] bg-black/[0.03] ring-1 ring-black/5 transition-shadow duration-500 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
+      <div className="rounded-[calc(1.5rem-0.375rem)] bg-surface-container-lowest p-8 md:p-12 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] grid grid-cols-1 md:grid-cols-12 gap-10 md:items-center">
+        {/* Identity + price */}
+        <div className="md:col-span-4">
+          <div className="inline-flex w-fit items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.15em] font-semibold mb-5">
+            Live today {dash} no waitlist
           </div>
+          <h3 className="text-2xl font-bold mb-1">{freeTier.name}</h3>
+          <p className="text-sm text-on-surface-variant mb-6">{freeTier.description}</p>
+          <p className="text-6xl font-black leading-none">
+            {freeTier.price}
+            <span className="text-base font-medium ml-1 text-on-surface-variant">
+              {freeTier.priceSuffix}
+            </span>
+          </p>
+        </div>
 
-          {/* Price */}
-          <div className={cn("pb-6 mb-6 border-b", plan.popular ? "border-white/15" : "border-outline-variant/20")}>
-            <p className="text-5xl font-black">
-              {plan.price}
-              <span className={cn("text-base font-medium ml-1", plan.popular ? "text-white/60" : "text-on-surface-variant")}>
-                {plan.priceSuffix}
-              </span>
-            </p>
-          </div>
+        {/* Divider */}
+        <div className="hidden md:block md:col-span-1 h-full w-px bg-outline-variant/20 mx-auto" />
 
-          {/* Feature list — flex-1 pins button to bottom */}
-          <ul className="space-y-3 mb-8 flex-1">
-            {plan.features.map((feature) => (
-              <li key={feature.text} className="flex items-start gap-2.5">
-                <CheckCircle
-                  size={16}
-                  weight="fill"
-                  className={cn("shrink-0 mt-0.5", plan.popular ? "text-white/70" : "text-primary")}
-                />
-                <span
-                  className={cn(
-                    "text-sm leading-snug",
-                    feature.bold ? "font-bold" : "",
-                    plan.popular ? "text-white/90" : "",
-                  )}
-                >
-                  {feature.text}
-                </span>
+        {/* Commission copy + features */}
+        <div className="md:col-span-4">
+          <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">
+            10% commission on deposits only, capped at{" "}
+            <span className="font-semibold text-on-surface">R30</span> {dash} you keep 100% of
+            what you collect in person. We absorb the card fees.
+          </p>
+          <ul className="space-y-3">
+            {freeTier.features.map((feature) => (
+              <li key={feature} className="flex items-start gap-2.5">
+                <CheckCircle size={16} weight="fill" className="shrink-0 mt-0.5 text-primary" />
+                <span className="text-sm leading-snug">{feature}</span>
               </li>
             ))}
           </ul>
+        </div>
 
-          {/* CTA — pill shape, always at bottom */}
+        {/* CTA */}
+        <div className="md:col-span-3">
           <Button
-            disabled={plan.comingSoon}
-            className={cn(
-              "w-full h-12 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
-              plan.comingSoon
-                ? "cursor-not-allowed opacity-60"
-                : "cursor-pointer",
-              plan.popular
-                ? "bg-white text-primary hover:bg-white/90"
-                : "border-2 border-primary text-primary hover:bg-primary hover:text-white",
-            )}
-            variant={plan.popular ? "default" : "outline"}
+            className="w-full h-14 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer border-2 border-primary text-primary hover:bg-primary hover:text-white"
+            variant="outline"
           >
-            {plan.cta}
+            {freeTier.cta}
           </Button>
         </div>
-      ))}
+      </div>
     </div>
   )
 }

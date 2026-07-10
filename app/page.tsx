@@ -2,7 +2,6 @@ import Navbar from "@/components/navbar";
 import Hero from "@/components/home/hero";
 import Features from "@/components/home/features";
 import PopularSalons from "@/components/home/popular-salons";
-import Testimonials from "@/components/home/testimonials";
 import Pricing from "@/components/home/pricing";
 import Footer from "@/components/footer";
 import { getAuthToken } from "@/auth";
@@ -24,7 +23,6 @@ export default async function Home() {
         <Hero />
         <Features />
         <PopularSalons preloadedBusinesses={preloadedBusinesses} />
-        <Testimonials />
         <Pricing />
       </main>
       <Footer />

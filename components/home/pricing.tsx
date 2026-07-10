@@ -20,7 +20,7 @@ function Pricing() {
         <h2 className="text-4xl font-headline font-bold mb-4">
           Pricing that respects the <span className="text-primary">community</span>
         </h2>
-        <p className="text-on-surface-variant">Choose the plan that fits your current hustle.</p>
+        <p className="text-on-surface-variant">No tiers, no lock-in — just a fair cut when you get paid.</p>
       </div>
 
       <div
