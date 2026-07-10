@@ -12,6 +12,15 @@ export const VERIFICATION_THRESHOLD = 50
 // Platform-wide policy: every booking takes this fraction of the service price
 export const DEPOSIT_PERCENT = 0.5
 
+// Statuses that still hold a slot and must be counted when checking for
+// double-bookings or rendering blocked calendar slots. Everything else
+// (cancelled_*, completed, no_show) has released the slot.
+export const ACTIVE_BOOKING_STATUSES = [
+    "pending",
+    "upcoming",
+    "in_progress",
+] as const
+
 // Minimum notice required to reschedule a booking, to stop users chaining
 // last-minute reschedules to hold a slot indefinitely without forfeiting the deposit.
 export const RESCHEDULE_MIN_NOTICE_HOURS = 48

@@ -5,6 +5,7 @@ import { startOfDay, endOfDay, format, isSameDay } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { filter } from "convex-helpers/server/filter";
 import { getCurrentUser } from "../users";
+import { ACTIVE_BOOKING_STATUSES } from "../../constants";
 
 async function getBusinessRatingSummary(
   ctx: QueryCtx,
@@ -260,7 +261,7 @@ export const getBlockedSlots = query({
     const dayEnd = endOfDay(tzDate).getTime();
     const dayName = format(tzDate, "EEEE");
 
-    const [businessHours, businessSettings, serviceBookings] =
+    const [businessHours, businessSettings, serviceBookingsByStatus] =
       await Promise.all([
         ctx.db
           .query("businessHours")
@@ -271,17 +272,22 @@ export const getBlockedSlots = query({
           .query("businessSettings")
           .withIndex("by_business", (q) => q.eq("businessId", business._id))
           .first(),
-        ctx.db
-          .query("booking")
-          .withIndex("by_service_status_date", (q) =>
-            q
-              .eq("serviceId", service._id)
-              .eq("status", "upcoming")
-              .gte("bookingStartDate", dayStart)
-              .lte("bookingStartDate", dayEnd),
-          )
-          .collect(),
+        Promise.all(
+          ACTIVE_BOOKING_STATUSES.map((status) =>
+            ctx.db
+              .query("booking")
+              .withIndex("by_service_status_date", (q) =>
+                q
+                  .eq("serviceId", service._id)
+                  .eq("status", status)
+                  .gte("bookingStartDate", dayStart)
+                  .lte("bookingStartDate", dayEnd),
+              )
+              .collect(),
+          ),
+        ),
       ]);
+    const serviceBookings = serviceBookingsByStatus.flat();
 
     return {
       businessHours: businessHours ?? null,

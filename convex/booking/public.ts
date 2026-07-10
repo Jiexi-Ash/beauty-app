@@ -1,6 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
-import { DEPOSIT_PERCENT, RESCHEDULE_MIN_NOTICE_HOURS } from "../../constants";
+import {
+  ACTIVE_BOOKING_STATUSES,
+  DEPOSIT_PERCENT,
+  RESCHEDULE_MIN_NOTICE_HOURS,
+} from "../../constants";
 import { createNotification } from "../notifications/admin";
 
 export const createBookingRecord = internalMutation({
@@ -83,10 +87,11 @@ export const createBookingRecord = internalMutation({
       )
       .filter((q) =>
         q.and(
-          q.neq(q.field("status"), "failed"),
-          q.neq(q.field("status"), "cancelled_by_user"),
-          q.neq(q.field("status"), "cancelled_by_business"),
-          q.neq(q.field("status"), "cancelled_by_payment_failed"),
+          q.or(
+            ...ACTIVE_BOOKING_STATUSES.map((status) =>
+              q.eq(q.field("status"), status),
+            ),
+          ),
           q.lt(q.field("bookingStartDate"), bookingEnd.getTime()),
           q.gt(q.field("bookingEndDate"), bookingStart.getTime()),
         ),
@@ -215,10 +220,11 @@ export const rescheduleBookingRecord = internalMutation({
       .filter((q) =>
         q.and(
           q.neq(q.field("_id"), booking._id),
-          q.neq(q.field("status"), "failed"),
-          q.neq(q.field("status"), "cancelled_by_user"),
-          q.neq(q.field("status"), "cancelled_by_business"),
-          q.neq(q.field("status"), "cancelled_by_payment_failed"),
+          q.or(
+            ...ACTIVE_BOOKING_STATUSES.map((status) =>
+              q.eq(q.field("status"), status),
+            ),
+          ),
           q.lt(q.field("bookingStartDate"), newEndMs),
           q.gt(q.field("bookingEndDate"), newStartMs),
         ),
