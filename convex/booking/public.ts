@@ -59,6 +59,35 @@ export const createBookingRecord = internalMutation({
       .unique();
     if (!user) throw new ConvexError("User not found.");
 
+    // Rate limit: without this, the overlap check below (which treats
+    // "pending" as slot-blocking) can be gamed — a user can repeatedly
+    // start-and-abandon checkout to hold a single-slot solo operator's
+    // calendar indefinitely, since each abandoned hold only clears after the
+    // ~15-20min stale-pending sweep, and nothing stops immediately re-creating
+    // one. Counts only pending/abandoned attempts, not completed bookings, so
+    // a legitimate repeat customer isn't penalized.
+    const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+    const RATE_LIMIT_MAX_ATTEMPTS = 3;
+
+    const recentAttempts = await ctx.db
+      .query("booking")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(20);
+
+    const recentAbandonedAttempts = recentAttempts.filter(
+      (b) =>
+        b.businessId === business._id &&
+        b._creationTime > Date.now() - RATE_LIMIT_WINDOW_MS &&
+        (b.status === "pending" || b.status === "cancelled_by_payment_failed"),
+    );
+
+    if (recentAbandonedAttempts.length >= RATE_LIMIT_MAX_ATTEMPTS) {
+      throw new ConvexError(
+        "Too many recent booking attempts. Please wait a while before trying again, or contact the business directly.",
+      );
+    }
+
     const bookingStart = new Date(`${args.date}T${args.time}:00+02:00`);
     if (Number.isNaN(bookingStart.getTime()))
       throw new ConvexError("Invalid date or time.");
@@ -135,7 +164,7 @@ export const createBookingRecord = internalMutation({
       serviceId: service._id as string,
       userId: user._id as string,
       serviceName: service.name,
-      servicePrice: service.price,
+      depositAmount: depositPrice,
       commission: subTier.commission,
       reference,
       email: user.email,

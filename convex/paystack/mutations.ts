@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { paystackChargeEventValidator } from "./types";
 import { createNotification } from "../notifications/admin";
 import { internal } from "../_generated/api";
+import { computeSplitFallback } from "./split";
 
 
 export const handlePaystackEvent = internalMutation({
@@ -44,16 +45,14 @@ export const handlePaystackEvent = internalMutation({
                     return null;
                 }
 
-                // Use Paystack's actual split breakdown (fees_split).
-                // Fall back to commission calc if fees_split is absent (e.g. subaccount not used).
+                // Use Paystack's actual split breakdown (fees_split) when present.
+                // Falls back to a capped commission estimate if fees_split is
+                // absent (e.g. subaccount not used) — see computeSplitFallback.
                 // fees_split.integration = platform net after Paystack deducts its fee
                 // fees_split.subaccount  = merchant net
                 // fees_split.paystack    = Paystack processing fee
-                const fs = event.data.fees_split;
-                const paystackFee = fs?.paystack ?? 0;
-                const platformAmount = fs?.integration ?? Math.round(payment.amount * (payment.commission / 100)) - paystackFee;
-                const merchantAmount = fs?.subaccount ?? (payment.amount - payment.amount * (payment.commission / 100));
-                const amountNet = payment.amount - paystackFee;
+                const { paystackFee, platformAmount, merchantAmount, amountNet } =
+                    computeSplitFallback(payment.amount, payment.commission, event.data.fees_split);
 
                 await ctx.db.patch(payment._id, { status: "completed", merchantAmount, paymentDate: Date.now() });
                 await ctx.db.patch(booking._id, { status: "upcoming" });

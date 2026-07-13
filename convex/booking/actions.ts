@@ -3,7 +3,8 @@ import { ConvexError, v } from "convex/values";
 import { action, internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { initiatePaystackCheckout } from "../payment";
-import { DEPOSIT_PERCENT } from "../../constants";
+import { getSplitMaxCents } from "../paystack/split";
+import type { Id } from "../_generated/dataModel";
 
 export const bookSlot = action({
   args: {
@@ -19,8 +20,8 @@ export const bookSlot = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("You must be logged in to book.");
 
-    const SPLIT_MAX_CENTS = Number(process.env.SPLIT_MAX);
-    if (isNaN(SPLIT_MAX_CENTS) || SPLIT_MAX_CENTS <= 0) {
+    const SPLIT_MAX_CENTS = getSplitMaxCents();
+    if (SPLIT_MAX_CENTS === undefined) {
       console.error("SPLIT_MAX env var is missing or invalid — payment split cannot be configured.");
       throw new ConvexError("We couldn't process your booking at this time. Please try again later.");
     }
@@ -41,7 +42,7 @@ export const bookSlot = action({
 
     const [firstName, ...lastParts] = args.fullName.split(" ");
     const lastName = lastParts.join(" ") || firstName;
-    const depositAmountCents = Math.round(result.servicePrice * DEPOSIT_PERCENT);
+    const depositAmountCents = result.depositAmount;
     const platformFee = Math.round(depositAmountCents * (result.commission / 100));
 
     const checkoutArgs: Parameters<typeof initiatePaystackCheckout>[0] = {
@@ -58,8 +59,23 @@ export const bookSlot = action({
       reference: result.reference,
     };
 
-
-    const paystackCheckoutUrl = await initiatePaystackCheckout(checkoutArgs);
+    // If Paystack initialization throws here, createBookingRecord's mutation
+    // has ALREADY committed the booking+payment as "pending" — actions don't
+    // roll back mutations when a later step fails. Without this, the booking
+    // is orphaned pending forever (it blocks the slot, and the stale-pending
+    // sweep can't resolve a reference Paystack never registered). Cancel it
+    // explicitly so the slot frees up immediately, then re-throw so the user
+    // still sees the error.
+    let paystackCheckoutUrl: string;
+    try {
+      paystackCheckoutUrl = await initiatePaystackCheckout(checkoutArgs);
+    } catch (error) {
+      await ctx.runMutation(internal.booking.admin.cancelOrphanedBooking, {
+        bookingId: result.bookingId as Id<"booking">,
+        bookingPaymentId: result.bookingPaymentId as Id<"bookingPayment">,
+      });
+      throw error;
+    }
 
     return paystackCheckoutUrl
   },

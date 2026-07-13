@@ -10,6 +10,7 @@ import { getBusinessByUserId } from "../business/admin";
 import { createNotification } from "../notifications/admin";
 import { internal } from "../_generated/api";
 import { NO_SHOW_CORRECTION_WINDOW_HOURS } from "../../constants";
+import { computeSplitFallback } from "../paystack/split";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -75,10 +76,8 @@ export const markCompleted = internalMutation({
     // once cancelled (a late success here is a refund case, not a completion).
     if (!booking || booking.status !== "pending") return null;
 
-    const paystackFee = fees_split?.paystack ?? 0;
-    const platformAmount = fees_split?.integration ?? Math.round(payment.amount * (payment.commission / 100)) - paystackFee;
-    const merchantAmount = fees_split?.subaccount ?? Math.round(payment.amount * (1 - payment.commission / 100));
-    const amountNet = payment.amount - paystackFee;
+    const { paystackFee, platformAmount, merchantAmount, amountNet } =
+      computeSplitFallback(payment.amount, payment.commission, fees_split);
 
     await ctx.db.patch(paymentId, { status: "completed", merchantAmount, paymentDate: Date.now() });
     await ctx.db.patch(booking._id, { status: "upcoming" });
@@ -133,6 +132,36 @@ export const markFailed = internalMutation({
     if (booking && booking.status === "pending") {
       await ctx.db.patch(booking._id, { status: "cancelled_by_payment_failed" });
     }
+    return null;
+  },
+});
+
+/**
+ * Compensating action for when Paystack checkout initialization fails right
+ * after createBookingRecord already committed the booking+payment as
+ * "pending" — Convex actions don't roll back mutations when a later external
+ * call fails, so this cancels the orphaned booking explicitly, freeing the
+ * slot immediately instead of waiting on the stale-pending sweep (which can't
+ * resolve a payment reference Paystack never actually registered). Idempotent:
+ * no-ops if either record has already moved past "pending".
+ */
+export const cancelOrphanedBooking = internalMutation({
+  args: {
+    bookingId: v.id("booking"),
+    bookingPaymentId: v.id("bookingPayment"),
+  },
+  returns: v.null(),
+  handler: async (ctx, { bookingId, bookingPaymentId }) => {
+    const booking = await ctx.db.get(bookingId);
+    if (booking && booking.status === "pending") {
+      await ctx.db.patch(bookingId, { status: "cancelled_by_payment_failed" });
+    }
+
+    const payment = await ctx.db.get(bookingPaymentId);
+    if (payment && payment.status === "pending") {
+      await ctx.db.patch(bookingPaymentId, { status: "failed" });
+    }
+
     return null;
   },
 });

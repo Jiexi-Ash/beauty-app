@@ -24,6 +24,7 @@ import type * as notifications_messages from "../notifications/messages.js";
 import type * as payment from "../payment.js";
 import type * as paystack_actions from "../paystack/actions.js";
 import type * as paystack_mutations from "../paystack/mutations.js";
+import type * as paystack_split from "../paystack/split.js";
 import type * as paystack_types from "../paystack/types.js";
 import type * as paystack_utils from "../paystack/utils.js";
 import type * as public_ from "../public.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   payment: typeof payment;
   "paystack/actions": typeof paystack_actions;
   "paystack/mutations": typeof paystack_mutations;
+  "paystack/split": typeof paystack_split;
   "paystack/types": typeof paystack_types;
   "paystack/utils": typeof paystack_utils;
   public: typeof public_;
