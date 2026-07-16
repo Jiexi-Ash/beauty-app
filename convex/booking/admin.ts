@@ -3,14 +3,17 @@ import {
   internalMutation,
   internalQuery,
   mutation,
+  MutationCtx,
   query,
 } from "../_generated/server";
+import { Doc } from "../_generated/dataModel";
 import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { createNotification } from "../notifications/admin";
 import { internal } from "../_generated/api";
 import { NO_SHOW_CORRECTION_WINDOW_HOURS } from "../../constants";
 import { computeSplitFallback } from "../paystack/split";
+import { assertSlotAvailable } from "./availability";
 import { tz } from "@date-fns/tz";
 import {
   startOfYear,
@@ -357,12 +360,50 @@ export const startBooking = mutation({
 
 
 /**
+ * Attests that a deposit's remaining balance was collected outside the app
+ * (cash/card in person). Self-reported, not commission-bearing — never
+ * touches `status`/`amount`/`merchantAmount`, which stay verified-Paystack
+ * only. The eligibility guard is load-bearing for `completeBooking`, which
+ * calls this unconditionally with no pre-check of its own; it's redundant
+ * defense-in-depth for `markBalanceCollected`, which already validates the
+ * same conditions itself with more specific, user-facing error messages
+ * before calling in.
+ */
+async function settleDepositBalance(
+  ctx: MutationCtx,
+  payment: Doc<"bookingPayment">,
+): Promise<void> {
+  if (
+    payment.status !== "completed" ||
+    payment.paymentType !== "deposit" ||
+    payment.balanceCollected
+  ) {
+    return;
+  }
+
+  await ctx.db.patch(payment._id, {
+    balanceCollected: true,
+    balanceCollectedAt: Date.now(),
+    balanceCollectedSource: "manual",
+  });
+}
+
+/**
  * Completes an in-progress booking: transitions it to "completed".
  * Ownership-checked and only valid from the "in_progress" state.
+ *
+ * `balanceCollected` is an optional owner attestation, surfaced in the same
+ * completion dialog, that the remaining deposit balance was collected
+ * outside the app (cash/card in person). It's self-reported and never
+ * touches `status`/`amount`/`merchantAmount` on the payment record, so it
+ * can't be conflated with verified Paystack revenue.
  */
 export const completeBooking = mutation({
-  args: { bookingId: v.id("booking") },
-  handler: async (ctx, { bookingId }) => {
+  args: {
+    bookingId: v.id("booking"),
+    balanceCollected: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { bookingId, balanceCollected }) => {
     const user = await getCurrentUser(ctx);
     if (!user) throw new ConvexError("You must be signed in.");
 
@@ -385,6 +426,57 @@ export const completeBooking = mutation({
     }
 
     await ctx.db.patch(booking._id, { status: "completed" });
+
+    if (balanceCollected && booking.bookingPaymentId) {
+      const payment = await ctx.db.get(booking.bookingPaymentId);
+      if (payment) await settleDepositBalance(ctx, payment);
+    }
+
+    return { ok: true };
+  },
+});
+
+/**
+ * Fallback for settling a deposit balance after the fact (the owner didn't
+ * check the box at completion time). Same attestation semantics as the
+ * `balanceCollected` flag on `completeBooking` — self-reported, not
+ * commission-bearing, kept off the verified payment fields.
+ */
+export const markBalanceCollected = mutation({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "completed") {
+      throw new ConvexError(
+        "Only completed appointments can have their balance marked as collected.",
+      );
+    }
+
+    if (!booking.bookingPaymentId) {
+      throw new ConvexError("This appointment has no payment on record.");
+    }
+
+    const payment = await ctx.db.get(booking.bookingPaymentId);
+    if (!payment || payment.status !== "completed" || payment.paymentType !== "deposit") {
+      throw new ConvexError("This appointment has no outstanding balance to collect.");
+    }
+
+    if (payment.balanceCollected) {
+      throw new ConvexError("This balance has already been marked as collected.");
+    }
+
+    await settleDepositBalance(ctx, payment);
+
     return { ok: true };
   },
 });
@@ -463,6 +555,81 @@ export const markNoShowAsCompleted = mutation({
     }
 
     await ctx.db.patch(booking._id, { status: "completed" });
+    return { ok: true };
+  },
+});
+
+/**
+ * Reschedules an upcoming booking on the business's side to a new date/time.
+ * Unlike the client-initiated reschedule (booking.public.rescheduleBookingRecord),
+ * this has no minimum-notice restriction — the owner should be able to
+ * reschedule anytime, including last-minute. Slot availability is still
+ * enforced with the same overlap logic so the new time can't double-book.
+ */
+export const rescheduleBookingByBusiness = mutation({
+  args: {
+    bookingId: v.id("booking"),
+    date: v.string(),
+    time: v.string(),
+  },
+  handler: async (ctx, { bookingId, date, time }) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) throw new ConvexError("You must be signed in.");
+
+    const business = await getBusinessByUserId(ctx, user._id);
+    if (!business) throw new ConvexError("No business found for this user.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.businessId !== business._id) {
+      throw new ConvexError("Booking not found.");
+    }
+
+    if (booking.status !== "upcoming") {
+      throw new ConvexError("Only upcoming appointments can be rescheduled.");
+    }
+
+    const service = await ctx.db.get(booking.serviceId);
+    if (!service) throw new ConvexError("Service not found.");
+
+    const newStart = new Date(`${date}T${time}:00+02:00`);
+    if (Number.isNaN(newStart.getTime())) {
+      throw new ConvexError("Invalid date or time.");
+    }
+
+    const newStartMs = newStart.getTime();
+    const newEndMs = newStartMs + service.duration * 60000;
+
+    if (newStartMs <= Date.now()) {
+      throw new ConvexError("New appointment time must be in the future.");
+    }
+
+    if (
+      newStartMs === booking.bookingStartDate &&
+      newEndMs === booking.bookingEndDate
+    ) {
+      throw new ConvexError(
+        "New time is the same as the current appointment time.",
+      );
+    }
+
+    await assertSlotAvailable(ctx, {
+      businessId: business._id,
+      excludeBookingId: booking._id,
+      newStartMs,
+      newEndMs,
+    });
+
+    await ctx.db.patch(booking._id, {
+      bookingStartDate: newStartMs,
+      bookingEndDate: newEndMs,
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.messages.SendWhatsAppBookingRescheduledMessage,
+      { bookingId: booking._id },
+    );
+
     return { ok: true };
   },
 });

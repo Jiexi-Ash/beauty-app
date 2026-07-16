@@ -6,6 +6,7 @@ import {
   RESCHEDULE_MIN_NOTICE_HOURS,
 } from "../../constants";
 import { createNotification } from "../notifications/admin";
+import { assertSlotAvailable } from "./availability";
 
 export const createBookingRecord = internalMutation({
   args: {
@@ -231,37 +232,12 @@ export const rescheduleBookingRecord = internalMutation({
         "New time is the same as the current booking time.",
       );
 
-    const settings = await ctx.db
-      .query("businessSettings")
-      .withIndex("by_business", (q) => q.eq("businessId", business._id))
-      .unique();
-
-    const maxConcurrent = settings?.maxConcurrentBookings ?? 1;
-
-    const overlapping = await ctx.db
-      .query("booking")
-      .withIndex("by_business_and_date", (q) =>
-        q
-          .eq("businessId", business._id)
-          .gte("bookingStartDate", newStartMs - 24 * 60 * 60 * 1000)
-          .lte("bookingStartDate", newEndMs),
-      )
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("_id"), booking._id),
-          q.or(
-            ...ACTIVE_BOOKING_STATUSES.map((status) =>
-              q.eq(q.field("status"), status),
-            ),
-          ),
-          q.lt(q.field("bookingStartDate"), newEndMs),
-          q.gt(q.field("bookingEndDate"), newStartMs),
-        ),
-      )
-      .collect();
-
-    if (overlapping.length >= maxConcurrent)
-      throw new ConvexError("This time slot is fully booked.");
+    await assertSlotAvailable(ctx, {
+      businessId: business._id,
+      excludeBookingId: booking._id,
+      newStartMs,
+      newEndMs,
+    });
 
     await ctx.db.patch(booking._id, {
       bookingStartDate: newStartMs,

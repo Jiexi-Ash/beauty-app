@@ -133,6 +133,7 @@ export const getBookingDetails = query({
         image: client?.image ?? null,
       },
       service: {
+        _id: booking.serviceId,
         name: service?.name ?? "Service",
         description: service?.description ?? null,
         duration: service?.duration,
@@ -144,11 +145,12 @@ export const getBookingDetails = query({
           amount: payment.amount,
           status: payment.status,
           type: payment.paymentType,
+          balanceCollected: payment.balanceCollected ?? false,
         }
         : null,
       financials: { totalFee, paid, remaining },
       history,
-      business: { timezone: business.timezone },
+      business: { timezone: business.timezone, slug: business.slug },
     };
   },
 });

@@ -170,6 +170,10 @@ export default defineSchema({
     ),
     commission: v.number(),
     paymentReference: v.optional(v.string()),
+    // Self-reported: balance collected outside the app (cash/card). Not a verified Paystack transaction — never sum into revenue analytics.
+    balanceCollected: v.optional(v.boolean()),
+    balanceCollectedAt: v.optional(v.number()),
+    balanceCollectedSource: v.optional(v.literal("manual")),
   })
     .index("by_booking", ["bookingId"])
     .index("by_booking_and_status", ["bookingId", "status"])

@@ -1,10 +1,10 @@
 "use client";
 
-import { SignOut } from "@phosphor-icons/react";
+import { Broadcast, SignOut } from "@phosphor-icons/react";
 import Image from "next/image";
 import NotificationBell from "./notification-bell";
-import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
 import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -20,12 +20,30 @@ import {
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { getInitials } from "@/lib/utils";
 import Link from "next/link";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
 
 function DashboardHeader() {
   const { data: business, isLoading } = useQuery({
     ...convexQuery(api.business.admin.getUserBusiness, {}),
   });
   const { user } = useUser();
+
+  const { mutate: goLive, isPending: isGoingLive } = useMutation({
+    mutationFn: useConvexMutation(api.business.admin.toggleBusinessVisibilty),
+    onSuccess: () => {
+      toast.success("You're live!", {
+        description: "Clients can now find and book your salon.",
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Could not go live. Try again.",
+      );
+    },
+  });
 
   return (
     <header className="top-0 sticky border-b border-border shadow-sm px-4 md:px-6 z-50 bg-background/95 backdrop-blur-sm">
@@ -46,7 +64,7 @@ function DashboardHeader() {
                   className="rounded-full object-cover"
                 />
               </div>
-              <h1 className="text-base text-primary font-bold">
+              <h1 className="text-base text-foreground font-bold">
                 {business.name}
               </h1>
             </>
@@ -54,6 +72,19 @@ function DashboardHeader() {
         </div>
 
         <div className="flex gap-2 items-center">
+          {business && business.visibility === "offline" && (
+            <button
+              type="button"
+              onClick={() => goLive({ visibility: "visible" })}
+              disabled={isGoingLive}
+              aria-label="Go live"
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity duration-200 hover:opacity-90 disabled:opacity-60 cursor-pointer lg:hidden"
+            >
+              <Broadcast className="size-3.5" weight="fill" />
+              {isGoingLive ? "Going live…" : "Go Live"}
+            </button>
+          )}
+
           <NotificationBell />
 
           <DropdownMenu>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Preloaded, usePreloadedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -13,15 +13,30 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
-import { DotsThreeVertical, FunnelSimple, MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { FunnelSimple, MagnifyingGlass, UsersThree } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { getInitials } from "@/lib/utils";
+import { formatZarFromRands, getInitials } from "@/lib/utils";
+import { EmptyState } from "./empty-state";
 
 const PAGE_SIZE = 8;
 
-const formatRevenue = (rands: number) =>
-  `R ${Math.round(rands).toLocaleString("en-ZA")}`;
+const ACTIVE_WINDOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+
+const ACTIVITY_FILTERS = [
+  { value: "all", label: "All clients" },
+  { value: "active", label: "Active (last 60 days)" },
+  { value: "lapsed", label: "Lapsed (60+ days)" },
+  { value: "never", label: "Never visited" },
+] as const;
 
 function ClientRoster({
   preloadedClients,
@@ -30,16 +45,29 @@ function ClientRoster({
 }) {
   const clients = usePreloadedQuery(preloadedClients);
   const [search, setSearch] = useState("");
+  const [activity, setActivity] =
+    useState<(typeof ACTIVITY_FILTERS)[number]["value"]>("all");
   const [page, setPage] = useState(0);
+  const [now] = useState(() => Date.now());
 
   const term = search.trim().toLowerCase();
-  const filtered = term
-    ? clients.filter((c) =>
-        [c.name, c.email, c.phone]
-          .filter(Boolean)
-          .some((v) => v!.toLowerCase().includes(term)),
-      )
-    : clients;
+  const filtered = useMemo(() => {
+    const matchesActivity = (client: (typeof clients)[number]) => {
+      if (activity === "all") return true;
+      if (activity === "never") return client.lastVisit === null;
+      if (client.lastVisit === null) return false;
+      const isActive = now - client.lastVisit <= ACTIVE_WINDOW_MS;
+      return activity === "active" ? isActive : !isActive;
+    };
+
+    return clients.filter((c) => {
+      if (!matchesActivity(c)) return false;
+      if (!term) return true;
+      return [c.name, c.email, c.phone]
+        .filter(Boolean)
+        .some((v) => v!.toLowerCase().includes(term));
+    });
+  }, [clients, term, activity, now]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -48,6 +76,12 @@ function ClientRoster({
 
   const onSearch = (value: string) => {
     setSearch(value);
+    setPage(0);
+  };
+
+  const onActivityChange = (value: string | null) => {
+    if (!value) return;
+    setActivity(value as (typeof ACTIVITY_FILTERS)[number]["value"]);
     setPage(0);
   };
 
@@ -63,7 +97,7 @@ function ClientRoster({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="group flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 sm:w-[280px] focus-within:ring-1 focus-within:ring-primary">
+          <div className="group flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 sm:w-[280px] focus-within:ring-1 focus-within:ring-foreground/10">
             <MagnifyingGlass className="size-4 shrink-0 text-muted-foreground" />
             <Input
               value={search}
@@ -72,21 +106,34 @@ function ClientRoster({
               className="h-auto w-full border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
-          <Button variant="secondary" size="lg" className="h-10 gap-2">
-            <FunnelSimple className="size-4" />
-            Filter
-          </Button>
+          <Select value={activity} onValueChange={onActivityChange}>
+            <SelectTrigger className="h-10 w-full bg-muted sm:w-[210px]">
+              <FunnelSimple className="size-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ACTIVITY_FILTERS.map((f) => (
+                <SelectItem key={f.value} value={f.value}>
+                  {f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {/* Mobile cards */}
       <div className="mt-6 flex flex-col gap-3 lg:hidden">
         {visible.length === 0 ? (
-          <p className="rounded-xl border border-border p-6 text-center text-sm text-muted-foreground">
-            {clients.length === 0
-              ? "No clients yet. They'll appear here once they book."
-              : "No clients match your search."}
-          </p>
+          <EmptyState
+            icon={UsersThree}
+            className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
+            message={
+              clients.length === 0
+                ? "No clients yet. They'll appear here once they book."
+                : "No clients match your filters."
+            }
+          />
         ) : (
           visible.map((client) => (
             <div
@@ -104,24 +151,16 @@ function ClientRoster({
                     {client.email ?? "No email"}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Client actions"
-                  className="shrink-0"
-                >
-                  <DotsThreeVertical className="size-5 text-muted-foreground" />
-                </Button>
               </div>
 
               <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 text-center">
                 <div>
-                  <p className="text-[10px] uppercase text-muted-foreground">Bookings</p>
+                  <p className="text-[10px] uppercase text-muted-foreground">Appointments</p>
                   <p className="text-sm font-semibold">{client.totalBookings}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground">Revenue</p>
-                  <p className="text-sm font-semibold">{formatRevenue(client.revenue)}</p>
+                  <p className="text-sm font-semibold">{formatZarFromRands(client.revenue)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground">Last visit</p>
@@ -138,7 +177,8 @@ function ClientRoster({
       </div>
 
       {/* Table */}
-      <div className="mt-6 hidden overflow-hidden rounded-xl border border-border lg:block">
+      <Card className="mt-6 hidden lg:block">
+        <CardContent className="p-0">
         <Table className="border-collapse">
           <TableHeader className="bg-muted [&_tr]:border-0">
             <TableRow className="border-0 hover:bg-transparent">
@@ -152,27 +192,31 @@ function ClientRoster({
                 PHONE
               </TableHead>
               <TableHead className="h-auto bg-muted px-6 py-4 text-xs font-semibold text-muted-foreground">
-                TOTAL BOOKINGS
+                TOTAL APPOINTMENTS
               </TableHead>
               <TableHead className="h-auto bg-muted px-6 py-4 text-xs font-semibold text-muted-foreground">
-                TOTAL REVENUE
+                PROCESSED REVENUE
               </TableHead>
               <TableHead className="h-auto bg-muted px-6 py-4 text-xs font-semibold text-muted-foreground">
                 LAST VISIT
               </TableHead>
-              <TableHead className="h-auto w-12 bg-muted px-6 py-4" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {visible.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={7}
-                  className="h-24 text-center text-sm text-muted-foreground"
+                  colSpan={6}
+                  className="h-40 text-center text-sm text-muted-foreground"
                 >
-                  {clients.length === 0
-                    ? "No clients yet. They'll appear here once they book."
-                    : "No clients match your search."}
+                  <EmptyState
+                    icon={UsersThree}
+                    message={
+                      clients.length === 0
+                        ? "No clients yet. They'll appear here once they book."
+                        : "No clients match your filters."
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -205,7 +249,7 @@ function ClientRoster({
                     {client.totalBookings}
                   </TableCell>
                   <TableCell className="p-6 text-sm font-semibold">
-                    {formatRevenue(client.revenue)}
+                    {formatZarFromRands(client.revenue)}
                   </TableCell>
                   <TableCell className="p-6 text-sm text-muted-foreground">
                     {client.lastVisit
@@ -214,22 +258,13 @@ function ClientRoster({
                         })
                       : "No visits yet"}
                   </TableCell>
-                  <TableCell className="p-6">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Client actions"
-                      className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-                    >
-                      <DotsThreeVertical className="size-5 text-muted-foreground" />
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Pagination */}
       <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">

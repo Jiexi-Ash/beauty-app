@@ -12,8 +12,20 @@ import {
   TrendUp,
 } from "@phosphor-icons/react";
 import Image from "next/image";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 import { Id } from "@/convex/_generated/dataModel";
 import { DataTable } from "./tables/services/data-table";
 import { columns, Service } from "./tables/services/columns";
@@ -29,7 +41,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useConvexMutation } from "@convex-dev/react-query";
 import { toast } from "sonner";
 import { ConvexError } from "convex/values";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, formatZar, formatZarFromRands } from "@/lib/utils";
 
 interface ServicesProps {
   preloadedServices: Preloaded<typeof api.service.admin.getBusinessServices>;
@@ -80,10 +92,7 @@ function Services({ preloadedServices }: ServicesProps) {
               </p>
             </div>
 
-            <Button
-              className="text-sm cursor-pointer h-10 px-6"
-              size="lg"
-            >
+            <Button className="text-sm cursor-pointer h-10 px-6" size="lg">
               <Link
                 href="/dashboard/services/create-service"
                 className="flex items-center gap-2"
@@ -100,20 +109,17 @@ function Services({ preloadedServices }: ServicesProps) {
 
   return (
     <div className="w-full">
-      <div className="px-6 flex flex-col space-y-4 mt-6">
+      <div className="px-6 flex flex-col space-y-4 py-6 2xl:mx-auto 2xl:max-w-[1600px]">
         <div className="flex flex-col gap-3 lg:gap-0 lg:items-center lg:flex-row lg:justify-between">
           <div className="flex flex-col">
-            <h2 className="font-bold text-xl md:text-2xl">Services</h2>
+            <h1 className="text-2xl font-headline font-bold md:text-3xl">Services</h1>
             <p className="text-sm text-muted-foreground">
               Create and manage your service list, pricing, duration, and
               visibility.
             </p>
           </div>
 
-          <Button
-            className="text-sm cursor-pointer h-10 px-6"
-            size="lg"
-          >
+          <Button className="text-sm cursor-pointer h-10 px-6" size="lg">
             <Link
               href="/dashboard/services/create-service"
               className="flex items-center gap-2"
@@ -125,7 +131,7 @@ function Services({ preloadedServices }: ServicesProps) {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className=" border border-border shadow-sm">
+          <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                 <Scissors className="text-primary size-4" />
@@ -144,9 +150,9 @@ function Services({ preloadedServices }: ServicesProps) {
             </CardContent>
           </Card>
 
-          <Card className=" border border-border shadow-sm">
+          <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 bg-green-400/20 rounded-full flex items-center justify-center shrink-0">
                 <TrendUp className="text-green-600 size-4" />
               </div>
               <div>
@@ -154,21 +160,21 @@ function Services({ preloadedServices }: ServicesProps) {
                   Average Price
                 </p>
                 <p className="font-bold text-lg leading-tight">
-                  R{avgPrice.toFixed(2)}
+                  {formatZarFromRands(avgPrice)}
                 </p>
                 <p className="text-xs text-muted-foreground">per service</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className=" border border-border shadow-sm">
+          <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 bg-blue-400/20 rounded-full flex items-center justify-center shrink-0">
                 <CalendarCheck className="text-blue-600 size-4" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase">
-                  Bookings
+                  Appointments
                 </p>
                 <p className="font-bold text-lg leading-tight">
                   {totalBookings}
@@ -178,9 +184,9 @@ function Services({ preloadedServices }: ServicesProps) {
             </CardContent>
           </Card>
 
-          <Card className=" border border-border shadow-sm">
+          <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 bg-purple-400/20 rounded-full flex items-center justify-center shrink-0">
                 <Tag className="text-purple-600 size-4" />
               </div>
               <div>
@@ -258,18 +264,21 @@ const ServiceCard = ({
     },
   });
 
-  const formatedPrice = price / 100;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     deleteService({ serviceId: _id });
   };
 
   return (
-    <Link href={`/dashboard/services/${_id}`}>
-      <Card key={_id} className="w-full border-none border-0">
-        <CardContent className="border-none border-0 flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <div className="relative w-20 h-20 rounded-full">
+    <>
+      <Card key={_id} className="w-full">
+        <CardContent className="flex items-center justify-between p-4">
+          <Link
+            href={`/dashboard/services/${_id}`}
+            className="flex min-w-0 flex-1 items-center gap-3"
+          >
+            <div className="relative w-20 h-20 rounded-full shrink-0">
               <Image
                 src={image ?? ""}
                 fill
@@ -278,14 +287,16 @@ const ServiceCard = ({
               />
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <span className="text-primary text-xs uppercase font-semibold">
                 {category}
               </span>
-              <span className="capitalize font-bold text-sm">{name}</span>
+              <span className="truncate capitalize font-bold text-sm">
+                {name}
+              </span>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-primary font-bold">
-                  R{formatedPrice.toFixed(2)}
+                  {formatZar(price)}
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -294,24 +305,18 @@ const ServiceCard = ({
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
 
-          <div
-            className="flex items-center gap-3"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
+          <div className="flex shrink-0 items-center gap-3">
             <VisibilityToggle id={_id} visibility={visibility} />
             <DropdownMenu>
-              <DropdownMenuTrigger>
+              <DropdownMenuTrigger aria-label="Service actions">
                 <DotsThreeVertical className="size-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive border p-2"
-                  onClick={() => handleDelete()}
+                  onClick={() => setDeleteDialogOpen(true)}
                 >
                   <Trash className="size-4 mr-2" />
                   Delete
@@ -321,7 +326,28 @@ const ServiceCard = ({
           </div>
         </CardContent>
       </Card>
-    </Link>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10">
+              <Trash className="text-destructive" weight="fill" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete this service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes {name} from your service list permanently. This
+              can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep service</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              Delete service
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
@@ -330,7 +356,7 @@ interface ServicesDesktopProps {
 }
 const ServicesDesktop = ({ services }: ServicesDesktopProps) => {
   return (
-    <Card className="hidden lg:block shadow-lg">
+    <Card className="hidden lg:block">
       <CardContent className="p-0">
         <DataTable columns={columns} data={services} />
       </CardContent>

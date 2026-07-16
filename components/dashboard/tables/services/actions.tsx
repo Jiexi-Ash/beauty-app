@@ -1,6 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useConvexMutation } from "@convex-dev/react-query";
@@ -43,27 +55,56 @@ function Actions({ id }: ActionProps) {
         size="icon-lg"
         className="rounded-lg cursor-pointer"
         disabled={isPending}
+        aria-label="Edit service"
       >
         <Link href={`/dashboard/services/${id}`}>
           <PencilSimple className="size-4 text-primary" />
         </Link>
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon-lg"
-        className="rounded-lg cursor-pointer"
-        disabled={isPending}
-        onClick={() => {
-          handleDeleteService();
-        }}
-      >
-        {isPending ? (
-          <CircleNotch className="animate-spin size-4" />
-        ) : (
-          <Trash className="size-4 text-destructive" />
-        )}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-lg"
+              className="rounded-lg cursor-pointer"
+              disabled={isPending}
+              aria-label="Delete service"
+            />
+          }
+        >
+          {isPending ? (
+            <CircleNotch className="animate-spin size-4" />
+          ) : (
+            <Trash className="size-4 text-destructive" />
+          )}
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10">
+              <Trash className="text-destructive" weight="fill" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete this service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes it from your service list permanently. This
+              can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              Keep service
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isPending}
+              onClick={handleDeleteService}
+            >
+              {isPending ? "Deleting..." : "Delete service"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

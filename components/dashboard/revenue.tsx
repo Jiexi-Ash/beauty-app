@@ -27,6 +27,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
+import { formatZarFromRands } from "@/lib/utils";
+import { WidgetError } from "./widget-error";
 
 type Period = "week" | "month" | "year";
 
@@ -45,7 +47,7 @@ const chartConfig = {
 function Revenue() {
   const [selectedPeriod, setPeriod] = useState<Period>("month");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     ...convexQuery(api.booking.admin.getRevenueData, {
       period: selectedPeriod,
     }),
@@ -55,11 +57,11 @@ function Revenue() {
 
   return (
     <div className="flex-1 h-full">
-      <Card className="rounded-lg h-full">
+      <Card className="h-full">
         <CardHeader>
           <div className="w-full flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <CardTitle>Revenue</CardTitle>
+              <CardTitle>Processed Revenue</CardTitle>
               <CardDescription>
                 {PERIOD_DESCRIPTION[selectedPeriod]}
               </CardDescription>
@@ -88,7 +90,13 @@ function Revenue() {
           </div>
         </CardHeader>
         <CardContent className="flex-1 min-h-0 px-4">
-          {isLoading ? (
+          {isError ? (
+            <WidgetError
+              message="Couldn't load revenue data."
+              onRetry={() => refetch()}
+              className="h-full min-h-[200px]"
+            />
+          ) : isLoading ? (
             <Skeleton className="h-full w-full min-h-[200px]" />
           ) : chartData.every((d) => d.revenue === 0) ? (
             <div className="flex h-full min-h-[200px] items-center justify-center">
@@ -119,11 +127,16 @@ function Revenue() {
                   content={
                     <ChartTooltipContent
                       cursor={false}
-                      formatter={(value) => `R${Number(value).toFixed(2)}`}
+                      formatter={(value) => formatZarFromRands(Number(value))}
                     />
                   }
                 />
-                <Bar dataKey="revenue" fill="var(--primary)" radius={10}>
+                <Bar
+                  dataKey="revenue"
+                  fill="var(--primary)"
+                  radius={10}
+                  background={{ fill: "var(--muted)", radius: 10 }}
+                >
                   <LabelList
                     dataKey="revenue"
                     position="top"
@@ -131,7 +144,9 @@ function Revenue() {
                     className="fill-foreground"
                     fontSize={10}
                     formatter={(value) =>
-                      typeof value === "number" && value > 0 ? `R${value.toFixed(0)}` : ""
+                      typeof value === "number" && value > 0
+                        ? formatZarFromRands(value)
+                        : ""
                     }
                   />
                 </Bar>

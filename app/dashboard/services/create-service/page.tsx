@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration, formatZarFromRands } from "@/lib/utils";
 import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -299,7 +299,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
     <div className="min-h-screen w-full">
       <div className="space-y-6 px-6 pt-4 pb-6">
         <div>
-          <h1 className="text-2xl font-bold">Create New Service</h1>
+          <h1 className="text-2xl font-headline font-bold">Create New Service</h1>
           <p className="text-sm text-muted-foreground">
             Add a new service to your business to start taking bookings
           </p>
@@ -316,6 +316,7 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
           Go Back
         </Button>
 
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <form
           id="service-form"
           onSubmit={(e) => {
@@ -553,6 +554,32 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
             </form.Field>
           </FieldGroup>
         </form>
+
+        <aside className="hidden w-72 shrink-0 lg:sticky lg:top-6 lg:block">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Preview
+          </p>
+          <form.Subscribe
+            selector={(state) => ({
+              name: state.values.name,
+              price: state.values.price,
+              duration: state.values.duration,
+            })}
+          >
+            {({ name, price, duration }) => (
+              <ServicePreviewCard
+                name={name}
+                price={price}
+                duration={duration}
+                image={serviceImage}
+              />
+            )}
+          </form.Subscribe>
+          <p className="mt-2 text-xs text-muted-foreground">
+            This is roughly how clients will see this service.
+          </p>
+        </aside>
+        </div>
       </div>
       <footer className="sticky bottom-0 bg-background z-50 border-t border-border p-6">
         <div className="flex gap-3 md:justify-end">
@@ -591,6 +618,59 @@ export const CreateServiceForm = ({ categories }: CreateServiceFormProps) => {
           onCancel={handleCropCancel}
         />
       )}
+    </div>
+  );
+};
+
+interface ServicePreviewCardProps {
+  name: string;
+  price: number;
+  duration: number;
+  image: string | null;
+}
+
+const ServicePreviewCard = ({
+  name,
+  price,
+  duration,
+  image,
+}: ServicePreviewCardProps) => {
+  return (
+    <div className="rounded-2xl bg-surface-container-lowest shadow-sm">
+      <div className="p-3">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 rounded-xl bg-black/[0.04] p-1 ring-1 ring-black/5">
+            <div className="relative h-16 w-14 overflow-hidden rounded-[0.6rem] bg-muted">
+              {image ? (
+                <Image
+                  src={image}
+                  alt={name || "Service preview"}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <Camera className="size-5 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="truncate text-sm font-semibold leading-tight text-foreground">
+                {name || "Service name"}
+              </p>
+              <span className="shrink-0 text-sm font-bold text-primary">
+                {formatZarFromRands(price)}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {formatDuration(duration)}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

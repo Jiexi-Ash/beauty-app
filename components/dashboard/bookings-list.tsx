@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -30,6 +31,8 @@ import {
   getBookingStatusBadge,
   getInitials,
 } from "@/lib/utils";
+import { PaymentBadge } from "./payment-badge";
+import { EmptyState } from "./empty-state";
 
 const PAGE_SIZE = 8;
 
@@ -41,46 +44,6 @@ const STATUS_FILTERS = [
   { value: "pending", label: "Pending" },
   { value: "cancelled", label: "Cancelled" },
 ] as const;
-
-const PaymentBadge = ({
-  status,
-  type,
-}: {
-  status?: "pending" | "completed" | "failed" | "refunded" | "cancelled";
-  type?: "deposit" | "full-payment";
-}) => {
-  if (!status) {
-    return (
-      <Badge className="bg-muted text-muted-foreground font-medium">
-        No payment
-      </Badge>
-    );
-  }
-
-  const isDeposit = type === "deposit";
-  const isSettled = status === "completed" && !isDeposit;
-
-  return (
-    <Badge
-      className={cn(
-        "font-medium",
-        isSettled
-          ? "bg-primary/10 text-primary"
-          : status === "completed" && isDeposit
-            ? "bg-amber-400/20 text-amber-600"
-            : "bg-muted text-muted-foreground",
-      )}
-    >
-      {isSettled
-        ? "Paid in full"
-        : status === "completed" && isDeposit
-          ? "Deposit · balance due"
-          : status === "failed"
-            ? "Payment failed"
-            : "Awaiting payment"}
-    </Badge>
-  );
-};
 
 function BookingsList({
   preloadedBookings,
@@ -132,15 +95,15 @@ function BookingsList({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-headline font-bold md:text-3xl">
-            Bookings
+            Appointments
           </h1>
           <p className="text-sm text-muted-foreground">
-            Every booking made with your business, past and upcoming.
+            Every appointment made with your business, past and upcoming.
           </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 sm:w-[280px] focus-within:ring-1 focus-within:ring-primary">
+          <div className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 sm:w-[280px] focus-within:ring-1 focus-within:ring-foreground/10">
             <MagnifyingGlass className="size-4 shrink-0 text-muted-foreground" />
             <Input
               value={search}
@@ -168,21 +131,22 @@ function BookingsList({
       {/* Mobile cards */}
       <div className="mt-6 flex flex-col gap-3 lg:hidden">
         {visible.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-10 text-center text-sm text-muted-foreground">
-            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-              <CalendarX className="size-6 text-muted-foreground" />
-            </div>
-            {bookings.length === 0
-              ? "No bookings yet. They'll appear here once clients book."
-              : "No bookings match your filters."}
-          </div>
+          <EmptyState
+            icon={CalendarX}
+            className="rounded-xl border border-border p-10 text-center text-sm text-muted-foreground"
+            message={
+              bookings.length === 0
+                ? "No appointments yet. They'll appear here once clients book."
+                : "No appointments match your filters."
+            }
+          />
         ) : (
           visible.map((booking) => {
             const statusBadge = getBookingStatusBadge(booking.status);
             return (
               <Link
                 key={booking._id}
-                href={`/dashboard/bookings/${booking._id}`}
+                href={`/dashboard/appointments/${booking._id}`}
                 className="rounded-xl border border-border p-4"
               >
                 <div className="flex items-center gap-3">
@@ -220,6 +184,7 @@ function BookingsList({
                   <PaymentBadge
                     status={booking.payment?.status}
                     type={booking.payment?.type}
+                    balanceCollected={booking.payment?.balanceCollected}
                   />
                 </div>
               </Link>
@@ -229,7 +194,8 @@ function BookingsList({
       </div>
 
       {/* Table */}
-      <div className="mt-6 hidden overflow-hidden rounded-xl border border-border lg:block">
+      <Card className="mt-6 hidden lg:block">
+        <CardContent className="p-0">
         <Table className="border-collapse">
           <TableHeader className="bg-muted [&_tr]:border-0">
             <TableRow className="border-0 hover:bg-transparent">
@@ -258,14 +224,14 @@ function BookingsList({
                   colSpan={6}
                   className="h-40 text-center text-sm text-muted-foreground"
                 >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                      <CalendarX className="size-6 text-muted-foreground" />
-                    </div>
-                    {bookings.length === 0
-                      ? "No bookings yet. They'll appear here once clients book."
-                      : "No bookings match your filters."}
-                  </div>
+                  <EmptyState
+                    icon={CalendarX}
+                    message={
+                      bookings.length === 0
+                        ? "No appointments yet. They'll appear here once clients book."
+                        : "No appointments match your filters."
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -287,9 +253,11 @@ function BookingsList({
                             {getInitials(booking.client.name ?? "?")}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-bold">{booking.client.name}</span>
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex min-w-0 flex-col">
+                          <span className="max-w-[220px] truncate font-bold">
+                            {booking.client.name}
+                          </span>
+                          <span className="max-w-[220px] truncate text-xs text-muted-foreground">
                             {booking.client.email}
                           </span>
                         </div>
@@ -308,6 +276,7 @@ function BookingsList({
                       <PaymentBadge
                         status={booking.payment?.status}
                         type={booking.payment?.type}
+                        balanceCollected={booking.payment?.balanceCollected}
                       />
                     </TableCell>
                     <TableCell className="p-6">
@@ -316,16 +285,16 @@ function BookingsList({
                       </Badge>
                     </TableCell>
                     <TableCell className="p-6">
-                      <Link href={`/dashboard/bookings/${booking._id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="View booking"
-                          className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-                        >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="View appointment"
+                        className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                      >
+                        <Link href={`/dashboard/appointments/${booking._id}`}>
                           <Eye className="size-5 text-muted-foreground" />
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -333,14 +302,15 @@ function BookingsList({
             )}
           </TableBody>
         </Table>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Pagination */}
       <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm text-muted-foreground">
           {filtered.length === 0
-            ? "No bookings"
-            : `Showing ${start + 1} to ${start + visible.length} of ${filtered.length} bookings`}
+            ? "No appointments"
+            : `Showing ${start + 1} to ${start + visible.length} of ${filtered.length} appointments`}
         </span>
         <div className="flex items-center gap-2">
           <Button

@@ -16,23 +16,35 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import Link from "next/link";
-import { cn, formatBookingDateTime, formatBookingTime, formatDuration } from "@/lib/utils";
-import { Badge } from "../ui/badge";
+import { formatBookingDateTime, formatBookingTime, formatDuration } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
 import { BookingWithDetails } from "@/convex/business/admin";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "../ui/skeleton";
+import { WidgetError } from "./widget-error";
+import { PaymentBadge } from "./payment-badge";
+import { EmptyState } from "./empty-state";
 
 function UpcomingBookings() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     ...convexQuery(api.business.admin.getUpcomingBookings),
   });
   return (
     <div className="mb-6">
-      <BookingsMobile bookings={data} isLoading={isLoading} />
-      <BookingsDesktop bookings={data} isLoading={isLoading} />
+      <BookingsMobile
+        bookings={data}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      />
+      <BookingsDesktop
+        bookings={data}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      />
     </div>
   );
 }
@@ -42,9 +54,13 @@ export default UpcomingBookings;
 const BookingsDesktop = ({
   bookings,
   isLoading,
+  isError,
+  onRetry,
 }: {
   bookings: BookingWithDetails[] | undefined;
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
 }) => {
   return (
     <Card className="hidden sm:block">
@@ -59,72 +75,81 @@ const BookingsDesktop = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="w-full grid grid-cols-5 bg-muted py-3 px-2 rounded">
-          <div className="uppercase text-muted-foreground  text-xs font-semibold">
-            Client
-          </div>
-          <div className="uppercase text-muted-foreground  text-xs font-semibold">
-            Service
-          </div>
-          <div className="uppercase text-muted-foreground  text-xs font-semibold">
-            Date & Time
-          </div>
-          <div className="uppercase text-muted-foreground  text-xs font-semibold">
-            Payment
-          </div>
-          <div className="uppercase text-muted-foreground  text-xs font-semibold">
-            Actions
-          </div>
-        </div>
-
-        {isLoading ? (
-          <DesktopRowsSkeleton />
-        ) : !bookings || bookings.length === 0 ? (
-          <EmptyBookings />
+        {isError ? (
+          <WidgetError
+            message="Couldn't load your upcoming appointments."
+            onRetry={onRetry}
+          />
         ) : (
-          bookings.map((a) => (
-          <div key={a._id} className="w-full grid grid-cols-5 items-center">
-            <div className="flex items-center gap-3">
-              <Avatar size="lg">
-                <AvatarImage
-                  src={a.client.avatar}
-                  alt={a.client.name ?? "Client"}
-                />
-                <AvatarFallback>{getInitials(a.client.name)}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col gap-0.5 ">
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-xs">{a.client.name}</span>
-                  {a.notes && (
-                    <NotePencil
-                      className="size-3 text-muted-foreground shrink-0"
-                      aria-label="Has a note"
-                    >
-                      <title>This appointment has a note</title>
-                    </NotePencil>
-                  )}
-                </div>
-                <span className="text-muted-foreground text-xs">
-                  {a.client.email}
-                </span>
+          <>
+            <div className="w-full grid grid-cols-5 bg-muted py-3 px-2 rounded">
+              <div className="uppercase text-muted-foreground  text-xs font-semibold">
+                Client
+              </div>
+              <div className="uppercase text-muted-foreground  text-xs font-semibold">
+                Service
+              </div>
+              <div className="uppercase text-muted-foreground  text-xs font-semibold">
+                Date & Time
+              </div>
+              <div className="uppercase text-muted-foreground  text-xs font-semibold">
+                Payment
+              </div>
+              <div className="uppercase text-muted-foreground  text-xs font-semibold">
+                Actions
               </div>
             </div>
 
-            <div className="text-muted-foreground text-sm capitalize">{a.service.name}</div>
-            <div className="flex flex-col gap-0.5 ">
-              <span className="font-bold text-xs">{formatBookingDateTime(a.bookingStartDate, a.business.timezone)}</span>
-              <span className="text-muted-foreground text-xs">
-                Duration: {formatDuration(a.service.duration)}
-              </span>
-            </div>
+            {isLoading ? (
+              <DesktopRowsSkeleton />
+            ) : !bookings || bookings.length === 0 ? (
+              <EmptyBookings />
+            ) : (
+              bookings.map((a) => (
+                <div key={a._id} className="w-full grid grid-cols-5 items-center">
+                  <div className="flex items-center gap-3">
+                    <Avatar size="lg">
+                      <AvatarImage
+                        src={a.client.avatar}
+                        alt={a.client.name ?? "Client"}
+                      />
+                      <AvatarFallback>{getInitials(a.client.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-0.5 ">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-xs">{a.client.name}</span>
+                        {a.notes && (
+                          <NotePencil
+                            className="size-3 text-muted-foreground shrink-0"
+                            aria-label="Has a note"
+                          >
+                            <title>This appointment has a note</title>
+                          </NotePencil>
+                        )}
+                      </div>
+                      <span className="text-muted-foreground text-xs">
+                        {a.client.email}
+                      </span>
+                    </div>
+                  </div>
 
-            <div className="flex items-center">
-              <PaymentBadge status={a.payment?.status} type={a.payment?.type} />
-            </div>
+                  <div className="text-muted-foreground text-sm capitalize">{a.service.name}</div>
+                  <div className="flex flex-col gap-0.5 ">
+                    <span className="font-bold text-xs">{formatBookingDateTime(a.bookingStartDate, a.business.timezone)}</span>
+                    <span className="text-muted-foreground text-xs">
+                      Duration: {formatDuration(a.service.duration)}
+                    </span>
+                  </div>
 
-            <BookingActions bookingId={a._id} />
-          </div>
-          ))
+                  <div className="flex items-center">
+                    <PaymentBadge status={a.payment?.status} type={a.payment?.type} balanceCollected={a.payment?.balanceCollected} />
+                  </div>
+
+                  <BookingActions bookingId={a._id} />
+                </div>
+              ))
+            )}
+          </>
         )}
       </CardContent>
     </Card>
@@ -134,12 +159,16 @@ const BookingsDesktop = ({
 const BookingsMobile = ({
   bookings,
   isLoading,
+  isError,
+  onRetry,
 }: {
   bookings: BookingWithDetails[] | undefined;
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
 }) => {
   return (
-    <Card className="block sm:hidden rounded-lg mb-6">
+    <Card className="block sm:hidden mb-6">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
@@ -151,7 +180,12 @@ const BookingsMobile = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading ? (
+        {isError ? (
+          <WidgetError
+            message="Couldn't load your upcoming appointments."
+            onRetry={onRetry}
+          />
+        ) : isLoading ? (
           <MobileRowsSkeleton />
         ) : !bookings || bookings.length === 0 ? (
           <EmptyBookings />
@@ -186,7 +220,7 @@ const BookingsMobile = ({
                 <span className="text-xs text-muted-foreground">{formatBookingTime(a.bookingStartDate, a.business.timezone)}</span>
 
                 <div className="flex items-center text-xs">
-                  <PaymentBadge status={a.payment?.status} type={a.payment?.type} />
+                  <PaymentBadge status={a.payment?.status} type={a.payment?.type} balanceCollected={a.payment?.balanceCollected} />
                 </div>
               </div>
             </div>
@@ -200,20 +234,14 @@ const BookingsMobile = ({
   );
 };
 
-const EmptyBookings = () => {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        <CalendarX className="size-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-semibold">No upcoming appointments</p>
-      <p className="max-w-xs text-xs text-muted-foreground">
-        Your schedule is clear. New appointments will appear here as soon as clients
-        reserve a spot.
-      </p>
-    </div>
-  );
-};
+const EmptyBookings = () => (
+  <EmptyState
+    icon={CalendarX}
+    className="py-10 text-center"
+    message="No upcoming appointments"
+    description="Your schedule is clear. New appointments will appear here as soon as clients reserve a spot."
+  />
+);
 
 const getInitials = (name?: string) => {
   if (!name) return "?";
@@ -270,36 +298,6 @@ const MobileRowsSkeleton = () => {
   );
 };
 
-const PaymentBadge = ({
-  status,
-  type,
-}: {
-  status?: "pending" | "completed" | "failed" | "refunded" | "cancelled";
-  type?: "deposit" | "full-payment";
-}) => {
-  if (status !== "completed") {
-    return (
-      <Badge className="font-medium text-xs bg-muted text-muted-foreground">
-        Awaiting payment
-      </Badge>
-    );
-  }
-
-  const isDeposit = type === "deposit";
-  return (
-    <Badge
-      className={cn(
-        "font-medium text-xs",
-        isDeposit
-          ? "bg-amber-400/20 text-amber-600"
-          : "bg-primary/10 text-primary",
-      )}
-    >
-      {isDeposit ? "Deposit · balance due" : "Paid in full"}
-    </Badge>
-  );
-};
-
 const BookingActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
   return (
     <DropdownMenu>
@@ -312,7 +310,7 @@ const BookingActions = ({ bookingId }: { bookingId: Id<"booking"> }) => {
         <DropdownMenuItem
          
         >
-          <Link href={`/dashboard/bookings/${bookingId}`} className="flex items-center gap-2">
+          <Link href={`/dashboard/appointments/${bookingId}`} className="flex items-center gap-2">
             <Eye className="size-4" />
           View
           </Link>

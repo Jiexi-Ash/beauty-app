@@ -7,19 +7,15 @@ import {
     FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { paymentSchema, useBusinessStore } from "@/stores/use-business";
-import { useForm } from "@tanstack/react-form";
-import { WarningCircle, CheckCircle, ShieldCheck } from "@phosphor-icons/react";
+import { Payment, paymentSchema, useBusinessStore } from "@/stores/use-business";
+import { useForm, useStore } from "@tanstack/react-form";
+import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
 import { Card, CardContent } from "../ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-
-const PAYSTACK_BENEFITS = [
-    "Paid settlements directly to your South African bank account",
-    "PCI DSS Level 1 certified security for all transactions",
-    "Seamlessly integrated with local banking infrastructure",
-];
+import { useEffect } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 const PaymentForm = () => {
     const { payment, setSteps, setPaymentDetails } = useBusinessStore();
@@ -41,6 +37,7 @@ const PaymentForm = () => {
             phone: payment?.phone ?? "",
         },
         validators: {
+            onBlur: paymentSchema,
             onSubmit: paymentSchema,
         },
         onSubmit: ({ value }) => {
@@ -48,6 +45,21 @@ const PaymentForm = () => {
             setSteps("Launch");
         },
     });
+
+    const values = useStore(form.store, (state) => state.values);
+    const saveDraft = useDebouncedCallback((v: typeof values) => {
+        setPaymentDetails(v as Payment);
+    }, 500);
+
+    useEffect(() => {
+        saveDraft(values);
+    }, [values, saveDraft]);
+
+    useEffect(() => {
+        return () => {
+            saveDraft.flush();
+        };
+    }, [saveDraft]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start w-full">
@@ -80,7 +92,7 @@ const PaymentForm = () => {
                                                 aria-invalid={isInvalid}
                                                 placeholder="Legal business name"
                                                 autoComplete="off"
-                                                className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
+                                                className="h-9 bg-surface-container-low placeholder:text-sm rounded-sm"
                                             />
                                             {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                         </Field>
@@ -94,6 +106,7 @@ const PaymentForm = () => {
                                     return (
                                         <Field data-invalid={isInvalid}>
                                             <FieldLabel htmlFor={field.name}>Settlement Bank</FieldLabel>
+                                            {/* Native select: opens the OS picker on mobile, better for a long bank list than the custom ui/select popover */}
                                             <select
                                                 id={field.name}
                                                 name={field.name}
@@ -101,7 +114,7 @@ const PaymentForm = () => {
                                                 onBlur={field.handleBlur}
                                                 aria-invalid={isInvalid}
                                                 disabled={banksLoading}
-                                                className="h-9 w-full bg-[#F3F3F4] rounded-sm border border-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="h-9 w-full bg-surface-container-low rounded-sm border border-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
                                                 onChange={(e) => {
                                                     field.handleChange(e.target.value);
                                                     const selected = banks.find(b => b.code === e.target.value);
@@ -139,7 +152,7 @@ const PaymentForm = () => {
                                                 placeholder="e.g. 123456789"
                                                 autoComplete="off"
                                                 inputMode="numeric"
-                                                className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
+                                                className="h-9 bg-surface-container-low placeholder:text-sm rounded-sm"
                                             />
                                             {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                         </Field>
@@ -163,7 +176,7 @@ const PaymentForm = () => {
                                                 placeholder="hello@yourbusiness.com"
                                                 autoComplete="off"
                                                 type="email"
-                                                className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
+                                                className="h-9 bg-surface-container-low placeholder:text-sm rounded-sm"
                                             />
                                             {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                         </Field>
@@ -187,7 +200,7 @@ const PaymentForm = () => {
                                                 placeholder="+27 00 000 0000"
                                                 autoComplete="off"
                                                 type="tel"
-                                                className="h-9 bg-[#F3F3F4] placeholder:text-sm rounded-sm"
+                                                className="h-9 bg-surface-container-low placeholder:text-sm rounded-sm"
                                             />
                                             {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                         </Field>
@@ -198,7 +211,7 @@ const PaymentForm = () => {
                             <div className="bg-secondary rounded-sm p-3 flex gap-2.5 mt-2">
                                 <WarningCircle className="size-5 text-primary shrink-0 mt-0.5" />
                                 <p className="text-sm text-foreground/80">
-                                    Provide your business banking details for automated settlements. We use Paystack to ensure secure and timely transfers to your account.
+                                    Provide the bank account where you&apos;d like your payouts to land.
                                 </p>
                             </div>
 
@@ -207,33 +220,33 @@ const PaymentForm = () => {
                 </Card>
             </form>
 
-            {/* Right: Why Paystack? */}
+            {/* Right: How payouts work */}
             <div className="lg:col-span-2">
                 <Card className="bg-secondary border-0">
                     <CardContent className="p-6 space-y-5">
+                        <h3 className="text-base font-bold">How payouts work</h3>
 
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold">Why Paystack?</h3>
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <ShieldCheck className="size-5 text-primary" />
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle className="size-5 text-primary shrink-0 mt-0.5" weight="fill" />
+                                <p className="text-sm text-foreground/80 leading-snug">
+                                    Deposits are collected securely by Paystack when a client books.
+                                </p>
                             </div>
-                        </div>
 
-                        <div className="space-y-3">
-                            {PAYSTACK_BENEFITS.map((benefit) => (
-                                <div key={benefit} className="flex items-start gap-2.5">
-                                    <CheckCircle className="size-4 text-primary shrink-0 mt-0.5" />
-                                    <p className="text-sm text-foreground/80 leading-snug">{benefit}</p>
-                                </div>
-                            ))}
-                        </div>
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle className="size-5 text-primary shrink-0 mt-0.5" weight="fill" />
+                                <p className="text-sm text-foreground/80 leading-snug">
+                                    Payouts settle to your bank account automatically within 48 hours of each booking.
+                                </p>
+                            </div>
 
-                        <div className="rounded-lg overflow-hidden">
-                            <img
-                                src="/salon-image-placeholder.jpg"
-                                alt="Payment terminal"
-                                className="w-full h-36 object-cover rounded-lg"
-                            />
+                            <div className="flex items-start gap-2.5">
+                                <CheckCircle className="size-5 text-primary shrink-0 mt-0.5" weight="fill" />
+                                <p className="text-sm text-foreground/80 leading-snug">
+                                    This account only receives payouts — Paystack never withdraws or charges anything from it. Our commission is already deducted from the client&apos;s deposit before it reaches you.
+                                </p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

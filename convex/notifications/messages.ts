@@ -218,6 +218,73 @@ export const SendWhatsAppBookingCancelledMessage = internalAction({
   },
 });
 
+export const SendWhatsAppBookingRescheduledMessage = internalAction({
+  args: {
+    bookingId: v.id("booking"),
+  },
+  handler: async (ctx, { bookingId }) => {
+    const booking = await ctx.runQuery(internal.booking.admin.getBookingById, {
+      bookingId,
+    });
+
+    if (!booking) {
+      console.error(
+        `SendWhatsAppBookingRescheduledMessage: booking not found for id ${bookingId}`,
+      );
+      return;
+    }
+
+    const [service, business, user] = await Promise.all([
+      ctx.runQuery(internal.service.admin.queryServiceById, {
+        serviceId: booking.serviceId,
+      }),
+      ctx.runQuery(internal.business.admin.queryBusinessById, {
+        businessId: booking.businessId,
+      }),
+      ctx.runQuery(internal.users.queryUserById, { userId: booking.userId }),
+    ]);
+
+    const phone = booking.phoneNumber || user?.phone;
+
+    if (!service || !business || !user || !phone) {
+      console.error(
+        `SendWhatsAppBookingRescheduledMessage: missing data for booking ${bookingId}`,
+        {
+          service: !!service,
+          business: !!business,
+          user: !!user,
+          phone: !!phone,
+        },
+      );
+      return;
+    }
+
+    const startDate = new Date(booking.bookingStartDate);
+
+    const formattedDate = startDate.toLocaleDateString("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const formattedTime = startDate.toLocaleTimeString("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const serviceName = service.name.replace(/\b\w/g, (c) => c.toUpperCase());
+    const businessName = business.name.replace(/\b\w/g, (c) => c.toUpperCase());
+
+    await client.messages.create({
+      body: `Hi ${user.fullname}. \n\n${businessName} has rescheduled your appointment.\n\n Service: ${serviceName}\n New date: ${formattedDate}\n New time: ${formattedTime}\n\nPlease reach out to ${businessName} directly if this new time doesn't work for you.`,
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:${toE164ZA(phone)}`,
+    });
+  },
+});
+
 export const sweepBookingReminders = internalAction({
   args: {},
   handler: async (ctx) => {

@@ -1,8 +1,5 @@
 "use client";
 
-import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import AnalyticCards from "./analytics-cards";
 import Revenue from "./revenue";
 import UpcomingBookings from "./upcoming-bookings";
@@ -23,28 +20,13 @@ function DashboardContent() {
 
         </div>
       </div>
-      <div className="flex gap-3 justify-between items-center px-6 py-4">
-        <div className="bg-muted flex-1 lg:flex-none lg:w-full lg:max-w-[350px] flex items-center gap-2 pl-3 pr-2 py-3 rounded-lg transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-          <MagnifyingGlass className="size-4 text-muted-foreground shrink-0" />
-          <Input
-            autoComplete="none"
-            placeholder="Search appointments, clients..."
-            className="w-full text-sm border-0 shadow-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent placeholder:text-muted-foreground"
-          />
-        </div>
-        <Button className="text-sm cursor-pointer h-10 shrink-0" size="lg">
-          <Plus className="size-4" />
-          <span className="hidden lg:inline">Add New Booking</span>
-          <span className="sr-only lg:hidden">Add new booking</span>
-        </Button>
-      </div>
-      <div className="w-full px-6 space-y-4 lg:space-y-4">
+      <div className="w-full px-6 pt-2 pb-6 space-y-4 lg:space-y-4">
         <AnalyticCards />
+        <UpcomingBookings />
         <div className="flex w-full flex-col gap-3 lg:flex-row lg:h-[450px]">
           <Revenue />
           <ServiceHighlight />
         </div>
-        <UpcomingBookings />
       </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getInitials } from "@/lib/utils";
 import {
+  Broadcast,
   CalendarDots,
   GearSix,
   type Icon,
@@ -21,10 +22,15 @@ import {
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
+import { ConvexError } from "convex/values";
 
 const navlinks = [
   { href: "/dashboard", label: "overview", icon: SquaresFour },
-  { href: "/dashboard/bookings", label: "booking", icon: CalendarDots },
+  { href: "/dashboard/appointments", label: "appointments", icon: CalendarDots },
   { href: "/dashboard/services", label: "services", icon: Scissors },
   { href: "/dashboard/clients", label: "clients", icon: UsersThree },
   { href: "/dashboard/settings", label: "settings", icon: GearSix },
@@ -33,6 +39,25 @@ const navlinks = [
 function DashboardSidebar() {
   const pathname = usePathname();
   const { user } = useUser();
+  const { data: business } = useQuery({
+    ...convexQuery(api.business.admin.getUserBusiness, {}),
+  });
+
+  const { mutate: goLive, isPending: isGoingLive } = useMutation({
+    mutationFn: useConvexMutation(api.business.admin.toggleBusinessVisibilty),
+    onSuccess: () => {
+      toast.success("You're live!", {
+        description: "Clients can now find and book your salon.",
+      });
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ConvexError && typeof error.data === "string"
+          ? error.data
+          : "Could not go live. Try again.",
+      );
+    },
+  });
 
   return (
     <Sidebar className="border-border/60">
@@ -70,6 +95,23 @@ function DashboardSidebar() {
             );
           })}
         </SidebarMenu>
+
+        {business && business.visibility === "offline" && (
+          <div className="px-3 mt-2">
+            <button
+              type="button"
+              onClick={() => goLive({ visibility: "visible" })}
+              disabled={isGoingLive}
+              className="flex w-full items-center gap-2.5 rounded-full bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity duration-200 hover:opacity-90 disabled:opacity-60 cursor-pointer"
+            >
+              <Broadcast className="size-5" weight="fill" />
+              {isGoingLive ? "Going live…" : "Go Live"}
+            </button>
+            <p className="px-3 pt-1.5 text-xs text-muted-foreground">
+              You&apos;re not visible to clients yet.
+            </p>
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-3">

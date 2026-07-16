@@ -1,48 +1,14 @@
 "use client"
-import { Business, useBusinessStore } from '@/stores/use-business'
+import { useBusinessStore } from '@/stores/use-business'
 import { Card, CardContent } from '../ui/card'
-import Image from 'next/image'
-import { CalendarCheck, Calendar, CaretRight, Clock, CreditCard, Eye, EyeSlash, MapPin, PencilSimple, Storefront } from '@phosphor-icons/react'
+import { Calendar, Clock, CreditCard, Eye, EyeSlash, MapPin, PencilSimple, Storefront } from '@phosphor-icons/react'
 import { Separator } from '../ui/separator'
-import { useState, useEffect } from 'react'
-
-const groupBusinessDays = (days: Business["businessDays"]) => {
-    if (!days?.length) return [];
-
-    const groups: { start: string; end: string; openTime: string; closeTime: string }[] = [];
-    let current = days[0];
-    let groupStart = current;
-
-    for (let i = 1; i < days.length; i++) {
-        const day = days[i];
-        const sameTime = day.openTime === current.openTime && day.closeTime === current.closeTime;
-
-        if (sameTime) {
-            current = day;
-        } else {
-            groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
-            groupStart = day;
-            current = day;
-        }
-    }
-    groups.push({ start: groupStart.fullName, end: current.fullName, openTime: groupStart.openTime, closeTime: groupStart.closeTime });
-
-    return groups;
-};
+import { useState } from 'react'
+import BookingPagePreview, { groupBusinessDays } from './booking-page-preview'
 
 function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setConfirmed: (v: boolean) => void }) {
     const { business, payment, setSteps } = useBusinessStore()
     const [showAccountNumber, setShowAccountNumber] = useState(false)
-    const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!business?.coverImage) return;
-        const url = URL.createObjectURL(business.coverImage);
-        setCoverImageUrl(url);
-        return () => {
-            URL.revokeObjectURL(url);
-        };
-    }, [business?.coverImage]);
 
     const accountNumber = payment?.accountNumber ?? ''
     const maskedAccountNumber = accountNumber.length > 4
@@ -78,12 +44,13 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
                 <Card>
                     <CardContent className="space-y-3">
                         <Clock className="size-5 text-primary" />
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Location &amp; Hours</p>
                         <div className="flex items-start gap-2">
-                            <MapPin className="size-4 text-gray-300 shrink-0 mt-0.5" />
+                            <MapPin className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                             <p className="text-xs truncate">{business?.address.address}</p>
                         </div>
                         <div className="flex items-start gap-2">
-                            <Calendar className="size-4 text-gray-300 shrink-0 mt-0.5" />
+                            <Calendar className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div className="flex flex-col gap-0.5">
                                 {groupBusinessDays(business?.businessDays ?? []).map((group, i) => (
                                     <p key={i} className="text-xs">
@@ -141,44 +108,7 @@ function LaunchBusiness({ confirmed, setConfirmed }: { confirmed: boolean; setCo
 
             {/* Profile Preview */}
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-2">Profile Preview</p>
-            <Card className="p-0 overflow-hidden">
-                <CardContent className="p-0">
-                    <div className="w-full relative h-40">
-                        <Image
-                            src={coverImageUrl ?? "/salon-image-placeholder.jpg"}
-                            fill
-                            alt=""
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="w-full bg-white px-5 py-4 space-y-3">
-                        <div>
-                            <h2 className="text-base font-bold">{business?.name}</h2>
-                            <div className="flex gap-1.5 items-center">
-                                <MapPin className="size-3.5 text-gray-400" />
-                                <p className="text-sm text-muted-foreground truncate">{business?.address.address}</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                            {(business?.tags ?? []).map(tag => (
-                                <span key={tag} className="bg-muted text-xs py-1 px-3 rounded-full">{tag}</span>
-                            ))}
-                        </div>
-                        <div className="bg-[#F3F3F4] w-full flex items-center justify-between p-3 rounded-full">
-                            <div className="flex gap-2 items-center">
-                                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                                    <CalendarCheck className="size-4 text-primary" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="uppercase text-[10px] tracking-tight text-muted-foreground">Next Available</span>
-                                    <span className="font-semibold text-sm">Today, 15:00</span>
-                                </div>
-                            </div>
-                            <CaretRight className="size-4 text-black" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <BookingPagePreview />
 
             {/* Confirmation */}
             <label className="flex items-center gap-2.5 cursor-pointer pt-1">

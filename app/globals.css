@@ -152,7 +152,7 @@
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
   --font-headline: var(--font-headline);
-  --font-body: var(--font-outfit);
+  --font-body: var(--font-headline);
 
   /* Design system surface colors */
   --color-surface: var(--surface);

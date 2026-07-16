@@ -3,15 +3,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ConvexProviderWithClerk from "@/components/providers/convex-clerk"
 import { ClerkProvider } from "@clerk/nextjs";
-import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-headline",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -38,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${plusJakarta.variable} ${outfit.variable} antialiased font-(family-name:--font-outfit)`}>
+      <body className={`${plusJakarta.variable} antialiased font-(family-name:--font-headline)`}>
         {/* Skip to content for keyboard users */}
         <a
           href="#main-content"

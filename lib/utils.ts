@@ -71,13 +71,16 @@ export const formatDuration = (minutes?: number) => {
   return `${formatted} ${hours === 1 ? "hour" : "hours"}`;
 };
 
-/** Formats an amount stored in cents as ZAR, e.g. 45000 -> "R450.00". */
-export const formatZar = (cents: number) => {
-  return `R${(cents / 100).toLocaleString("en-ZA", {
+/** Formats a rand amount (not cents) as ZAR, e.g. 450.5 -> "R450.50". */
+export const formatZarFromRands = (rands: number) => {
+  return `R${rands.toLocaleString("en-ZA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
 };
+
+/** Formats an amount stored in cents as ZAR, e.g. 45000 -> "R450.00". */
+export const formatZar = (cents: number) => formatZarFromRands(cents / 100);
 
 export const getBookingStatusBadge = (
   status: string,

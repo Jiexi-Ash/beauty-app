@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Preloaded, usePreloadedQuery, useMutation } from "convex/react";
+import { useMemo, useState } from "react";
+import { Preloaded, usePreloadedQuery, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { notFound } from "next/navigation";
 import { toast } from "sonner";
+import { ConvexError } from "convex/values";
+import { format, isSameDay } from "date-fns";
+import { TZDate } from "@date-fns/tz";
 import {
   Card,
   CardContent,
@@ -27,9 +31,19 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Switch } from "../ui/switch";
+import {
   CalendarCheck,
   CalendarDots,
+  CaretLeft,
   CaretRight,
+  Check,
   CheckCircle,
   Clock,
   ClockCounterClockwise,
@@ -69,9 +83,16 @@ function BookingDetails({
   const markNoShowAsCompleted = useMutation(
     api.booking.admin.markNoShowAsCompleted,
   );
+  const markBalanceCollected = useMutation(
+    api.booking.admin.markBalanceCollected,
+  );
   const [pendingAction, setPendingAction] = useState<
-    "start" | "complete" | "cancel" | "update-no-show" | null
+    "start" | "complete" | "cancel" | "update-no-show" | "collect-balance" | null
   >(null);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleOpenedAt, setRescheduleOpenedAt] = useState(() => Date.now());
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [balanceCollectedChecked, setBalanceCollectedChecked] = useState(false);
   const [now] = useState(() => Date.now());
 
   if (!data) notFound();
@@ -96,13 +117,33 @@ function BookingDetails({
   const handleComplete = async () => {
     try {
       setPendingAction("complete");
-      await completeBooking({ bookingId: booking._id });
+      await completeBooking({
+        bookingId: booking._id,
+        balanceCollected: balanceCollectedChecked,
+      });
       toast.success("Appointment completed");
+      setCompleteDialogOpen(false);
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
           : "Could not complete the appointment.",
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleMarkBalanceCollected = async () => {
+    try {
+      setPendingAction("collect-balance");
+      await markBalanceCollected({ bookingId: booking._id });
+      toast.success("Balance marked as collected");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Could not mark this balance as collected.",
       );
     } finally {
       setPendingAction(null);
@@ -134,7 +175,7 @@ function BookingDetails({
       toast.error(
         err instanceof Error
           ? err.message
-          : "Could not update this booking.",
+          : "Could not update this appointment.",
       );
     } finally {
       setPendingAction(null);
@@ -153,15 +194,29 @@ function BookingDetails({
       ? Math.min(financials.paid / financials.totalFee, 1)
       : 0;
 
+  const isFullySettled =
+    payment?.status === "completed" &&
+    (payment.type === "full-payment" || payment.balanceCollected);
+
+  const displayedPaidRatio = isFullySettled ? 1 : paidRatio;
+
   const paymentLabel =
     payment?.status === "completed"
       ? payment.type === "full-payment"
         ? "Full payment received"
-        : "Deposit received"
+        : payment.balanceCollected
+          ? "Paid"
+          : "Deposit received"
       : "Awaiting payment";
 
-  const isFullySettled =
-    payment?.status === "completed" && payment.type === "full-payment";
+  const hasOutstandingBalance =
+    payment?.status === "completed" &&
+    payment.type === "deposit" &&
+    !payment.balanceCollected &&
+    financials.remaining > 0;
+
+  const showBalanceCollectedAction =
+    booking.status === "completed" && hasOutstandingBalance;
 
   const statusBadge = getBookingStatusBadge(booking.status);
 
@@ -171,11 +226,11 @@ function BookingDetails({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Link href="/dashboard/bookings" className="hover:text-primary">
-              Bookings
+            <Link href="/dashboard/appointments" className="hover:text-primary">
+              Appointments
             </Link>
             <CaretRight className="size-3" />
-            <span className="text-primary font-medium">Booking Details</span>
+            <span className="text-primary font-medium">Appointment Details</span>
           </div>
           <h1 className="mt-1 text-2xl font-headline font-bold">Review Appointment</h1>
         </div>
@@ -189,7 +244,15 @@ function BookingDetails({
           >
             {canCancel && (
               <>
-                <Button variant="secondary" size="lg" className="h-10">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="h-10"
+                  onClick={() => {
+                    setRescheduleOpenedAt(Date.now());
+                    setRescheduleOpen(true);
+                  }}
+                >
                   Reschedule
                 </Button>
 
@@ -277,7 +340,13 @@ function BookingDetails({
         )}
 
         {isInProgress && (
-          <AlertDialog>
+          <AlertDialog
+            open={completeDialogOpen}
+            onOpenChange={(open) => {
+              setCompleteDialogOpen(open);
+              if (!open) setBalanceCollectedChecked(false);
+            }}
+          >
             <AlertDialogTrigger
               render={
                 <Button
@@ -299,6 +368,25 @@ function BookingDetails({
                   completed. Only do this once the service has actually finished.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
+              {hasOutstandingBalance && (
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Balance of {formatZar(financials.remaining)} outstanding
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Collected in person from {client.name}?
+                    </p>
+                  </div>
+                  <Switch
+                    checked={balanceCollectedChecked}
+                    onCheckedChange={setBalanceCollectedChecked}
+                    disabled={pendingAction === "complete"}
+                  />
+                </div>
+              )}
+
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={pendingAction === "complete"}>
                   Cancel
@@ -363,7 +451,7 @@ function BookingDetails({
         {/* Column 1: client, appointment, financials, notes */}
         <div className="space-y-4">
           {/* Client */}
-          <Card className="rounded-2xl">
+          <Card>
             <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
               <Avatar size="xl" className="size-20">
                 <AvatarImage src={client.image ?? undefined} alt={client.name} />
@@ -394,7 +482,7 @@ function BookingDetails({
           </Card>
 
           {/* Appointment */}
-          <Card className="rounded-2xl">
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase text-muted-foreground">
@@ -441,7 +529,7 @@ function BookingDetails({
           </Card>
 
           {/* Financials */}
-          <Card className="rounded-2xl">
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase text-muted-foreground">
@@ -456,7 +544,7 @@ function BookingDetails({
                   <p className="text-2xl font-bold">
                     {formatZar(financials.totalFee)}
                   </p>
-                  <p className="text-xs text-muted-foreground">Total booking fee</p>
+                  <p className="text-xs text-muted-foreground">Total appointment fee</p>
                 </div>
                 <Badge
                   className={cn(
@@ -476,19 +564,39 @@ function BookingDetails({
                     "h-full rounded-full transition-all",
                     isFullySettled ? "bg-primary" : "bg-amber-500",
                   )}
-                  style={{ width: `${paidRatio * 100}%` }}
+                  style={{ width: `${displayedPaidRatio * 100}%` }}
                 />
               </div>
 
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Paid: {formatZar(financials.paid)}</span>
-                <span>Remaining: {formatZar(financials.remaining)}</span>
-              </div>
+              {payment?.balanceCollected ? (
+                <p className="text-xs text-muted-foreground">
+                  {formatZar(financials.remaining)} collected in person
+                </p>
+              ) : (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Paid: {formatZar(financials.paid)}</span>
+                  <span>Remaining: {formatZar(financials.remaining)}</span>
+                </div>
+              )}
+
+              {showBalanceCollectedAction && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={pendingAction === "collect-balance"}
+                  onClick={handleMarkBalanceCollected}
+                >
+                  {pendingAction === "collect-balance"
+                    ? "Marking as collected..."
+                    : `Mark ${formatZar(financials.remaining)} balance as collected`}
+                </Button>
+              )}
             </CardContent>
           </Card>
 
           {/* Client Notes */}
-          <Card className="rounded-2xl">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-headline font-bold">
                 <NotePencil className="size-4 text-primary" />
@@ -502,7 +610,7 @@ function BookingDetails({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No notes were added for this booking.
+                  No notes were added for this appointment.
                 </p>
               )}
             </CardContent>
@@ -511,7 +619,7 @@ function BookingDetails({
 
         {/* Column 2: service details */}
         <div>
-          <Card className="rounded-2xl">
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase text-muted-foreground">
@@ -567,16 +675,16 @@ function BookingDetails({
 
         {/* Column 3: booking history */}
         <div>
-          <Card className="rounded-2xl">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base font-headline font-bold">
-                Booking History
+                Appointment History
               </CardTitle>
             </CardHeader>
             <CardContent>
               {history.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  This is the client&apos;s first booking with you.
+                  This is the client&apos;s first appointment with you.
                 </p>
               ) : (
                 <ol className="relative space-y-5 border-l border-border pl-5">
@@ -598,8 +706,350 @@ function BookingDetails({
           </Card>
         </div>
       </div>
+
+      {canCancel && (
+        <RescheduleDialog
+          open={rescheduleOpen}
+          onOpenChange={setRescheduleOpen}
+          now={rescheduleOpenedAt}
+          booking={booking}
+          service={service}
+          business={business}
+        />
+      )}
     </div>
   );
 }
 
 export default BookingDetails;
+
+type RescheduleSlot = {
+  start: string;
+  end: string;
+  startTimestamp: number;
+  endTimestamp: number;
+};
+
+// Returns a UTC-noon marker for d's calendar date in `timezone`, so day picker and slot query agree regardless of the admin's local timezone.
+const toNoonUTC = (d: Date, timezone: string) => {
+  const zoned = new TZDate(d, timezone);
+  return new Date(
+    Date.UTC(zoned.getFullYear(), zoned.getMonth(), zoned.getDate(), 12, 0, 0),
+  );
+};
+
+interface RescheduleDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  now: number;
+  booking: {
+    _id: Id<"booking">;
+    bookingStartDate: number;
+    bookingEndDate: number;
+  };
+  service: {
+    _id: Id<"service">;
+    name: string;
+    duration?: number;
+  };
+  business: {
+    slug: string;
+    timezone: string;
+  };
+}
+
+function RescheduleDialog({
+  open,
+  onOpenChange,
+  now,
+  booking,
+  service,
+  business,
+}: RescheduleDialogProps) {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
+    toNoonUTC(new Date(booking.bookingStartDate), business.timezone),
+  );
+  const [selectedSlot, setSelectedSlot] = useState<RescheduleSlot | null>(null);
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [lastNow, setLastNow] = useState(now);
+
+  // Reset selection state on every dialog open (new `now` from parent) — this component stays mounted across opens, so state would otherwise carry over.
+  if (now !== lastNow) {
+    setLastNow(now);
+    setWeekOffset(0);
+    setSelectedDate(toNoonUTC(new Date(booking.bookingStartDate), business.timezone));
+    setSelectedSlot(null);
+  }
+
+  const rescheduleBooking = useMutation(
+    api.booking.admin.rescheduleBookingByBusiness,
+  );
+
+  const weekDays = useMemo(() => {
+    const today = new TZDate(now, business.timezone);
+    const base = Date.UTC(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      12,
+      0,
+      0,
+    );
+    return Array.from(
+      { length: 7 },
+      (_, i) => new Date(base + (weekOffset * 7 + i) * 86_400_000),
+    );
+  }, [weekOffset, now, business.timezone]);
+
+  const blockedData = useQuery(
+    api.business.public.getBlockedSlots,
+    open
+      ? {
+          businessSlug: business.slug,
+          serviceId: service._id,
+          date: selectedDate.getTime(),
+        }
+      : "skip",
+  );
+
+  const slots = useMemo<RescheduleSlot[]>(() => {
+    if (!blockedData?.businessHours || !service.duration) return [];
+
+    const { businessHours, maxConcurrent, allowBeyondClose, bufferMinutes, bookedSlots } =
+      blockedData;
+
+    const [openH, openM] = businessHours.openTime.split(":").map(Number);
+    const [closeH, closeM] = businessHours.closeTime.split(":").map(Number);
+
+    // Re-anchor selectedDate's Y/M/D to the business's timezone so open/close times line up with server-computed `bookedSlots`.
+    const year = selectedDate.getUTCFullYear();
+    const month = selectedDate.getUTCMonth();
+    const day = selectedDate.getUTCDate();
+
+    const openTime = new TZDate(
+      year,
+      month,
+      day,
+      openH,
+      openM,
+      0,
+      business.timezone,
+    ).getTime();
+    const closeTime = new TZDate(
+      year,
+      month,
+      day,
+      closeH,
+      closeM,
+      0,
+      business.timezone,
+    ).getTime();
+    const durationMs = service.duration * 60_000;
+    const bufferMs = bufferMinutes * 60_000;
+
+    const available: RescheduleSlot[] = [];
+    let slotStart = openTime;
+
+    while (slotStart < closeTime) {
+      const slotEnd = slotStart + durationMs;
+
+      if (!allowBeyondClose && slotEnd > closeTime) break;
+      if (allowBeyondClose && slotStart >= closeTime) break;
+
+      if (slotStart > now) {
+        // Exclude the current booking so its own slot doesn't show as unavailable.
+        const overlapping = bookedSlots.filter(
+          (b) =>
+            b.start < slotEnd &&
+            b.end > slotStart &&
+            !(b.start === booking.bookingStartDate && b.end === booking.bookingEndDate),
+        );
+
+        if (overlapping.length < maxConcurrent) {
+          available.push({
+            start: format(new Date(slotStart), "HH:mm"),
+            end: format(new Date(slotEnd), "HH:mm"),
+            startTimestamp: slotStart,
+            endTimestamp: slotEnd,
+          });
+        }
+      }
+
+      slotStart += durationMs + bufferMs;
+    }
+
+    return available;
+  }, [blockedData, selectedDate, booking, service, now, business.timezone]);
+
+  const weekStart = weekDays[0];
+  const weekEnd = weekDays[6];
+  const monthLabel =
+    format(weekStart, "MMMM") === format(weekEnd, "MMMM")
+      ? format(weekStart, "MMMM yyyy")
+      : `${format(weekStart, "MMM")} – ${format(weekEnd, "MMM yyyy")}`;
+
+  const handleConfirm = async () => {
+    if (!selectedSlot) return;
+    try {
+      setSubmitting(true);
+      await rescheduleBooking({
+        bookingId: booking._id,
+        date: format(new Date(selectedSlot.startTimestamp), "yyyy-MM-dd"),
+        time: format(new Date(selectedSlot.startTimestamp), "HH:mm"),
+      });
+      toast.success("Appointment rescheduled");
+      onOpenChange(false);
+      setSelectedSlot(null);
+    } catch (err) {
+      if (err instanceof ConvexError) {
+        toast.error((err.data as string) || "Could not reschedule this appointment.");
+      } else {
+        toast.error(
+          err instanceof Error ? err.message : "Could not reschedule this appointment.",
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="font-headline font-bold">
+            Reschedule Appointment
+          </DialogTitle>
+          <DialogDescription>
+            Pick a new date and time for{" "}
+            <span className="font-bold capitalize">{service.name}</span>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{monthLabel}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setWeekOffset((o) => Math.max(0, o - 1));
+                  setSelectedSlot(null);
+                }}
+                disabled={weekOffset === 0}
+                className="size-8 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30"
+              >
+                <CaretLeft className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWeekOffset((o) => o + 1);
+                  setSelectedSlot(null);
+                }}
+                className="size-8 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <CaretRight className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]">
+            {weekDays.map((day) => {
+              const isSelected = isSameDay(day, selectedDate);
+              return (
+                <button
+                  type="button"
+                  key={day.toISOString()}
+                  onClick={() => {
+                    setSelectedDate(toNoonUTC(day, business.timezone));
+                    setSelectedSlot(null);
+                  }}
+                  className={cn(
+                    "flex flex-col items-center justify-center rounded-xl transition-all shrink-0 w-14 h-16",
+                    isSelected
+                      ? "bg-primary text-white shadow"
+                      : "bg-muted hover:bg-muted/70",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase font-semibold tracking-wide",
+                      isSelected ? "text-white/75" : "text-muted-foreground",
+                    )}
+                  >
+                    {format(day, "EEE")}
+                  </span>
+                  <span className="text-lg font-bold mt-0.5">{format(day, "d")}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="max-h-64 overflow-y-auto">
+            {blockedData === undefined ? (
+              <div className="grid grid-cols-3 gap-2" aria-busy="true" aria-label="Loading available slots">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : blockedData === null ? (
+              <p className="text-sm text-muted-foreground">Not open on this day.</p>
+            ) : slots.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No available slots for this day.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {slots.map((slot) => {
+                  const isSelected = selectedSlot?.startTimestamp === slot.startTimestamp;
+                  const isCurrent =
+                    slot.startTimestamp === booking.bookingStartDate &&
+                    slot.endTimestamp === booking.bookingEndDate;
+                  return (
+                    <Button
+                      variant="outline"
+                      type="button"
+                      key={slot.startTimestamp}
+                      onClick={() => !isCurrent && setSelectedSlot(slot)}
+                      disabled={isCurrent}
+                      className={cn(
+                        "rounded-lg py-2 px-3 text-sm font-semibold transition-all",
+                        isCurrent
+                          ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                          : isSelected
+                            ? "bg-primary text-white shadow"
+                            : "bg-muted hover:bg-muted/70",
+                      )}
+                      title={isCurrent ? "Current appointment time" : undefined}
+                    >
+                      {slot.start}
+                      {isSelected && !isCurrent && <Check className="inline ml-1 size-3.5" />}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={!selectedSlot || isSubmitting}
+              size="lg"
+            >
+              {isSubmitting ? "Rescheduling..." : "Confirm new time"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

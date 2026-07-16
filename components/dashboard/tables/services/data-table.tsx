@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import { EmptyState } from "../../empty-state";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -104,9 +106,12 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-40 text-center text-sm text-muted-foreground"
                 >
-                  No results.
+                  <EmptyState
+                    icon={MagnifyingGlass}
+                    message="No services match your filter."
+                  />
                 </TableCell>
               </TableRow>
             )}

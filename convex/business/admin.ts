@@ -643,7 +643,7 @@ export const getUpcomingBookings = query({
           ...booking,
           client: { name: client?.fullname, avatar: client?.image, email: client?.email },
           service: { _id: service?._id, name: service?.name, duration: service?.duration },
-          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
+          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType, balanceCollected: payment.balanceCollected ?? false } : null,
           business: { timezone: business.timezone }
         };
       })
@@ -658,7 +658,7 @@ export const getUpcomingBookings = query({
 export type BookingWithDetails = Doc<"booking"> & {
   client: { name?: string; avatar?: string, email?: string };
   service: { _id?: Id<"service">; name?: string, duration?: number };
-  payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type: "deposit" | "full-payment" } | null;
+  payment: { amount: number; status: "pending" | "completed" | "failed" | "refunded" | "cancelled", type: "deposit" | "full-payment", balanceCollected: boolean } | null;
   business: { timezone: string }
 };
 
@@ -696,7 +696,7 @@ export const getAllBookings = query({
           ...booking,
           client: { name: client?.fullname, avatar: client?.image, email: client?.email },
           service: { _id: service?._id, name: service?.name, duration: service?.duration },
-          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType } : null,
+          payment: payment ? { amount: payment.amount, status: payment.status, type: payment.paymentType, balanceCollected: payment.balanceCollected ?? false } : null,
           business: { timezone: business.timezone },
         };
       }),

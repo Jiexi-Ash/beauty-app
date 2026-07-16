@@ -26,6 +26,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Doc } from "@/convex/_generated/dataModel";
 import type { ForwardRefExoticComponent } from "react";
+import { EmptyState } from "./empty-state";
 
 const NOTIFICATION_ICON: Record<
   Doc<"notifications">["type"],
@@ -103,12 +104,12 @@ function NotificationBell() {
         <DropdownMenuSeparator className="my-0" />
 
         {!notifications || notifications.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-            <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-              <Bell className="size-4 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">No notifications yet</p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            size="sm"
+            className="px-4 py-8 text-center text-sm text-muted-foreground"
+            message="No notifications yet"
+          />
         ) : (
           <div className="max-h-96 overflow-y-auto">
             {notifications.map((notification) => {
@@ -121,7 +122,7 @@ function NotificationBell() {
                     !notification.read && "bg-primary/5",
                   )}
                   {...(notification.bookingId
-                    ? { render: <Link href={`/dashboard/bookings/${notification.bookingId}`} /> }
+                    ? { render: <Link href={`/dashboard/appointments/${notification.bookingId}`} /> }
                     : {})}
                   onClick={() => {
                     if (!notification.read)

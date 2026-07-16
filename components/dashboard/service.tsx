@@ -416,7 +416,7 @@ function DashboardServiceForm({
     <div className="min-h-screen w-full">
       <div className="space-y-6 px-6 pt-4 pb-6">
         <div>
-          <h1 className="text-2xl font-bold">Edit Service</h1>
+          <h1 className="text-2xl font-headline font-bold">Edit Service</h1>
           <p className="text-sm text-muted-foreground">
             Update your service details and/or add/remove gallery images
           </p>

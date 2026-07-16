@@ -13,7 +13,7 @@ import { usePathname } from "next/navigation";
 
 const navlinks = [
   { href: "/dashboard", label: "Overview", icon: SquaresFour },
-  { href: "/dashboard/bookings", label: "Booking", icon: CalendarDots },
+  { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDots },
   { href: "/dashboard/services", label: "Services", icon: Scissors },
   { href: "/dashboard/clients", label: "Clients", icon: UsersThree },
   { href: "/dashboard/settings", label: "Settings", icon: GearSix },
@@ -21,7 +21,7 @@ const navlinks = [
 // Focused create/edit task screens (e.g. /dashboard/services/create-service,
 // /dashboard/services/[id]) render their own sticky bottom action bar, which
 // would overlap this sticky nav if both were shown at once.
-const HAS_OWN_ACTION_BAR = /^\/dashboard\/services\/[^/]+$/;
+export const HAS_OWN_ACTION_BAR = /^\/dashboard\/services\/[^/]+$/;
 
 function DashboardFooter() {
   const pathname = usePathname();

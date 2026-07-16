@@ -14,9 +14,10 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@/convex/_generated/api";
+import { WidgetError } from "./widget-error";
 
 function ServiceHighlight() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     ...convexQuery(api.business.admin.getServiceHighlights, {}),
   });
 
@@ -24,36 +25,42 @@ function ServiceHighlight() {
   const topService = services[0];
 
   return (
-    <Card className="rounded-lg lg:w-[300px] bg-primary">
+    <Card className="lg:w-[300px]">
       <CardHeader>
-        <CardTitle className="text-primary-foreground font-bold">
-          Service Highlight
-        </CardTitle>
-        <CardDescription className="text-muted text-xs">
-          {isLoading ? (
-            <Skeleton className="h-3 w-48 bg-white/25" />
+        <CardTitle className="font-bold">Service Highlight</CardTitle>
+        <CardDescription className="text-xs">
+          {isError ? (
+            "Couldn't load your service highlights."
+          ) : isLoading ? (
+            <Skeleton className="h-3 w-48" />
           ) : topService ? (
-            `${topService.name} is your top performing service this month with ${topService.count} ${topService.count === 1 ? "booking" : "bookings"}`
+            `${topService.name} is your top performing service this month with ${topService.count} ${topService.count === 1 ? "appointment" : "appointments"}`
           ) : (
-            "No bookings yet this month. Your top services will show up here."
+            "No appointments yet this month. Your top services will show up here."
           )}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col h-full">
         <div className="flex-1 space-y-2">
-          {isLoading ? (
+          {isError ? (
+            <WidgetError
+              message="Couldn't load service highlights."
+              onRetry={() => refetch()}
+              className="min-h-[120px] py-0"
+            />
+          ) : isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white/25 flex items-center justify-between p-2 rounded-lg"
+                className="bg-muted flex items-center justify-between p-2 rounded-lg"
               >
-                <Skeleton className="h-4 w-24 bg-white/40" />
-                <Skeleton className="h-5 w-20 rounded-full bg-white/40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-20 rounded-full" />
               </div>
             ))
           ) : services.length === 0 ? (
             <div className="flex h-full min-h-[120px] items-center justify-center">
-              <p className="text-muted text-xs text-center">
+              <p className="text-muted-foreground text-xs text-center">
                 No services have been booked this month yet.
               </p>
             </div>
@@ -61,13 +68,13 @@ function ServiceHighlight() {
             services.map((service) => (
               <div
                 key={service.serviceId}
-                className="bg-white/25 flex items-center justify-between p-2 rounded-lg"
+                className="bg-muted flex items-center justify-between p-2 rounded-lg"
               >
-                <span className="text-muted font-medium capitalize">
+                <span className="font-medium capitalize">
                   {service.name}
                 </span>
-                <Badge className="bg-primary">
-                  {service.count} {service.count === 1 ? "Booking" : "Bookings"}
+                <Badge className="bg-primary/10 text-primary">
+                  {service.count} {service.count === 1 ? "Appointment" : "Appointments"}
                 </Badge>
               </div>
             ))
@@ -75,14 +82,8 @@ function ServiceHighlight() {
         </div>
 
         <div className="mt-4">
-          <Button
-         
-            className="bg-primary-foreground text-primary w-full cursor-pointer"
-            size="lg"
-          >
-            <Link href="/dashboard/services">
-            Manage services
-            </Link>
+          <Button className="w-full cursor-pointer" size="lg">
+            <Link href="/dashboard/services">Manage services</Link>
           </Button>
         </div>
       </CardContent>

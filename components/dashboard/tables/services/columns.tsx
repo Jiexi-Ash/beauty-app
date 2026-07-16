@@ -5,7 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import Actions from "./actions";
-import { cn, formatDuration } from "@/lib/utils";
+import { cn, formatDuration, formatZar } from "@/lib/utils";
 import VisibilityToggle from "./visibility-toggle";
 
 export type Service = {
@@ -80,9 +80,8 @@ export const columns: ColumnDef<Service>[] = [
     ),
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("price"));
-      const formatedPrice = (price / 100).toFixed(2);
 
-      return <div className="font-semibold">R{formatedPrice}</div>;
+      return <div className="font-semibold">{formatZar(price)}</div>;
     },
   },
   {
