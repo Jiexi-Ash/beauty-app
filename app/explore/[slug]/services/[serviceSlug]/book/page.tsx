@@ -236,8 +236,7 @@ function BookServicePage() {
                 <span className="text-primary italic">Appointment.</span>
               </h1>
               <p className="text-muted-foreground text-sm mt-2 max-w-md leading-relaxed">
-                Review your appointment details and secure your spot at Kasi&apos;s premium
-                beauty destination.
+                Review your appointment details and secure your spot.
               </p>
             </div>
 

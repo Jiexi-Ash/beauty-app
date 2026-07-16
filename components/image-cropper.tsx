@@ -184,7 +184,6 @@ export default function ImageCropDialog({
         setCrop(buildInitialCrop(width, height, option.value));
     };
 
-    // Confirm → rasterise the crop
     const handleConfirm = async () => {
         if (!imgRef.current || !completedCrop || !file) return;
         setIsProcessing(true);
@@ -284,7 +283,7 @@ export default function ImageCropDialog({
                 </div>
 
                 {/* ── Footer ── */}
-                <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex gap-2 justify-end">
+                <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex gap-2 mb-2 justify-end">
                     <Button
                         type="button"
                         variant="outline"

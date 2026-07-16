@@ -54,7 +54,7 @@ export const createService = mutation({
       primaryImageStorageId,
       price: priceInDecimal,
       totalBookings: 0,
-      visibility: "hidden",
+      visibility: "visible",
       description,
       categoryId: category._id,
       duration,
