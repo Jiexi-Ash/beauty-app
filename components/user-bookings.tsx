@@ -24,6 +24,7 @@ import { Check, CaretLeft, CaretRight, CheckCircle, DotsThreeVertical, Star, War
 import { useSearchParams } from 'next/navigation'
 import { Preloaded, useAction, usePreloadedQuery, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
+import { Badge } from './ui/badge'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
@@ -102,7 +103,7 @@ type Booking = {
     } | null
 }
 
-type BookingCardVariant = "upcoming" | "completed" | "cancelled"
+type BookingCardVariant = "upcoming" | "pending" | "completed" | "cancelled"
 
 interface BookingCardProps {
     booking: Booking
@@ -134,11 +135,54 @@ function BookingCard({ booking, variant }: BookingCardProps) {
         },
     });
 
+    const { mutate: cancelPendingBooking } = useMutation({
+        mutationFn: useConvexMutation(api.booking.user.cancelPendingBooking),
+        onSuccess: () => {
+            toast.success("Booking cancelled");
+            setCancelDialogOpen(false);
+        },
+        onError: (error) => {
+            if (error instanceof ConvexError) {
+                toast.error(
+                    error.data || "An unknown error occurred while cancelling this booking.",
+                );
+            } else if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unknown error occurred while cancelling this booking.");
+            }
+        },
+    });
+
+    const retryPayment = useAction(api.booking.actions.retryBookingPayment);
+    const [isRetrying, setIsRetrying] = useState(false);
+
+    const handleCompletePayment = async () => {
+        setIsRetrying(true);
+        try {
+            const checkoutUrl = await retryPayment({ bookingId: booking._id });
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl; // navigating away — leave isRetrying true
+            } else {
+                setIsRetrying(false);
+                toast.error("Failed to resume payment");
+            }
+        } catch (error) {
+            setIsRetrying(false);
+            if (error instanceof ConvexError) {
+                toast.error((error.data as string) || "An unknown error occurred.");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
+        }
+    };
+
     const [now] = useState(() => Date.now());
 
     const showDuration = variant === "upcoming"
     const showDropdown = variant === "upcoming"
-    const showRebook = variant === "completed"
+    const showPendingActions = variant === "pending"
+    const isPendingCancel = variant === "pending"
     const showReview = variant === "completed"
     const canReschedule = booking.bookingStartDate - now >= RESCHEDULE_MIN_NOTICE_HOURS * 60 * 60 * 1000
 
@@ -152,15 +196,23 @@ function BookingCard({ booking, variant }: BookingCardProps) {
 
         <>
             <Card className="rounded-2xl ring-1 ring-black/5 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                <CardContent className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <CardContent className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="p-1 rounded-full bg-black/[0.04] ring-1 ring-black/5 shrink-0">
                             <div className="h-14 w-14 rounded-full relative overflow-hidden">
                                 <Image src={booking.business?.coverImageUrl ?? ""} alt={`${booking.business?.name} photo`} fill className="object-cover" />
                             </div>
                         </div>
-                        <div className="space-y-0.5">
-                            <h2 className="font-headline font-bold">{booking.business?.name}</h2>
+                        <div className="space-y-0.5 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <h2 className="font-headline font-bold truncate">{booking.business?.name}</h2>
+                                {booking.status === "pending" && (
+                                    <Badge className="bg-amber-400/20 text-amber-600 font-medium shrink-0">Payment pending</Badge>
+                                )}
+                                {booking.status === "in_progress" && (
+                                    <Badge className="bg-primary/10 text-primary font-medium">In progress</Badge>
+                                )}
+                            </div>
                             <div className="flex items-center gap-1.5 text-muted-foreground flex-wrap text-sm">
                                 <p className="capitalize font-medium">{booking.service?.name}</p>
                                 <span className="text-muted-foreground/50">&bull;</span>
@@ -196,7 +248,28 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                         </DropdownMenu>
                     )}
 
-                    {(showRebook || showReview) && (
+                    {showPendingActions && (
+                        <div className="flex shrink-0 items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground px-1.5"
+                                onClick={() => setCancelDialogOpen(true)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="rounded-full bg-primary text-white hover:bg-primary/90"
+                                disabled={isRetrying}
+                                onClick={handleCompletePayment}
+                            >
+                                {isRetrying ? "Redirecting…" : "Pay now"}
+                            </Button>
+                        </div>
+                    )}
+
+                    {showReview && (
                         <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
                             {showReview && (
                                 booking.review ? (
@@ -223,9 +296,6 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                                     </Button>
                                 )
                             )}
-                            {showRebook && (
-                                <Button className="text-primary" variant="ghost" size="sm">Rebook</Button>
-                            )}
                         </div>
                     )}
                 </CardContent>
@@ -235,21 +305,35 @@ function BookingCard({ booking, variant }: BookingCardProps) {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <Warning className="size-8 text-amber-500 shrink-0 text-center w-full" />
-                        <AlertDialogTitle className="w-full text-center font-headline">Cancel Appointment?</AlertDialogTitle>
+                        <AlertDialogTitle className="w-full text-center font-headline">
+                            {isPendingCancel ? "Cancel Booking?" : "Cancel Appointment?"}
+                        </AlertDialogTitle>
                         <AlertDialogDescription className="w-full text-center space-y-2" render={<div />}>
                             <span className="block text-muted-foreground font-medium">This action cannot be undone.</span>
-                            <span className="block text-destructive font-medium text-center">
-                                Deposits are non-refundable. You will not receive a refund for any payment made.
-                            </span>
+                            {isPendingCancel ? (
+                                <span className="block text-muted-foreground font-medium text-center">
+                                    This booking hasn&apos;t been paid yet — cancelling won&apos;t charge you anything.
+                                </span>
+                            ) : (
+                                <span className="block text-destructive font-medium text-center">
+                                    Deposits are non-refundable. You will not receive a refund for any payment made.
+                                </span>
+                            )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="lg:justify-center">
-                        <AlertDialogCancel className="rounded-full">Keep Appointment</AlertDialogCancel>
+                        <AlertDialogCancel className="rounded-full">
+                            {isPendingCancel ? "Keep Booking" : "Keep Appointment"}
+                        </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={() => cancelBooking({ bookingId: booking._id })}
+                            onClick={() =>
+                                isPendingCancel
+                                    ? cancelPendingBooking({ bookingId: booking._id })
+                                    : cancelBooking({ bookingId: booking._id })
+                            }
                             className="bg-destructive text-white hover:bg-destructive/90 rounded-full"
                         >
-                            Cancel Appointment
+                            {isPendingCancel ? "Cancel Booking" : "Cancel Appointment"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -685,11 +769,15 @@ function UserBookings({ bookings }: UserBookingsProps) {
     const [dismissed, setDismissed] = useState(false)
     const searchParams = useSearchParams()
     const isSuccess = searchParams.get("status") === "success"
-    const [now] = useState(() => Date.now())
 
+    // Status is the source of truth for which tab a booking belongs to — the
+    // backend flips status away from upcoming/pending once a booking is truly
+    // done, so filtering on bookingStartDate here would hide active bookings
+    // (e.g. in_progress, or upcoming ones not yet swept to completed) as soon
+    // as their start time passes.
     const upcomingBookings = useMemo(() =>
-        bookings?.filter(b => b.status === "upcoming" && b.bookingStartDate > now) ?? []
-        , [bookings, now])
+        bookings?.filter(b => b.status === "upcoming" || b.status === "pending" || b.status === "in_progress") ?? []
+        , [bookings])
 
     const completedBookings = useMemo(() =>
         bookings?.filter(b => b.status === "completed") ?? []
@@ -738,7 +826,11 @@ function UserBookings({ bookings }: UserBookingsProps) {
                             <TabsContent value="upcoming" className="mt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     { upcomingBookings.map((booking) => (
-                                        <BookingCard key={booking._id} booking={booking} variant="upcoming" />
+                                        <BookingCard
+                                            key={booking._id}
+                                            booking={booking}
+                                            variant={booking.status === "pending" ? "pending" : "upcoming"}
+                                        />
                                     ))}
                                 </div>
                             </TabsContent>

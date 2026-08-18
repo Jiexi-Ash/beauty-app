@@ -12,10 +12,7 @@ function BookingNotFound() {
     <div className="w-full min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div
-        className="flex-1 flex flex-col items-center justify-center px-4 py-20"
-        style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
-      >
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-20">
         <h1 className="font-headline text-4xl md:text-5xl font-bold text-foreground text-center mb-3 tracking-tight">
           Booking not found.
         </h1>

@@ -8,7 +8,7 @@ const crons = cronJobs()
 // unknown (transient) -> leave pending for the next run.
 crons.interval(
   "sweep stale pending payments",
-  { minutes: 5 },
+  { minutes: 2 },
   internal.booking.actions.sweepStalePendingPayments,
 );
 

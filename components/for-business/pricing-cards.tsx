@@ -1,6 +1,7 @@
 "use client"
 import { CheckCircle } from "@phosphor-icons/react"
-import { Button } from "./ui/button"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 const freeTier = {
   name: "Community Free",
@@ -9,7 +10,7 @@ const freeTier = {
   priceSuffix: "/forever",
   features: [
     "Unlimited bookings",
-    "Up to 10 services listed",
+    "Up to 20 services listed",
     "Basic profile listing",
     "Automated WhatsApp reminders",
     "Verified badge after 50 completed bookings",
@@ -62,12 +63,13 @@ export default function PricingCards() {
 
         {/* CTA */}
         <div className="md:col-span-3">
-          <Button
-            className="w-full h-14 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer border-2 border-primary text-primary hover:bg-primary hover:text-white"
-            variant="outline"
-          >
-            {freeTier.cta}
-          </Button>
+          <Link href="/onboarding">
+            <Button
+              className="w-full h-14 rounded-full font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] cursor-pointer"
+            >
+              {freeTier.cta}
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

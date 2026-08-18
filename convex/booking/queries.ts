@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalQuery, query } from "../_generated/server";
 import { getCurrentUser } from "../users";
 import { getBusinessByUserId } from "../business/admin";
@@ -28,6 +28,15 @@ export const getUserBookingById = query({
       ? await ctx.db.get(booking.bookingPaymentId)
       : null;
 
+    // Balance owed at pickup — same "only count completed payments" rule as
+    // the business-owner-facing getBookingDetails financials.
+    const totalFee = service?.price ?? 0;
+    const paid =
+      bookingPaymentDetails?.status === "completed"
+        ? bookingPaymentDetails.amount
+        : 0;
+    const remaining = Math.max(totalFee - paid, 0);
+
     return {
       id: booking._id,
       status: booking.status,
@@ -37,9 +46,11 @@ export const getUserBookingById = query({
       ),
 
       time: booking.bookingStartDate,
+      endTime: booking.bookingEndDate,
       paymentDetails: {
         amountPaid: bookingPaymentDetails?.amount,
         paymentType: bookingPaymentDetails?.paymentType,
+        remaining,
       },
       business: {
         name: business?.name ?? "Unknown Business",
@@ -58,12 +69,6 @@ export const getUserBookingById = query({
 });
 
 
-
-/**
- * Full detail for a single booking, scoped to the business owned by the
- * requesting user. Returns null when the booking doesn't exist or doesn't
- * belong to the caller's business (the page renders not-found in that case).
- */
 export const getBookingDetails = query({
   args: { bookingId: v.id("booking") },
   handler: async (ctx, { bookingId }) => {
@@ -208,5 +213,62 @@ export const getStalePending = internalQuery({
       paymentReference: p.paymentReference,
       amount: p.amount,
     }));
+  },
+});
+
+export const getRetryCheckoutContext = internalQuery({
+  args: { bookingId: v.id("booking"), clerkId: v.string() },
+  returns: v.object({
+    bookingPaymentId: v.id("bookingPayment"),
+    amount: v.number(),
+    commission: v.number(),
+    subaccount: v.string(),
+    email: v.string(),
+    serviceName: v.string(),
+    fullName: v.string(),
+  }),
+  handler: async (ctx, { bookingId, clerkId }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+      .unique();
+    if (!user) throw new ConvexError("User not found.");
+
+    const booking = await ctx.db.get(bookingId);
+    if (!booking || booking.userId !== user._id)
+      throw new ConvexError("Booking not found.");
+    if (booking.status !== "pending")
+      throw new ConvexError("This booking is no longer awaiting payment.");
+
+    const payment = booking.bookingPaymentId
+      ? await ctx.db.get(booking.bookingPaymentId)
+      : null;
+    if (!payment || payment.status !== "pending")
+      throw new ConvexError("This booking is no longer awaiting payment.");
+
+    const business = await ctx.db.get(booking.businessId);
+    if (!business) throw new ConvexError("Business not found.");
+    if (business.visibility !== "visible")
+      throw new ConvexError("This business is not active at the moment.");
+
+    const businessBanking = await ctx.db
+      .query("businessBanking")
+      .withIndex("by_business", (q) => q.eq("businessId", business._id))
+      .unique();
+    if (!businessBanking?.subAccountCode)
+      throw new ConvexError("This business is not yet set up to accept payments.");
+
+    const service = await ctx.db.get(booking.serviceId);
+    if (!service) throw new ConvexError("Service not found.");
+
+    return {
+      bookingPaymentId: payment._id,
+      amount: payment.amount,
+      commission: payment.commission,
+      subaccount: businessBanking.subAccountCode,
+      email: user.email,
+      serviceName: service.name,
+      fullName: user.fullname,
+    };
   },
 });

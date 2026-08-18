@@ -17,11 +17,8 @@ function Features() {
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
           )}
         >
-          <div className="inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold mb-4">
-            — Built for your business —
-          </div>
           <h2 className="text-4xl font-headline font-bold mb-4 tracking-tight">
-            Built for your <span className="text-primary">hustle</span>
+            Built for your hustle
           </h2>
           <p className="text-on-surface-variant">Professional tools, community-centric pricing.</p>
         </div>

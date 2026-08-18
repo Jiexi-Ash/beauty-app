@@ -18,16 +18,6 @@ function Hero() {
     >
       {/* Left column — text + CTAs */}
       <div className="col-span-12 md:col-span-6">
-        {/* Eyebrow badge */}
-        <div
-          className={cn(
-            "inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold mb-6 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
-          )}
-        >
-          — Trusted beauty marketplace —
-        </div>
-
         <h1
           className={cn(
             "text-6xl md:text-8xl font-headline font-extrabold tracking-tighter leading-[0.9] mb-8 transition-all duration-700 delay-100 ease-[cubic-bezier(0.32,0.72,0,1)]",
@@ -88,7 +78,7 @@ function Hero() {
         <div className="grid grid-cols-2 gap-3">
           {/* Left column */}
           <div className="flex flex-col gap-3">
-            <div className="relative rounded-3xl overflow-hidden aspect-[3/4]">
+            <div className="relative rounded-3xl overflow-hidden flex-1 min-h-[320px]">
               <Image
                 src="/salon-1.jpg"
                 alt="Modern salon interior"
@@ -96,19 +86,9 @@ function Hero() {
                 className="object-cover"
               />
               {/* Opaque — no backdrop-blur on scrolling content (GPU perf) */}
-              <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/95 px-3 py-1.5 rounded-full shadow-sm">
+              <div className="absolute bottom-4 left-4 flex items-center gap-1.5 bg-white/95 px-3 py-1.5 rounded-full shadow-sm">
                 <SealCheck className="size-4 text-primary" weight="fill" />
                 <span className="text-xs font-semibold text-on-surface">Verified</span>
-              </div>
-            </div>
-
-            {/* Double-bezel card */}
-            <div className="p-1.5 rounded-[1.5rem] bg-black/[0.03] ring-1 ring-black/5">
-              <div className="bg-surface-container-lowest rounded-[calc(1.5rem-0.375rem)] p-5 flex flex-col gap-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-                <p className="font-bold text-sm">100% Vetted</p>
-                <p className="text-xs leading-relaxed text-on-surface-variant">
-                  Every business on our platform undergoes a rigorous quality and safety check.
-                </p>
               </div>
             </div>
           </div>
@@ -132,10 +112,6 @@ function Hero() {
                 fill
                 className="object-cover"
               />
-              {/* Opaque — no backdrop-blur on scrolling content (GPU perf) */}
-              <div className="absolute bottom-3 right-3 bg-white/95 px-3 py-1.5 rounded-full shadow-sm">
-                <span className="text-xs font-semibold text-on-surface">Fair trade</span>
-              </div>
             </div>
           </div>
         </div>

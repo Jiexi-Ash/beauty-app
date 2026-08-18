@@ -81,6 +81,60 @@ export const bookSlot = action({
   },
 });
 
+export const retryBookingPayment = action({
+  args: { bookingId: v.id("booking") },
+  handler: async (ctx, { bookingId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("You must be logged in.");
+
+    const SPLIT_MAX_CENTS = getSplitMaxCents();
+    if (SPLIT_MAX_CENTS === undefined) {
+      console.error("SPLIT_MAX env var is missing or invalid — payment split cannot be configured.");
+      throw new ConvexError("We couldn't process your payment at this time. Please try again later.");
+    }
+
+    const context = await ctx.runQuery(
+      internal.booking.queries.getRetryCheckoutContext,
+      { bookingId, clerkId: identity.subject },
+    );
+
+    const [firstName, ...lastParts] = context.fullName.split(" ");
+    const lastName = lastParts.join(" ") || firstName;
+    const platformFee = Math.round(context.amount * (context.commission / 100));
+    const newReference = `${bookingId}_${Date.now()}`;
+
+    const checkoutArgs: Parameters<typeof initiatePaystackCheckout>[0] = {
+      amount: context.amount,
+      callback_url: `${process.env.APP_URL}/profile/bookings/${bookingId}/confirmation`,
+      email: context.email,
+      subaccount: context.subaccount,
+      transaction_charge: Math.min(platformFee, SPLIT_MAX_CENTS),
+      metadata: {
+        clientName: firstName,
+        clientSurname: lastName,
+        service: context.serviceName,
+      },
+      reference: newReference,
+    };
+
+    // Deliberately unlike bookSlot: call Paystack BEFORE writing anything. If
+    // this throws, the booking/payment are untouched and still hold the OLD
+    // (previously-registered, still-verifiable) reference — instead of a
+    // fresh reference Paystack never saw. No compensating cancel here: the
+    // customer is actively engaged, so leave the booking pending for them to
+    // retry again or for the sweep to eventually resolve it.
+    const paystackCheckoutUrl = await initiatePaystackCheckout(checkoutArgs);
+
+    await ctx.runMutation(internal.booking.public.commitPaymentRetryReference, {
+      bookingId,
+      bookingPaymentId: context.bookingPaymentId,
+      newReference,
+    });
+
+    return paystackCheckoutUrl;
+  },
+});
+
 export const rescheduleBooking = action({
   args: {
     bookingId: v.id("booking"),
@@ -155,7 +209,7 @@ export const sweepStalePendingPayments = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const staleThreshold = Date.now() - 15 * 60 * 1000; // retry window; matches the cancel boundary
+    const staleThreshold = Date.now() - 7 * 60 * 1000; // retry window; customers can also manually resume via retryBookingPayment
 
     const stalePending = await ctx.runQuery(
       internal.booking.queries.getStalePending,

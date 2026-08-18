@@ -98,3 +98,36 @@ export const cancelBooking = mutation({
     });
   },
 });
+
+// Separate from cancelBooking: a pending (unpaid) booking was never announced
+// to the business (notifications only fire on payment success), has no
+// start-time guard worth enforcing, and needs a payment-status side effect
+// the paid-cancel path doesn't have — nearly every clause diverges.
+export const cancelPendingBooking = mutation({
+  args: {
+    bookingId: v.id("booking"),
+  },
+  handler: async (ctx, { bookingId }) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const booking = await ctx.db.get(bookingId);
+
+    if (!booking || booking.userId != user._id)
+      throw new ConvexError("Booking not found.");
+
+    if (booking.status !== "pending") {
+      throw new ConvexError("This booking cannot be cancelled this way.");
+    }
+
+    await ctx.db.patch(booking._id, {
+      status: "cancelled_by_user",
+    });
+
+    const payment = booking.bookingPaymentId
+      ? await ctx.db.get(booking.bookingPaymentId)
+      : null;
+    if (payment && payment.status === "pending") {
+      await ctx.db.patch(payment._id, { status: "cancelled" });
+    }
+  },
+});

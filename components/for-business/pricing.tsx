@@ -1,5 +1,5 @@
 "use client"
-import PricingCards from "@/components/pricing-cards"
+import PricingCards from "@/components/for-business/pricing-cards"
 import { useInView } from "@/hooks/use-in-view"
 import { cn } from "@/lib/utils"
 
@@ -10,15 +10,12 @@ function Pricing() {
     <section ref={ref} className="py-24 px-6 max-w-7xl mx-auto" id="pricing">
       <div
         className={cn(
-          "text-center mb-16 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "mb-16 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
           inView ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]",
         )}
       >
-        <div className="inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold mb-4">
-          — Simple, fair pricing —
-        </div>
         <h2 className="text-4xl font-headline font-bold mb-4">
-          Pricing that respects the <span className="text-primary">community</span>
+          Pricing that respects the community
         </h2>
         <p className="text-on-surface-variant">No tiers, no lock-in — just a fair cut when you get paid.</p>
       </div>

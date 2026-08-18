@@ -7,10 +7,7 @@ export function BookingConfirmationSkeleton() {
         <div className="w-full min-h-screen bg-background flex flex-col">
             <Navbar />
 
-            <div
-                className="flex-1 flex flex-col items-center px-4 py-16"
-                style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
-            >
+            <div className="flex-1 flex flex-col items-center px-4 py-16">
                 {/* Check icon */}
                 <Skeleton className="w-16 h-16 rounded-full mb-6" />
 

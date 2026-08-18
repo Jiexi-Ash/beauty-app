@@ -9,6 +9,9 @@ export const CATEGORIES = [
 // Completed bookings a business needs before it's marked verified.
 export const VERIFICATION_THRESHOLD = 50
 
+// Max services a business can list, matches the free-tier pricing copy.
+export const MAX_SERVICES_PER_BUSINESS = 20
+
 // Platform-wide policy: every booking takes this fraction of the service price
 export const DEPOSIT_PERCENT = 0.5
 

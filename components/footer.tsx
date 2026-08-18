@@ -29,12 +29,12 @@ function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="#pricing"
+                  <Link
+                    href="/for-business"
                     className="text-on-surface-variant hover:text-primary transition-colors duration-200"
                   >
-                    Pricing
-                  </a>
+                    For business
+                  </Link>
                 </li>
                 <li>
                   <Link

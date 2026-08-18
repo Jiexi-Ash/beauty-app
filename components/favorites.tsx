@@ -144,10 +144,7 @@ function NoFavorites() {
     <div className="w-full min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div
-        className="flex-1 flex flex-col items-center justify-center px-4 py-20"
-        style={{ backgroundImage: "var(--background-image-gradient-rose)" }}
-      >
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-20">
         <div className="p-1 rounded-full bg-black/[0.04] ring-1 ring-black/5 mb-6">
           <div className="size-14 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
             <Heart weight="fill" className="size-6 text-primary" />

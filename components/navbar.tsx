@@ -10,6 +10,7 @@ import {
   CalendarDots,
   GearSix,
   UserCircle,
+  Storefront,
 } from "@phosphor-icons/react";
 import {
   SignInButton,
@@ -39,6 +40,7 @@ function Navbar() {
           { href: "/profile/favorites", label: "Favorites", icon: Heart },
         ]
       : []),
+    { href: "/for-business", label: "For business", icon: Storefront },
   ];
 
   return (
@@ -73,6 +75,19 @@ function Navbar() {
                 >
                   Find a salon
                 </Link>
+                {user && (
+                  <Link
+                    href="/for-business"
+                    className={cn(
+                      "text-sm font-medium transition-colors duration-200",
+                      pathname === "/for-business"
+                        ? "text-primary"
+                        : "text-gray-500 hover:text-foreground",
+                    )}
+                  >
+                    For business
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -123,7 +138,7 @@ function Navbar() {
                       Sign in
                     </Button>
                   </SignInButton>
-                  <Link href="/onboarding">
+                  <Link href="/for-business">
                     <Button
                       size="sm"
                       className="rounded-full px-5 cursor-pointer"
@@ -258,7 +273,7 @@ function Navbar() {
                     Sign in / Register
                   </Button>
                 </SignInButton>
-                <Link href="/onboarding" onClick={() => setMenuOpen(false)}>
+                <Link href="/for-business" onClick={() => setMenuOpen(false)}>
                   <Button
                     variant="outline"
                     className="w-full font-semibold rounded-full h-12"

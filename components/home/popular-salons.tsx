@@ -28,11 +28,8 @@ function PopularSalons({ preloadedBusinesses }: PopularSalonsProps) {
         )}
       >
         <div>
-          <div className="inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-semibold mb-4">
-            — Top rated near you —
-          </div>
           <h2 className="text-4xl font-headline font-bold tracking-tight mb-2">
-            Local <span className="text-primary">gems</span>
+            Local gems
           </h2>
           <p className="text-on-surface-variant">The most booked salons in your neighbourhood right now.</p>
         </div>
@@ -119,6 +116,15 @@ function SalonCard({
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
+
+        {/* Bottom scrim for overlaid text */}
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 via-35% to-transparent pointer-events-none",
+            isLead ? "h-[45%]" : "h-[55%]",
+          )}
+        />
+
         {salon.tags[0] && (
           <div className={cn("absolute", isLead ? "top-4 left-4" : "top-3 left-3")}>
             <span className={cn("bg-white/95 rounded-full font-semibold text-primary capitalize", isLead ? "px-3 py-1 text-xs" : "px-2.5 py-1 text-xs")}>
@@ -126,28 +132,30 @@ function SalonCard({
             </span>
           </div>
         )}
-      </div>
-      <div className={cn("flex justify-between items-start", isLead ? "mt-5" : "mt-4")}>
-        <div>
-          <h3
-            className={cn(
-              "font-headline font-bold group-hover:text-primary transition-colors duration-300",
-              isLead ? "text-xl" : "text-base",
-            )}
-          >
-            {salon.name}
-          </h3>
-          <p className={cn("text-on-surface-variant flex items-center gap-1", isLead ? "text-sm" : "text-xs")}>
-            <MapPin className="size-3 shrink-0" />
-            {salon.city}
-          </p>
-        </div>
-        {salon.reviewCount > 0 && (
-          <div className="flex items-center gap-1 bg-surface-container-low px-2.5 py-1.5 rounded-full shrink-0">
-            <Star className={cn("text-primary", isLead ? "size-3.5" : "size-3")} weight="fill" />
-            <span className={cn("font-bold", isLead ? "text-sm" : "text-xs")}>{salon.averageRating.toFixed(1)}</span>
+
+        {/* Name, city, rating — overlaid on the scrim */}
+        <div className={cn("absolute flex items-end justify-between gap-3", isLead ? "bottom-4 left-4 right-4" : "bottom-3 left-3 right-3")}>
+          <div>
+            <h3
+              className={cn(
+                "font-headline font-bold text-white group-hover:text-primary transition-colors duration-300",
+                isLead ? "text-xl" : "text-base",
+              )}
+            >
+              {salon.name}
+            </h3>
+            <p className={cn("text-white/80 flex items-center gap-1", isLead ? "text-sm" : "text-xs")}>
+              <MapPin className="size-3 shrink-0" />
+              {salon.city}
+            </p>
           </div>
-        )}
+          {salon.reviewCount > 0 && (
+            <div className="flex items-center gap-1 bg-white/95 px-2.5 py-1.5 rounded-full shrink-0">
+              <Star className={cn("text-primary", isLead ? "size-3.5" : "size-3")} weight="fill" />
+              <span className={cn("font-bold", isLead ? "text-sm" : "text-xs")}>{salon.averageRating.toFixed(1)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   )

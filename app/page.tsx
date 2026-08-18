@@ -1,8 +1,7 @@
 import Navbar from "@/components/navbar";
 import Hero from "@/components/home/hero";
-import Features from "@/components/home/features";
 import PopularSalons from "@/components/home/popular-salons";
-import Pricing from "@/components/home/pricing";
+import BusinessTeaser from "@/components/home/business-teaser";
 import Footer from "@/components/footer";
 import { getAuthToken } from "@/auth";
 import { api } from "@/convex/_generated/api";
@@ -21,9 +20,8 @@ export default async function Home() {
       <Navbar />
       <main id="main-content">
         <Hero />
-        <Features />
         <PopularSalons preloadedBusinesses={preloadedBusinesses} />
-        <Pricing />
+        <BusinessTeaser />
       </main>
       <Footer />
     </div>

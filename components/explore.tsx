@@ -238,7 +238,7 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
             ) : (
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {filteredBusinesses?.map((business) => (
-                        <div key={business._id} className="group flex flex-col gap-3 cursor-pointer">
+                        <Link key={business._id} href={`/explore/${business.slug}`} className="group flex flex-col gap-3">
                             <div className="relative aspect-4/3 overflow-hidden">
                                 {business.reviewCount > 0 && (
                                     <Badge className="absolute top-2 right-2 z-20 bg-white hover:bg-white shadow-sm gap-1">
@@ -265,17 +265,16 @@ function Explore({ preloadedBusinesses }: ServicesProps) {
                                     <div key={tag} className="bg-secondary py-1 px-2 rounded-sm text-primary text-xs capitalize">{tag}</div>
                                 ))}
                             </div>
-                            <Link className="w-full" href={`/explore/${business.slug}`}>
-                                <Button
-                                    variant="secondary"
-                                    size="lg"
-                                    className="mx-1 cursor-pointer text-xs hover:bg-primary hover:text-white transition-all duration-200 ease-in-out w-full"
-                                >
-                                    View Details
-                                    <ArrowRight className="size-3" />
-                                </Button>
-                            </Link>
-                        </div>
+                            <Button
+                                variant="secondary"
+                                size="lg"
+                                tabIndex={-1}
+                                className="mx-1 text-xs group-hover:bg-primary group-hover:text-white transition-all duration-200 ease-in-out w-full pointer-events-none"
+                            >
+                                View Details
+                                <ArrowRight className="size-3" />
+                            </Button>
+                        </Link>
                     ))}
                 </div>
             )}

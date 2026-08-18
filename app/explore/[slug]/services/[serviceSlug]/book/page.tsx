@@ -16,7 +16,7 @@ import Link from "next/link"
 import { SignInButton, useUser } from "@clerk/nextjs"
 import * as z from "zod"
 import { useForm } from "@tanstack/react-form"
-import { Field, FieldGroup } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
 import MainLayout from "@/components/main-layout"
 import { BookingPageSkeleton } from "@/components/skeletons/booking-page"
@@ -357,10 +357,12 @@ function BookServicePage() {
                           </Label>
                           <Input
                             value={field.state.value}
+                            aria-invalid={isInvalid}
                             className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
                           />
+                          {isInvalid && <FieldError errors={field.state.meta.errors} />}
                         </Field>
                       )
 
@@ -380,10 +382,12 @@ function BookServicePage() {
                             value={field.state.value}
                             type="tel"
                             inputMode="numeric"
+                            aria-invalid={isInvalid}
                             className="mt-1.5 bg-transparent border-foreground/15 h-12 text-sm"
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
                           />
+                          {isInvalid && <FieldError errors={field.state.meta.errors} />}
                         </Field>
                       )
 
@@ -471,7 +475,12 @@ function ConfirmBooking({
   selectedSlot,
 }: {
   isSubmitting: boolean
-  service: { name: string; primaryImage?: string | null; price: number }
+  service: {
+    name: string
+    primaryImage?: string | null
+    price: number
+    business: { location: string; tags: string[] }
+  }
   businessDisplayName: string
   durationLabel: string
   priceRands: number
@@ -496,13 +505,15 @@ function ConfirmBooking({
 
       <div className="p-5 space-y-4">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-            Luxury Studio
-          </span>
+          {service.business.tags?.[0] && (
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+              {service.business.tags[0]}
+            </span>
+          )}
           <h3 className="text-xl font-black mt-2 capitalize">{businessDisplayName}</h3>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 capitalize">
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
             <MapPin className="size-3 shrink-0" />
-            {businessDisplayName}
+            {service.business.location}
           </p>
         </div>
 

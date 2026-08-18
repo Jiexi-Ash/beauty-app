@@ -122,6 +122,16 @@ export const toggleBusinessVisibilty = mutation({
 
     if (!business) throw new ConvexError("You need to have a business to perform this action.")
 
+    if (visibility === "visible") {
+      const hasVisibleService = await ctx.db
+        .query("service")
+        .withIndex("by_business_visibility", q => q.eq("businessId", business._id).eq("visibility", "visible"))
+        .first()
+
+      if (!hasVisibleService)
+        throw new ConvexError("Add at least one service before going live.")
+    }
+
     await ctx.db.patch(business._id, {
       visibility,
     })

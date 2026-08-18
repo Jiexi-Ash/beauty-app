@@ -119,6 +119,11 @@ export const getBusinessBySlug = query({
 
     const isFavorite = user ? await ctx.db.query("favorites").withIndex("by_user_and_business", q => q.eq("userId", user._id).eq("businessId", business._id)).unique() : null
 
+    const businessHours = await ctx.db
+      .query("businessHours")
+      .withIndex("by_businessId", (q) => q.eq("businessId", business._id))
+      .collect();
+
     const businessReviews = await ctx.db
       .query("reviews")
       .withIndex("by_business", (q) => q.eq("businessId", business._id))
@@ -153,6 +158,7 @@ export const getBusinessBySlug = query({
       reviews,
       averageRating,
       reviewCount: businessReviews.length,
+      businessHours,
     };
   },
 });
@@ -232,7 +238,7 @@ export const getBusinessServiceBySlug = query({
 
     return {
       ...service,
-      business: { name: business.name },
+      business: { name: business.name, location: business.location, tags: business.tags },
       primaryImage,
       imageGallery,
     };

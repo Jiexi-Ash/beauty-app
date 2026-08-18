@@ -252,3 +252,36 @@ export const rescheduleBookingRecord = internalMutation({
     });
   },
 });
+
+export const commitPaymentRetryReference = internalMutation({
+  args: {
+    bookingId: v.id("booking"),
+    bookingPaymentId: v.id("bookingPayment"),
+    newReference: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { bookingId, bookingPaymentId, newReference }) => {
+    const booking = await ctx.db.get(bookingId);
+    const payment = await ctx.db.get(bookingPaymentId);
+
+    // Re-check right before writing. The time between getRetryCheckoutContext
+    // and this call includes a network round-trip to Paystack, during which
+    // the sweep cron or a webhook could resolve this payment. Convex mutations
+    // are transactional, so this read+write is atomic — closes the race the
+    // earlier read-only query couldn't close on its own.
+    if (!booking || booking.status !== "pending")
+      throw new ConvexError("This booking was resolved while payment was being set up.");
+    if (!payment || payment.status !== "pending")
+      throw new ConvexError("This booking was resolved while payment was being set up.");
+
+    // Reset paymentDate so this fresh attempt gets its own stale-sweep window
+    // — without this, retrying an already-stale payment would get swept and
+    // marked failed on the very next cron tick.
+    await ctx.db.patch(bookingPaymentId, {
+      paymentReference: newReference,
+      paymentDate: Date.now(),
+    });
+
+    return null;
+  },
+});

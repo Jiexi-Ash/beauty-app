@@ -3,6 +3,7 @@ import { internalQuery, mutation, query } from "../_generated/server";
 import { getCurrentUser, getCurrentUserOrThrow } from "../users";
 import { getBusinessByUserId } from "../business/admin";
 import { slugify } from "../../lib/utils";
+import { MAX_SERVICES_PER_BUSINESS } from "../../constants";
 
 export const createService = mutation({
   args: {
@@ -26,7 +27,7 @@ export const createService = mutation({
         "You need to have a business to perform this action.",
       );
 
-    const [isExisting, category] = await Promise.all([
+    const [isExisting, category, existingServices] = await Promise.all([
       ctx.db
         .query("service")
         .withIndex("by_name_and_business", (q) =>
@@ -39,12 +40,21 @@ export const createService = mutation({
         .query("categories")
         .withIndex("by_name", (q) => q.eq("name", categoryName))
         .first(),
+      ctx.db
+        .query("service")
+        .withIndex("by_business", (q) => q.eq("businessId", business._id))
+        .collect(),
     ]);
 
     if (isExisting)
       throw new ConvexError(`A service with the name ${name} already exists.`);
 
     if (!category) throw new ConvexError("Invalid category selected");
+
+    if (existingServices.length >= MAX_SERVICES_PER_BUSINESS)
+      throw new ConvexError(
+        `You've reached the ${MAX_SERVICES_PER_BUSINESS}-service limit on the free plan.`,
+      );
     const priceInDecimal = Number(price) * 100; // cents
     const serviceNameSlug = slugify(name);
     const serviceId = await ctx.db.insert("service", {

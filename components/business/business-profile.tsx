@@ -1,7 +1,7 @@
 "use client"
 import { api } from "@/convex/_generated/api"
 import { Preloaded, usePreloadedQuery } from "convex/react"
-import { Heart, MapPin, Star, CircleNotch, ArrowUpRight } from "@phosphor-icons/react"
+import { Heart, MapPin, Star, CircleNotch, ArrowUpRight, Clock } from "@phosphor-icons/react"
 import Image from "next/image"
 import { Badge } from "../ui/badge"
 import { useState } from "react"
@@ -16,7 +16,33 @@ import { ConvexError } from "convex/values"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 import { getInitials } from "@/lib/utils"
+import { BUSINESS_DAYS, DEPOSIT_PERCENT } from "@/constants"
 
+
+function buildHourGroups(hours: Doc<"businessHours">[]) {
+  const days = BUSINESS_DAYS.map((day) => {
+    const openDay = hours.find((h) => h.fullName === day.fullName)
+    return {
+      abbr: day.fullName.slice(0, 3),
+      text: openDay ? `${openDay.openTime}–${openDay.closeTime}` : "Closed",
+    }
+  })
+
+  const groups: { start: string; end: string; text: string }[] = []
+  for (const day of days) {
+    const last = groups[groups.length - 1]
+    if (last && last.text === day.text) {
+      last.end = day.abbr
+    } else {
+      groups.push({ start: day.abbr, end: day.abbr, text: day.text })
+    }
+  }
+
+  return groups.map((g) => ({
+    label: g.start === g.end ? g.start : `${g.start}–${g.end}`,
+    text: g.text,
+  }))
+}
 
 type Service = Doc<"service"> & {
   primaryImage: string | null
@@ -46,6 +72,8 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
   })
 
   if (!business) notFound()
+
+  const hourGroups = buildHourGroups(business.businessHours)
 
   const handleSelectService = (serviceId: Id<"service">) => {
     setSelectedServiceId((prev) => (prev === serviceId ? null : serviceId))
@@ -78,9 +106,21 @@ function BusinessProfile({ preloadedBusiness }: BusinessProfileProps) {
                 )}
                 {business.city && (
                   <div className="flex items-center gap-1 text-gray-500">
-                    {business.reviewCount > 0 && <span className="text-gray-400">&bull;</span>}
                     <MapPin className="size-3.5 md:size-4 text-primary" weight="fill" />
                     <span className="text-xs md:text-sm">{business.city}</span>
+                  </div>
+                )}
+                {hourGroups.length > 0 && (
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <Clock className="size-3.5 md:size-4 text-primary" weight="fill" />
+                    <span className="text-xs md:text-sm">
+                      {hourGroups.map((g, i) => (
+                        <span key={g.label}>
+                          {i > 0 && ", "}
+                          {g.label} {g.text}
+                        </span>
+                      ))}
+                    </span>
                   </div>
                 )}
               </div>
@@ -225,7 +265,7 @@ function ServiceCard({ service, isSelected, onSelect }: ServiceCardProps) {
             <div className="flex justify-between items-start gap-2">
               <p
                 className={cn(
-                  "text-sm font-semibold leading-tight truncate",
+                  "text-sm font-semibold leading-tight truncate capitalize",
                   isSelected ? "text-white" : "text-foreground",
                 )}
               >
@@ -276,7 +316,7 @@ function ServiceDetailDialog({
       ? `${(service.duration / 60).toFixed(1).replace(".0", "")} hours`
       : `${service.duration} min`
   const price = (service.price / 100).toFixed(2)
-  const depositPrice = ((service.price / 100) * 0.5).toFixed(2)
+  const depositPrice = ((service.price / 100) * DEPOSIT_PERCENT).toFixed(2)
 
   const allImages = [
     ...(service.primaryImage ? [{ key: "primary", url: service.primaryImage }] : []),
