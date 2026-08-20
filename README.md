@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beauty App
 
-## Getting Started
+A salon discovery and booking platform for South African beauty businesses: customers
+find salons, view services, and book appointments with a deposit paid up front;
+salon owners onboard their business, manage services/hours/pricing, get paid out
+automatically, and track bookings and revenue from a dashboard.
 
-First, run the development server:
+Built on Convex (reactive backend + database) and Clerk (auth), with Paystack handling
+real payments — deposits collected on booking, then split and paid out to each
+business's own subaccount.
+
+## Core features
+
+- **Discovery & booking** — geospatial "near me" salon search (`@convex-dev/geospatial`),
+  category browsing, live availability computed from each business's hours and existing
+  bookings, deposit-based checkout via Paystack
+- **Business dashboard** — onboarding, service catalog (pricing/duration/visibility),
+  business hours, booking management, revenue/analytics, subscription tiers,
+  verification badge, banking details for payouts
+- **Payments** — Paystack integration: deposit collection, commission-capped splits to
+  business subaccounts, webhook-driven payment status updates, automatic cancellation of
+  orphaned/abandoned bookings
+- **Notifications** — in-app notifications plus SMS via Twilio (booking confirmations,
+  reminders)
+- **Reviews & favorites**
+- **Scheduled jobs** — Convex crons for cleaning up expired holds/orphaned bookings and
+  sending reminders
+
+## Tech stack
+
+- **Frontend:** Next.js 16, React 19, TanStack Query (via `@convex-dev/react-query`)
+  + TanStack Form, Zod, Tailwind
+- **Backend:** [Convex](https://convex.dev) — reactive database, server functions
+  (queries/mutations/actions), scheduled crons, HTTP actions for webhooks
+- **Auth:** [Clerk](https://clerk.com), synced into Convex via a `clerk-users` webhook
+- **Payments:** [Paystack](https://paystack.com) — deposits, subaccount splits, webhook
+  verification
+- **Notifications:** Twilio (SMS)
+
+## Architecture
+
+```
+convex/         Server-side logic — this is the backend, not a separate service.
+  schema.ts       Table definitions (users, business, service, booking, bookingPayment,
+                  paymentSplits, notifications, reviews, favorites, businessBanking, ...)
+  http.ts         Webhook endpoints: /clerk-users (user sync), /api/paystack/notify
+  paystack/       Split calculation, signature verification, Paystack API calls
+  booking/        Availability computation, slot locking, booking lifecycle
+  business/       Onboarding, business admin operations
+  crons.ts        Scheduled cleanup (orphaned bookings) and reminders
+
+app/            Next.js App Router frontend — talks to Convex directly via
+                generated hooks/`@convex-dev/react-query`, no custom REST layer.
+proxy.ts        Clerk middleware (route protection)
+```
+
+## Running it locally
+
+### Prerequisites
+
+- Node.js 20+ and npm
+- A [Convex](https://dashboard.convex.dev) project
+- A [Clerk](https://dashboard.clerk.com) application (configured as a Convex JWT
+  template — see [Convex's Clerk guide](https://docs.convex.dev/auth/clerk))
+- A [Paystack](https://dashboard.paystack.com) account (test keys are fine)
+- A Google Maps API key (Places autocomplete + geocoding)
+- Optional: a Twilio account for SMS notifications
+
+### Setup
+
+```bash
+npm install
+npx convex dev   # provisions/links your Convex deployment, watches convex/
+```
+
+In a separate terminal, set the following in `.env.local`:
+
+```
+NEXT_PUBLIC_CONVEX_URL=            # from `npx convex dev`
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+CLERK_JWT_ISSUER_DOMAIN=           # Clerk Frontend API URL, also set on the Convex dashboard
+CLERK_WEBHOOK_SECRET=              # from the Clerk webhook pointed at <convex-url>/clerk-users
+GOOGLE_MAPS_API_KEY=
+PAYSTACK_SECRET_KEY=
+PAYSTACK_URL=https://api.paystack.co
+SPLIT_MAX=                         # commission cap for business payout splits
+APP_URL=http://localhost:3000
+TWILIO_ACCOUNT_SID=                # optional — SMS notifications
+TWILIO_AUTH_TOKEN=                 # optional
+```
+
+Then:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. In the Clerk dashboard, point a webhook at
+`<your-convex-url>/clerk-users` (user sync) and in Paystack, point a webhook at
+`<your-convex-url>/api/paystack/notify` (payment events).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## The Go rebuild
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+There's a second version of this app in a separate repo, rebuilt on a **self-built Go
+REST API** instead of Convex + Clerk — same product, same frontend, different backend
+philosophy:
 
-## Learn More
+**https://github.com/Jiexi-Ash/beauty-app-with-go-server**
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+That version exists to demonstrate designing and building backend infrastructure
+directly (schema design, migrations, auth, REST API) rather than composing
+backend-as-a-service and auth providers, which is what this repo does. It's a smaller
+slice of the feature set here — payments, notifications, and geospatial search aren't
+ported — but everything it does implement talks to a real Postgres-backed API written
+from scratch.
